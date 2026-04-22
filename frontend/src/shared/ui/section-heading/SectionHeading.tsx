@@ -25,8 +25,8 @@ export const SectionHeading = ({
                     variant="flat"
                     size="sm"
                     classNames={{
-                        base: "mb-5 bg-purple-500/10 border border-purple-500/20",
-                        content: "text-purple-400 font-semibold text-xs tracking-widest uppercase",
+                        base: "mb-5 bg-emerald-500/10 border border-emerald-500/20",
+                        content: "text-emerald-400 font-semibold text-xs tracking-widest uppercase",
                     }}
                 >
                     {badge}

@@ -77,16 +77,16 @@ export const RegisterForm = () => {
                     type="button"
                     onClick={() => setRole("client")}
                     className={`relative p-4 rounded-2xl border text-left transition-all overflow-hidden ${role === "client"
-                        ? "bg-purple-600/15 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.15)]"
+                        ? "bg-emerald-600/15 border-emerald-500 shadow-[0_0_20px_rgba(168,85,247,0.15)]"
                         : "bg-zinc-900/40 border-zinc-800/60 hover:border-zinc-700/80 hover:bg-zinc-900/80"
                         }`}
                 >
                     {role === "client" && (
-                        <div className="absolute top-3 right-3 text-purple-400">
-                            <CheckCircle2 size={16} className="fill-purple-500/20" />
+                        <div className="absolute top-3 right-3 text-emerald-400">
+                            <CheckCircle2 size={16} className="fill-emerald-500/20" />
                         </div>
                     )}
-                    <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center transition-colors ${role === "client" ? "bg-purple-500/20 text-purple-400" : "bg-zinc-800 text-zinc-400"
+                    <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center transition-colors ${role === "client" ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-800 text-zinc-400"
                         }`}>
                         <Briefcase size={20} />
                     </div>
@@ -128,7 +128,7 @@ export const RegisterForm = () => {
                 errorMessage={phoneInvalid ? "Введите корректный номер телефона" : undefined}
                 classNames={{
                     inputWrapper:
-                        "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                        "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                     label: "text-zinc-400",
                     input: "text-zinc-200 placeholder:text-zinc-600",
                 }}
@@ -157,7 +157,7 @@ export const RegisterForm = () => {
                     }
                     classNames={{
                         inputWrapper:
-                            "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                            "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                         label: "text-zinc-400",
                         input: "text-zinc-200 placeholder:text-zinc-600",
                     }}
@@ -191,7 +191,7 @@ export const RegisterForm = () => {
                 errorMessage={confirmInvalid ? "Пароли не совпадают" : undefined}
                 classNames={{
                     inputWrapper:
-                        "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                        "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                     label: "text-zinc-400",
                     input: "text-zinc-200 placeholder:text-zinc-600",
                 }}
@@ -205,7 +205,7 @@ export const RegisterForm = () => {
                     classNames={{ label: "text-sm text-zinc-300" }}
                 >
                     Принимаю{" "}
-                    <button type="button" onClick={onOpen} className="text-purple-400 hover:text-purple-300 underline underline-offset-4">
+                    <button type="button" onClick={onOpen} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
                         условия оферты
                     </button>
                 </Checkbox>
@@ -231,7 +231,7 @@ export const RegisterForm = () => {
                 size="lg"
                 isLoading={registerMutation.isPending}
                 isDisabled={!canSubmit}
-                className="bg-purple-600 text-white font-semibold glow-sm hover:bg-purple-500 transition-all duration-300 mt-1"
+                className="bg-emerald-600 text-white font-semibold glow-sm hover:bg-emerald-500 transition-all duration-300 mt-1"
                 endContent={!registerMutation.isPending && <UserPlus size={18} />}
             >
                 Создать аккаунт
@@ -241,7 +241,7 @@ export const RegisterForm = () => {
                 Уже есть аккаунт?{" "}
                 <Link
                     href="/login"
-                    className="text-purple-400 hover:text-purple-300 text-sm"
+                    className="text-emerald-400 hover:text-emerald-300 text-sm"
                 >
                     Войти
                 </Link>

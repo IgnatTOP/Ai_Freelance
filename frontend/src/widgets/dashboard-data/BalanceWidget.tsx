@@ -73,12 +73,12 @@ export const BalanceWidget = () => {
                                     </div>
                                     <span className="text-sm font-semibold text-emerald-400">{available.toLocaleString("ru-RU")} ₽</span>
                                 </div>
-                                <div className="flex items-center justify-between p-3 rounded-xl bg-purple-500/5 border border-purple-500/10">
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
                                     <div className="flex items-center gap-2">
-                                        <ShieldAlert size={14} className="text-purple-400" />
-                                        <span className="text-sm text-purple-300/80">В Escrow (заморожено)</span>
+                                        <ShieldAlert size={14} className="text-amber-400" />
+                                        <span className="text-sm text-amber-300/80">В Escrow (заморожено)</span>
                                     </div>
-                                    <span className="text-sm font-semibold text-purple-400">{frozen.toLocaleString("ru-RU")} ₽</span>
+                                    <span className="text-sm font-semibold text-amber-400">{frozen.toLocaleString("ru-RU")} ₽</span>
                                 </div>
                             </div>
                         </>
@@ -89,7 +89,7 @@ export const BalanceWidget = () => {
                     <Button
                         as={Link}
                         href="/dashboard/balance?action=topup"
-                        className="flex-1 bg-purple-600 text-white font-semibold shadow-lg hover:bg-purple-500"
+                        className="flex-1 bg-[var(--mint-400)] text-[#062219] font-semibold shadow-lg hover:bg-[var(--mint-300)]"
                     >
                         Пополнить
                     </Button>

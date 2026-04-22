@@ -45,7 +45,7 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
                         <div className="flex items-center gap-2">
                             <div className="relative">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isCurrent
-                                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/40 ring-2 ring-purple-500/20 ring-offset-2 ring-offset-zinc-950"
+                                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-zinc-950"
                                     : isPast
                                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                                         : "bg-zinc-800/60 text-zinc-600 border border-zinc-700/40"
@@ -53,10 +53,10 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
                                     {isPast && !isCurrent ? <Check size={12} /> : i + 1}
                                 </div>
                                 {isCurrent && (
-                                    <span className="absolute inset-0 rounded-full bg-purple-500/30 animate-ping" />
+                                    <span className="absolute inset-0 rounded-full bg-emerald-500/30 animate-ping" />
                                 )}
                             </div>
-                            <span className={`text-xs font-medium transition-colors ${isCurrent ? "text-purple-300" : isPast ? "text-zinc-300" : "text-zinc-600"}`}>
+                            <span className={`text-xs font-medium transition-colors ${isCurrent ? "text-emerald-300" : isPast ? "text-zinc-300" : "text-zinc-600"}`}>
                                 {step.label}
                             </span>
                         </div>
@@ -105,13 +105,13 @@ const WaitingForProposals = () => (
         <div className="flex flex-col items-center justify-center relative">
             <div className="relative w-28 h-28 mb-8">
                 {/* Radar rings */}
-                <div className="absolute inset-0 rounded-full border border-purple-500/20 animate-radar-ping" />
-                <div className="absolute inset-0 rounded-full border border-purple-500/15 animate-radar-ping-delay" />
-                <div className="absolute inset-0 rounded-full border border-purple-500/10 animate-radar-ping-delay-2" />
+                <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-radar-ping" />
+                <div className="absolute inset-0 rounded-full border border-emerald-500/15 animate-radar-ping-delay" />
+                <div className="absolute inset-0 rounded-full border border-emerald-500/10 animate-radar-ping-delay-2" />
                 {/* Center icon */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-lg shadow-purple-500/10">
-                        <Search size={24} className="text-purple-400" />
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                        <Search size={24} className="text-emerald-400" />
                     </div>
                 </div>
             </div>
@@ -120,9 +120,9 @@ const WaitingForProposals = () => (
             <p className="text-sm text-zinc-400 mb-1 flex items-center gap-1">
                 Ваш заказ виден исполнителям
                 <span className="inline-flex gap-0.5">
-                    <span className="w-1 h-1 rounded-full bg-purple-400 animate-typing-dot-1" />
-                    <span className="w-1 h-1 rounded-full bg-purple-400 animate-typing-dot-2" />
-                    <span className="w-1 h-1 rounded-full bg-purple-400 animate-typing-dot-3" />
+                    <span className="w-1 h-1 rounded-full bg-emerald-400 animate-typing-dot-1" />
+                    <span className="w-1 h-1 rounded-full bg-emerald-400 animate-typing-dot-2" />
+                    <span className="w-1 h-1 rounded-full bg-emerald-400 animate-typing-dot-3" />
                 </span>
             </p>
             <p className="text-xs text-zinc-600 mb-8">Обычно первые отклики приходят в течение 1–2 часов</p>
@@ -163,24 +163,24 @@ const AIRecommendationCard = ({
     return (
         <div className="relative rounded-2xl overflow-hidden animate-fade-in-up">
             {/* Animated gradient border */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-600/40 via-indigo-500/40 to-fuchsia-500/40 animate-gradient-border" />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-600/40 via-teal-500/40 to-emerald-500/40 animate-gradient-border" />
             <div className="m-[1px] rounded-2xl bg-zinc-950/90 backdrop-blur-xl p-5">
                 <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-purple-500/20 flex items-center justify-center shrink-0">
-                        <Sparkles size={20} className="text-purple-300 animate-sparkle" />
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600/20 to-teal-600/20 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                        <Sparkles size={20} className="text-emerald-300 animate-sparkle" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-bold text-purple-200">AI-рекомендация</h3>
+                            <h3 className="text-sm font-bold text-emerald-200">AI-рекомендация</h3>
                             {bestRecommendation.score != null && (
-                                <Chip size="sm" classNames={{ base: "bg-purple-500/15 border border-purple-500/25", content: "text-purple-300 text-xs font-bold" }}>
+                                <Chip size="sm" classNames={{ base: "bg-emerald-500/15 border border-emerald-500/25", content: "text-emerald-300 text-xs font-bold" }}>
                                     {bestRecommendation.score}% совпадение
                                 </Chip>
                             )}
                         </div>
                         {bestProposal?.freelancer_name && (
-                            <p className="text-xs text-purple-400/70 mb-2">
-                                Лучший кандидат: <span className="text-purple-300 font-medium">{bestProposal.freelancer_name}</span>
+                            <p className="text-xs text-emerald-400/70 mb-2">
+                                Лучший кандидат: <span className="text-emerald-300 font-medium">{bestProposal.freelancer_name}</span>
                             </p>
                         )}
                         <p className="text-sm text-zinc-300 leading-relaxed">{bestRecommendation.justification}</p>
@@ -208,10 +208,10 @@ const ProposalsStats = ({
     const aiAnalyzed = proposals.filter((p) => p.ai_analysis_for_client).length;
 
     const stats = [
-        { icon: <Users size={14} />, label: "Откликов", value: String(proposals.length), color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+        { icon: <Users size={14} />, label: "Откликов", value: String(proposals.length), color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
         { icon: <Wallet size={14} />, label: "Средняя цена", value: formatCurrency(avgBudget), color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
         { icon: <Timer size={14} />, label: "Средний срок", value: formatDays(avgDays), color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-        { icon: <Sparkles size={14} />, label: "AI-анализ", value: `${aiAnalyzed}/${proposals.length}`, color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
+        { icon: <Sparkles size={14} />, label: "AI-анализ", value: `${aiAnalyzed}/${proposals.length}`, color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/20" },
     ];
 
     return (
@@ -236,31 +236,31 @@ const AIAnalysisInProgress = ({ analyzed, total }: { analyzed: number; total: nu
     const pct = total > 0 ? Math.round((analyzed / total) * 100) : 0;
 
     return (
-        <div className="rounded-xl bg-indigo-500/[0.06] border border-indigo-500/15 p-4 animate-fade-in-up">
+        <div className="rounded-xl bg-teal-500/[0.06] border border-teal-500/15 p-4 animate-fade-in-up">
             <div className="flex items-center gap-3 mb-3">
                 <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
-                    <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20 border-t-indigo-400 animate-spin" />
-                    <Sparkles size={14} className="text-indigo-400" />
+                    <div className="absolute inset-0 rounded-full border-2 border-teal-500/20 border-t-teal-400 animate-spin" />
+                    <Sparkles size={14} className="text-teal-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-indigo-200">AI анализирует отклики</p>
+                    <p className="text-sm font-medium text-teal-200">AI анализирует отклики</p>
                     <p className="text-xs text-zinc-500">
                         Проанализировано {analyzed} из {total}
                         <span className="inline-flex gap-0.5 ml-1">
-                            <span className="w-1 h-1 rounded-full bg-indigo-400 animate-typing-dot-1" />
-                            <span className="w-1 h-1 rounded-full bg-indigo-400 animate-typing-dot-2" />
-                            <span className="w-1 h-1 rounded-full bg-indigo-400 animate-typing-dot-3" />
+                            <span className="w-1 h-1 rounded-full bg-teal-400 animate-typing-dot-1" />
+                            <span className="w-1 h-1 rounded-full bg-teal-400 animate-typing-dot-2" />
+                            <span className="w-1 h-1 rounded-full bg-teal-400 animate-typing-dot-3" />
                         </span>
                     </p>
                 </div>
-                <span className="text-xs font-bold text-indigo-300">{pct}%</span>
+                <span className="text-xs font-bold text-teal-300">{pct}%</span>
             </div>
             <Progress
                 value={pct}
                 size="sm"
                 classNames={{
                     track: "bg-zinc-800/60 h-1.5",
-                    indicator: "bg-gradient-to-r from-indigo-500 to-purple-500",
+                    indicator: "bg-gradient-to-r from-teal-500 to-emerald-500",
                 }}
             />
         </div>
@@ -654,7 +654,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                     <Search size={24} />
                 </div>
                 <p className="text-zinc-400 mb-4">Заказ не найден</p>
-                <Button variant="light" className="text-purple-400" onPress={() => router.back()}>
+                <Button variant="light" className="text-emerald-400" onPress={() => router.back()}>
                     Назад
                 </Button>
             </div>
@@ -677,7 +677,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
         !hasExistingProposal;
 
     const inputClasses = {
-        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
         label: "text-zinc-400",
         input: "text-zinc-200",
     };
@@ -691,8 +691,8 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
             {/* ═══ Order header + timeline ═══ */}
             <div className="glass-card rounded-2xl overflow-hidden relative">
                 {/* Decorative background gradient */}
-                <div className="absolute top-0 right-0 w-72 h-72 bg-purple-600/[0.04] rounded-full blur-[80px] pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-600/[0.03] rounded-full blur-[60px] pointer-events-none" />
+                <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-600/[0.04] rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-600/[0.03] rounded-full blur-[60px] pointer-events-none" />
 
                 <div className="relative p-6 space-y-5">
                     <div className="flex items-start justify-between gap-4">
@@ -718,7 +718,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     <Button
                                         size="sm"
                                         variant="light"
-                                        className="text-zinc-500 hover:text-purple-400"
+                                        className="text-zinc-500 hover:text-emerald-400"
                                         startContent={<Pencil size={13} />}
                                         onPress={startEditing}
                                     >
@@ -729,7 +729,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     <>
                                         <Button
                                             size="sm"
-                                            className="bg-purple-600/20 text-purple-300 border border-purple-500/30"
+                                            className="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
                                             startContent={<Save size={14} />}
                                             isLoading={updateOrder.isPending}
                                             onPress={() => { void handleSaveOrder(); }}
@@ -779,7 +779,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                 {isLongDescription && (
                                     <button
                                         type="button"
-                                        className="text-sm font-medium text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+                                        className="text-sm font-medium text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
                                         onClick={() => setIsDescriptionExpanded((prev) => !prev)}
                                     >
                                         {isDescriptionExpanded ? (
@@ -800,8 +800,8 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                         size="sm"
                                         variant="flat"
                                         classNames={{
-                                            base: "bg-purple-500/10 border border-purple-500/15 hover:bg-purple-500/20 hover:border-purple-500/30 hover:shadow-[0_0_8px_rgba(139,92,246,0.15)] transition-all duration-200 cursor-default",
-                                            content: "text-purple-300 text-xs font-medium",
+                                            base: "bg-emerald-500/10 border border-emerald-500/15 hover:bg-emerald-500/20 hover:border-emerald-500/30 hover:shadow-[0_0_8px_rgba(139,92,246,0.15)] transition-all duration-200 cursor-default",
+                                            content: "text-emerald-300 text-xs font-medium",
                                         }}
                                     >
                                         {tag}
@@ -826,7 +826,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                         <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-5">
                             {/* Budget */}
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                                     <Wallet size={18} />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -888,7 +888,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
 
                             {/* Responses count */}
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
                                     <MessageSquare size={18} />
                                 </div>
                                 <div>
@@ -905,13 +905,13 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
             {isOwner && (
                 <div className="space-y-5">
                     {proposalCounters.pending > 0 && (
-                        <div className="sticky top-20 z-20 rounded-xl border border-purple-500/20 bg-zinc-950/90 backdrop-blur p-3 flex items-center justify-between gap-3">
+                        <div className="sticky top-20 z-20 rounded-xl border border-emerald-500/20 bg-zinc-950/90 backdrop-blur p-3 flex items-center justify-between gap-3">
                             <p className="text-sm text-zinc-300">
-                                Новых откликов: <span className="text-purple-300 font-semibold">{proposalCounters.pending}</span>
+                                Новых откликов: <span className="text-emerald-300 font-semibold">{proposalCounters.pending}</span>
                             </p>
                             <Button
                                 size="sm"
-                                className="bg-purple-600/20 text-purple-300 border border-purple-500/25"
+                                className="bg-emerald-600/20 text-emerald-300 border border-emerald-500/25"
                                 onPress={() => setProposalFilter("pending")}
                             >
                                 Разобрать новые
@@ -922,12 +922,12 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                     {/* Section header */}
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                <MessageSquare size={16} className="text-purple-400" />
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                <MessageSquare size={16} className="text-emerald-400" />
                             </div>
                             Отклики
                             {proposals.length > 0 && (
-                                <Chip size="sm" classNames={{ base: "bg-purple-500/15 border border-purple-500/25", content: "text-purple-300 text-xs font-bold" }}>
+                                <Chip size="sm" classNames={{ base: "bg-emerald-500/15 border border-emerald-500/25", content: "text-emerald-300 text-xs font-bold" }}>
                                     {proposals.length}
                                 </Chip>
                             )}
@@ -943,7 +943,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                         type="button"
                                         onClick={() => setSortBy(opt.key)}
                                         className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${sortBy === opt.key
-                                            ? "bg-purple-500/15 text-purple-300 border border-purple-500/25"
+                                            ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25"
                                             : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
                                             }`}
                                     >
@@ -963,7 +963,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     type="button"
                                     onClick={() => setProposalFilter(filter.key)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${proposalFilter === filter.key
-                                        ? "bg-purple-500/15 text-purple-200 border-purple-500/30"
+                                        ? "bg-emerald-500/15 text-emerald-200 border-emerald-500/30"
                                         : "bg-white/[0.01] text-zinc-400 border-white/[0.06] hover:text-zinc-200"
                                         }`}
                                 >
@@ -1023,23 +1023,23 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                         className="animate-fade-in-up"
                                         style={{ animationDelay: `${i * 60}ms` }}
                                     >
-                                        <Card className={`glass-card card-hover-glow transition-all duration-300 ${isBestRecommended ? "ring-1 ring-purple-500/25 shadow-[0_0_24px_rgba(139,92,246,0.08)]" : ""}`}>
+                                        <Card className={`glass-card card-hover-glow transition-all duration-300 ${isBestRecommended ? "ring-1 ring-emerald-500/25 shadow-[0_0_24px_rgba(139,92,246,0.08)]" : ""}`}>
                                             <CardBody className="p-5">
                                                 {/* Best recommended badge */}
                                                 {isBestRecommended && (
-                                                    <div className="flex items-center gap-2 mb-3 pb-3 border-b border-purple-500/10">
+                                                    <div className="flex items-center gap-2 mb-3 pb-3 border-b border-emerald-500/10">
                                                         <Chip
                                                             size="sm"
                                                             startContent={<Star size={11} className="ml-1" />}
                                                             classNames={{
-                                                                base: "bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border border-purple-500/25",
-                                                                content: "text-purple-200 text-xs font-bold",
+                                                                base: "bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/25",
+                                                                content: "text-emerald-200 text-xs font-bold",
                                                             }}
                                                         >
                                                             AI рекомендует
                                                         </Chip>
                                                         {bestRecommendation.score != null && (
-                                                            <span className="text-xs text-purple-400/70">{bestRecommendation.score}% match</span>
+                                                            <span className="text-xs text-emerald-400/70">{bestRecommendation.score}% match</span>
                                                         )}
                                                     </div>
                                                 )}
@@ -1052,9 +1052,9 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                                             showFallback
                                                             name={p.freelancer_name?.charAt(0)?.toUpperCase() ?? ""}
                                                             classNames={{
-                                                                base: `${isBestRecommended ? "bg-purple-600/30 ring-2 ring-purple-500/20" : "bg-purple-600/15"} w-11 h-11`,
-                                                                icon: "text-purple-400",
-                                                                name: "text-purple-300 font-bold text-sm",
+                                                                base: `${isBestRecommended ? "bg-emerald-600/30 ring-2 ring-emerald-500/20" : "bg-emerald-600/15"} w-11 h-11`,
+                                                                icon: "text-emerald-400",
+                                                                name: "text-emerald-300 font-bold text-sm",
                                                             }}
                                                         />
                                                         <div>
@@ -1087,7 +1087,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                                         <Button
                                                             size="sm"
                                                             variant="light"
-                                                            className="text-zinc-400 hover:text-purple-400 h-7 text-xs px-2"
+                                                            className="text-zinc-400 hover:text-emerald-400 h-7 text-xs px-2"
                                                             onPress={() => router.push(`/dashboard/profile/${p.freelancer_id}` as never)}
                                                         >
                                                             Профиль
@@ -1100,17 +1100,17 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
 
                                                 {/* AI Analysis */}
                                                 {p.ai_analysis_for_client && (
-                                                    <div className="rounded-xl bg-indigo-500/[0.07] border border-indigo-500/15 overflow-hidden mb-4">
+                                                    <div className="rounded-xl bg-teal-500/[0.07] border border-teal-500/15 overflow-hidden mb-4">
                                                         <button
                                                             type="button"
-                                                            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-indigo-500/[0.05] transition-colors"
+                                                            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-teal-500/[0.05] transition-colors"
                                                             onClick={() => toggleAIExpanded(p.id)}
                                                         >
-                                                            <span className="text-xs text-indigo-300 font-medium flex items-center gap-1.5">
+                                                            <span className="text-xs text-teal-300 font-medium flex items-center gap-1.5">
                                                                 <Sparkles size={12} />
                                                                 AI-анализ отклика
                                                             </span>
-                                                            {isAIExpanded ? <ChevronUp size={13} className="text-indigo-400" /> : <ChevronDown size={13} className="text-indigo-400" />}
+                                                            {isAIExpanded ? <ChevronUp size={13} className="text-teal-400" /> : <ChevronDown size={13} className="text-teal-400" />}
                                                         </button>
                                                         {isAIExpanded && (
                                                             <div className="px-4 pb-3 animate-fade-in-up" style={{ animationDuration: "0.3s" }}>
@@ -1142,7 +1142,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                                         <Button
                                                             size="sm"
                                                             variant="light"
-                                                            className="text-zinc-500 hover:text-purple-400 ml-auto"
+                                                            className="text-zinc-500 hover:text-emerald-400 ml-auto"
                                                             startContent={<MessageSquare size={13} />}
                                                             onPress={() => router.push("/dashboard/messages")}
                                                         >
@@ -1153,7 +1153,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                                 {p.status === "accepted" && (
                                                     <Button
                                                         size="sm"
-                                                        className="bg-purple-600/15 text-purple-400 border border-purple-500/25 hover:bg-purple-600/25 transition-all"
+                                                        className="bg-emerald-600/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-600/25 transition-all"
                                                         startContent={<MessageSquare size={14} />}
                                                         onPress={() => router.push("/dashboard/messages")}
                                                     >
@@ -1174,7 +1174,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
             {role === "freelancer" && (
                 <div id="respond" className="glass-card rounded-2xl overflow-hidden relative">
                     {/* Decorative gradient */}
-                    <div className="absolute top-0 left-0 w-48 h-48 bg-purple-600/[0.03] rounded-full blur-[60px] pointer-events-none" />
+                    <div className="absolute top-0 left-0 w-48 h-48 bg-emerald-600/[0.03] rounded-full blur-[60px] pointer-events-none" />
 
                     <div className="relative p-6 space-y-5">
                         {submitProposal.isSuccess || hasExistingProposal ? (
@@ -1192,7 +1192,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     )}
                                 </p>
                                 <Button
-                                    className="mt-2 bg-purple-600/15 text-purple-400 hover:bg-purple-600/25 font-medium border border-purple-500/20"
+                                    className="mt-2 bg-emerald-600/15 text-emerald-400 hover:bg-emerald-600/25 font-medium border border-emerald-500/20"
                                     onPress={() => router.push("/dashboard/orders")}
                                 >
                                     Вернуться к маркетплейсу
@@ -1202,8 +1202,8 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                             <>
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                            <Send size={15} className="text-purple-400" />
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                            <Send size={15} className="text-emerald-400" />
                                         </div>
                                         Откликнуться
                                     </h2>
@@ -1214,7 +1214,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     <Button
                                         size="sm"
                                         variant="flat"
-                                        className="bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 hover:shadow-[0_0_12px_rgba(139,92,246,0.1)] transition-all"
+                                        className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20 hover:shadow-[0_0_12px_rgba(139,92,246,0.1)] transition-all"
                                         startContent={<Sparkles size={14} />}
                                         onPress={() => { void handleGenerateProposalWithAI(); }}
                                         isLoading={isGeneratingProposal}
@@ -1224,7 +1224,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     <Button
                                         size="sm"
                                         variant="flat"
-                                        className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20 hover:shadow-[0_0_12px_rgba(99,102,241,0.1)] transition-all"
+                                        className="bg-teal-500/10 text-teal-300 border border-teal-500/20 hover:bg-teal-500/20 hover:shadow-[0_0_12px_rgba(99,102,241,0.1)] transition-all"
                                         startContent={<Zap size={14} />}
                                         onPress={() => { void handleSuggestTermsWithAI(); }}
                                         isLoading={isSuggestingTerms}
@@ -1234,9 +1234,9 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                 </div>
 
                                 {aiHint && (
-                                    <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] px-4 py-3 animate-fade-in-up" style={{ animationDuration: "0.3s" }}>
-                                        <p className="text-xs text-indigo-200 flex items-start gap-2">
-                                            <Sparkles size={13} className="shrink-0 mt-0.5 text-indigo-400" />
+                                    <div className="rounded-xl border border-teal-500/20 bg-teal-500/[0.07] px-4 py-3 animate-fade-in-up" style={{ animationDuration: "0.3s" }}>
+                                        <p className="text-xs text-teal-200 flex items-start gap-2">
+                                            <Sparkles size={13} className="shrink-0 mt-0.5 text-teal-400" />
                                             {aiHint}
                                         </p>
                                     </div>
@@ -1285,7 +1285,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     </div>
                                 )}
                                 <Button
-                                    className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 transition-all"
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-lg shadow-emerald-600/20 hover:shadow-emerald-500/30 transition-all"
                                     onPress={handleSubmitProposal}
                                     isLoading={submitProposal.isPending}
                                     isDisabled={!canSubmitProposal}

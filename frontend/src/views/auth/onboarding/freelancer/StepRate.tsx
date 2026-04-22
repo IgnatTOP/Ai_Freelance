@@ -43,7 +43,7 @@ export const StepRate = () => {
           value={freelancerData.hourlyRate}
           onValueChange={(v) => updateFreelancer({ hourlyRate: v })}
           variant="bordered"
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+          classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
         />
 
         <Textarea
@@ -53,7 +53,7 @@ export const StepRate = () => {
           onValueChange={(v) => updateFreelancer({ bio: v })}
           variant="bordered"
           minRows={4}
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+          classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
         />
 
         <div className="flex gap-2">

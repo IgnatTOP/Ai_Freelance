@@ -22,7 +22,7 @@ export const ActiveOrdersWidget = () => {
             <Card className="glass-card  animate-fade-in-up">
                 <CardBody className="p-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                             <Briefcase size={20} />
                         </div>
                         <h3 className="text-lg font-semibold text-zinc-100">Активные заказы</h3>
@@ -50,7 +50,7 @@ export const ActiveOrdersWidget = () => {
         return (
             <div className="animate-fade-in-up">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                         <Briefcase size={20} />
                     </div>
                     <h3 className="text-lg font-semibold text-zinc-100">Активные заказы</h3>
@@ -63,7 +63,7 @@ export const ActiveOrdersWidget = () => {
                         <Button
                             as={NextLink}
                             href="/dashboard/orders/new"
-                            className="bg-purple-600 text-white shadow-lg glow-sm hover:bg-purple-500 transition-all"
+                            className="bg-[var(--mint-400)] text-[#062219] font-semibold shadow-lg glow-sm hover:bg-[var(--mint-300)] transition-all"
                         >
                             Создать заказ
                         </Button>
@@ -78,7 +78,7 @@ export const ActiveOrdersWidget = () => {
             <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                             <Briefcase size={20} />
                         </div>
                         <h3 className="text-lg font-semibold text-white">Активные заказы</h3>
@@ -88,7 +88,7 @@ export const ActiveOrdersWidget = () => {
                         href="/dashboard/orders"
                         variant="light"
                         size="sm"
-                        className="text-purple-400 hover:text-purple-300"
+                        className="text-emerald-400 hover:text-emerald-300"
                         endContent={<ArrowRight size={14} />}
                     >
                         Все
@@ -102,9 +102,9 @@ export const ActiveOrdersWidget = () => {
                             href={`/dashboard/orders/${order.id}`}
                             className="block group"
                         >
-                            <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/50 hover:bg-zinc-900/80 hover:border-purple-500/30 transition-all duration-200">
+                            <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/50 hover:bg-zinc-900/80 hover:border-emerald-500/30 transition-all duration-200">
                                 <div className="flex items-start justify-between gap-3 mb-2">
-                                    <h4 className="text-sm font-medium text-zinc-200 group-hover:text-purple-300 transition-colors line-clamp-1">
+                                    <h4 className="text-sm font-medium text-zinc-200 group-hover:text-emerald-300 transition-colors line-clamp-1">
                                         {order.title}
                                     </h4>
                                     <div className="shrink-0">
@@ -116,7 +116,7 @@ export const ActiveOrdersWidget = () => {
                                         <FileText size={12} className="text-zinc-600" />
                                         {order.proposals_count} откликов
                                     </div>
-                                    <span className="font-medium text-purple-400/80">
+                                    <span className="font-medium text-emerald-400/80">
                                         ₽{order.budget_max.toLocaleString()}
                                     </span>
                                 </div>

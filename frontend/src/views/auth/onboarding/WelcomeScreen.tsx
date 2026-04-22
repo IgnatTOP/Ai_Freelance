@@ -50,7 +50,7 @@ export const WelcomeScreen = ({ role, onStart }: Props) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6 }}
       >
-        НейроБиржа
+        Филка
       </motion.h1>
 
       {/* Subtitle */}

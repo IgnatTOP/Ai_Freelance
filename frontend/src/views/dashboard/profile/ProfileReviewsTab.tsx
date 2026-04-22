@@ -40,7 +40,7 @@ export const ProfileReviewsTab = ({ reviews }: Props) => {
                     <div key={review.id}>
                         <div className="py-4">
                             <div className="flex items-center gap-3 mb-2">
-                                <Avatar size="sm" showFallback classNames={{ base: "bg-purple-600/20", icon: "text-purple-400" }} />
+                                <Avatar size="sm" showFallback classNames={{ base: "bg-emerald-600/20", icon: "text-emerald-400" }} />
                                 <div className="flex-1">
                                     <span className="text-sm font-medium text-zinc-200">{review.reviewer_name}</span>
                                 </div>

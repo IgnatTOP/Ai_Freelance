@@ -75,7 +75,7 @@ export const Footer = () => (
             {/* Bottom bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8">
                 <p className="text-sm text-zinc-500">
-                    © {new Date().getFullYear()} НейроБиржа. Все права защищены.
+                    © {new Date().getFullYear()} Филка. Все права защищены.
                 </p>
                 <div className="flex items-center gap-4">
                     {SOCIAL_LINKS.map((social) => (

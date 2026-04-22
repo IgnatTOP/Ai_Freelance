@@ -18,7 +18,7 @@ export const ProfileAboutTab = ({ profile, role, isEditing, onStartEdit }: Props
             <div className="glass-card rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
                             <User size={18} />
                         </div>
                         <h3 className="text-lg font-semibold text-white">О себе</h3>
@@ -31,7 +31,7 @@ export const ProfileAboutTab = ({ profile, role, isEditing, onStartEdit }: Props
                         <PenLine size={24} className="mx-auto mb-2 text-zinc-600" />
                         <p className="text-sm text-zinc-500">Напишите пару слов о себе, чтобы выделиться</p>
                         {!isEditing && (
-                            <Button size="sm" variant="flat" className="mt-3 bg-purple-500/10 text-purple-400" onPress={onStartEdit}>
+                            <Button size="sm" variant="flat" className="mt-3 bg-emerald-500/10 text-emerald-400" onPress={onStartEdit}>
                                 Добавить описание
                             </Button>
                         )}
@@ -58,8 +58,8 @@ export const ProfileAboutTab = ({ profile, role, isEditing, onStartEdit }: Props
                                     size="sm"
                                     variant="flat"
                                     classNames={{
-                                        base: "bg-purple-500/10 border border-purple-500/20",
-                                        content: "text-purple-300 text-xs font-medium",
+                                        base: "bg-emerald-500/10 border border-emerald-500/20",
+                                        content: "text-emerald-300 text-xs font-medium",
                                     }}
                                 >
                                     {s}
@@ -71,7 +71,7 @@ export const ProfileAboutTab = ({ profile, role, isEditing, onStartEdit }: Props
                             <Code2 size={24} className="mx-auto mb-2 text-zinc-600" />
                             <p className="text-sm text-zinc-500">Добавьте навыки, чтобы заказчики находили вас быстрее</p>
                             {!isEditing && (
-                                <Button size="sm" variant="flat" className="mt-3 bg-purple-500/10 text-purple-400" onPress={onStartEdit}>
+                                <Button size="sm" variant="flat" className="mt-3 bg-emerald-500/10 text-emerald-400" onPress={onStartEdit}>
                                     Указать навыки
                                 </Button>
                             )}

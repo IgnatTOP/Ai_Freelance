@@ -12,7 +12,7 @@ const TESTIMONIALS = [
         role: "CEO в TechStart",
         initials: "АП",
         content:
-            "НейроБиржа полностью изменила наш подход к поиску разработчиков. AI-подбор сэкономил нам десятки часов. Нашли идеального фрилансера за 2 дня вместо обычных 2 недель.",
+            "Филка полностью изменила наш подход к поиску разработчиков. AI-подбор сэкономил нам десятки часов. Нашли идеального фрилансера за 2 дня вместо обычных 2 недель.",
         rating: 5,
     },
     {
@@ -71,7 +71,7 @@ export const TestimonialsSection = () => {
                 <SectionHeading
                     badge="Отзывы"
                     title="Что говорят наши пользователи"
-                    subtitle="Реальные истории от клиентов и фрилансеров, которые уже пользуются НейроБиржей."
+                    subtitle="Реальные истории от клиентов и фрилансеров, которые уже пользуются Филкой."
                 />
 
                 <div
@@ -97,7 +97,7 @@ export const TestimonialsSection = () => {
                                                 <div className="flex items-center justify-center">
                                                     <StarRating rating={t.rating} />
                                                 </div>
-                                                <Quote size={32} className="text-purple-500/20 absolute top-6 right-6" />
+                                                <Quote size={32} className="text-emerald-500/20 absolute top-6 right-6" />
                                                 <p className="text-zinc-300 text-lg md:text-xl leading-relaxed italic max-w-2xl">
                                                     &ldquo;{t.content}&rdquo;
                                                 </p>
@@ -106,7 +106,7 @@ export const TestimonialsSection = () => {
                                                         name={t.initials}
                                                         size="md"
                                                         classNames={{
-                                                            base: "bg-purple-500/15 text-purple-400 border border-purple-500/20",
+                                                            base: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
                                                             name: "font-bold",
                                                         }}
                                                     />
@@ -129,7 +129,7 @@ export const TestimonialsSection = () => {
                                     key={i}
                                     onClick={() => setCurrentIndex(i)}
                                     className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === currentIndex
-                                        ? "bg-purple-500 w-8"
+                                        ? "bg-emerald-500 w-8"
                                         : "bg-zinc-700 hover:bg-zinc-500"
                                         }`}
                                 />

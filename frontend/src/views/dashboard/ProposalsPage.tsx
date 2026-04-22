@@ -161,7 +161,7 @@ export const ProposalsPage = () => {
                     description={role === "client" ? "Опубликуйте заказ, чтобы получить отклики" : "Перейдите в маркетплейс и найдите подходящий заказ"}
                     action={
                         <Button
-                            className="bg-purple-600 text-white shadow-lg glow-sm hover:bg-purple-500 transition-all font-medium"
+                            className="bg-emerald-600 text-white shadow-lg glow-sm hover:bg-emerald-500 transition-all font-medium"
                             onPress={() => router.push("/dashboard/orders")}
                         >
                             {role === "client" ? "Мои заказы" : "Маркетплейс"}
@@ -179,11 +179,11 @@ export const ProposalsPage = () => {
                                     onClick={() => router.push(`/dashboard/orders/${group.orderId}`)}
                                 >
                                     <p className="text-sm text-zinc-500">Заказ</p>
-                                    <p className="text-base font-semibold text-zinc-100 hover:text-purple-400 transition-colors">
+                                    <p className="text-base font-semibold text-zinc-100 hover:text-emerald-400 transition-colors">
                                         {group.orderTitle}
                                     </p>
                                 </button>
-                                <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                     {group.items.length} откликов
                                 </span>
                             </div>
@@ -191,13 +191,13 @@ export const ProposalsPage = () => {
                                 {group.items.map((p, i) => (
                                     <Card
                                         key={p.id}
-                                        className="glass-card hover:border-purple-500/20 transition-all duration-200 animate-fade-in-up"
+                                        className="glass-card hover:border-emerald-500/20 transition-all duration-200 animate-fade-in-up"
                                         style={{ animationDelay: `${(groupIdx * 4 + i) * 60}ms` }}
                                     >
                                         <CardBody className="p-5">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <Avatar size="sm" showFallback classNames={{ base: "bg-purple-600/20", icon: "text-purple-400" }} />
+                                                    <Avatar size="sm" showFallback classNames={{ base: "bg-emerald-600/20", icon: "text-emerald-400" }} />
                                                     <div>
                                                         <p className="text-sm font-medium text-zinc-200">{p.freelancer_name ?? "Фрилансер"}</p>
                                                         <p className="text-xs text-zinc-500">{formatCurrency(p.proposed_budget)} · {formatTerm(p)}</p>
@@ -228,14 +228,14 @@ export const ProposalsPage = () => {
                     {proposals.map((p, i) => (
                         <Card
                             key={p.id}
-                            className="glass-card hover:border-purple-500/20 transition-all duration-200 animate-fade-in-up"
+                            className="glass-card hover:border-emerald-500/20 transition-all duration-200 animate-fade-in-up"
                             style={{ animationDelay: `${i * 60}ms` }}
                         >
                             <CardBody className="p-5">
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="min-w-0">
                                         <p className="text-[11px] uppercase tracking-wide text-zinc-500 mb-1">Заказ</p>
-                                        <Link href={`/dashboard/orders/${p.order_id}`} className="text-base font-semibold text-zinc-100 hover:text-purple-400 block truncate">
+                                        <Link href={`/dashboard/orders/${p.order_id}`} className="text-base font-semibold text-zinc-100 hover:text-emerald-400 block truncate">
                                             {p.order_title ?? `Заказ #${p.order_id.slice(0, 8)}`}
                                         </Link>
                                         <p className="text-xs text-zinc-500 mt-1">{formatOrderBudget(p)} · {formatOrderDeadline(p)}</p>

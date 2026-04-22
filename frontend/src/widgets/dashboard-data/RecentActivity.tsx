@@ -6,7 +6,7 @@ import { type ReactNode, useState } from "react";
 import { Button, Link } from "@heroui/react";
 
 const TYPE_ICONS: Record<string, ReactNode> = {
-    order: <FileText size={16} className="text-purple-400" />,
+    order: <FileText size={16} className="text-emerald-400" />,
     proposal: <MessageSquare size={16} className="text-blue-400" />,
     message: <MessageSquare size={16} className="text-green-400" />,
     payment: <CheckCircle size={16} className="text-emerald-400" />,
@@ -68,12 +68,12 @@ export const RecentActivity = () => {
     return (
         <div className="glass-card rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Clock size={18} className="text-purple-400" />
+                <Clock size={18} className="text-emerald-400" />
                 Последняя активность
             </h3>
             {activities.length === 0 ? (
                 <div className="text-center py-8">
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mx-auto mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto mb-3">
                         <Clock size={20} />
                     </div>
                     <p className="text-zinc-500 text-sm mb-3">Пока нет активности</p>
@@ -82,7 +82,7 @@ export const RecentActivity = () => {
                         href="/dashboard/orders"
                         size="sm"
                         variant="flat"
-                        className="text-purple-400"
+                        className="text-emerald-400"
                         endContent={<ArrowRight size={14} />}
                     >
                         Начать работу
@@ -98,7 +98,7 @@ export const RecentActivity = () => {
                                 className="flex gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-colors animate-fade-in-up group"
                                 style={{ animationDelay: `${i * 80}ms` }}
                             >
-                                <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 group-hover:bg-purple-500/20 transition-colors">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 group-hover:bg-emerald-500/20 transition-colors">
                                     {TYPE_ICONS[item.type] ?? TYPE_ICONS.default}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -115,7 +115,7 @@ export const RecentActivity = () => {
                         <Button
                             size="sm"
                             variant="light"
-                            className="text-purple-400 hover:text-purple-300 mt-3 w-full"
+                            className="text-emerald-400 hover:text-emerald-300 mt-3 w-full"
                             onPress={() => setVisibleCount((c) => c + STEP)}
                         >
                             Показать ещё

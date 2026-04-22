@@ -69,7 +69,7 @@ export const WelcomeSection = () => {
     });
 
     return (
-        <div className="glass-card rounded-2xl overflow-hidden animate-fade-in-up" style={{ borderLeft: "3px solid rgba(139,92,246,0.4)" }}>
+        <div className="glass-card rounded-2xl overflow-hidden animate-fade-in-up" style={{ borderLeft: "3px solid var(--mint-400)" }}>
             <div className="p-6 md:p-8">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     {/* Left: Greeting */}
@@ -106,13 +106,14 @@ export const WelcomeSection = () => {
                                 <Skeleton className="h-5 w-64 rounded-lg" classNames={{ base: "bg-zinc-800", content: "bg-zinc-700" }} />
                             ) : aiInsight ? (
                                 <>
-                                    <Sparkles size={14} className="text-purple-400 shrink-0" />
+                                    <Sparkles size={14} className="shrink-0" style={{ color: "var(--mint-300)" }} />
                                     <Button
                                         as={Link}
                                         href={aiInsight.href}
                                         variant="light"
                                         size="sm"
-                                        className="text-purple-400 hover:text-purple-300 p-0 h-auto min-w-0 text-sm font-medium"
+                                        className="p-0 h-auto min-w-0 text-sm font-medium"
+                                        style={{ color: "var(--mint-300)" }}
                                         endContent={<ArrowRight size={14} />}
                                     >
                                         {aiInsight.text}
@@ -126,16 +127,14 @@ export const WelcomeSection = () => {
                     <div className="lg:w-72 shrink-0">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-zinc-400">Прогресс профиля</span>
-                            <span className="text-sm font-semibold text-purple-400">{percentage}%</span>
+                            <span className="text-sm font-semibold" style={{ color: "var(--mint-300)" }}>{percentage}%</span>
                         </div>
                         <Progress
                             size="sm"
                             value={percentage}
                             classNames={{
                                 track: "bg-zinc-800",
-                                indicator: percentage === 100
-                                    ? "bg-gradient-to-r from-emerald-500 to-green-400"
-                                    : "bg-gradient-to-r from-purple-600 to-indigo-500",
+                                indicator: "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600",
                             }}
                         />
                         {missingSteps.length > 0 && (

@@ -29,7 +29,7 @@ export const StepExperience = () => {
           value={freelancerData.age}
           onValueChange={(v) => updateFreelancer({ age: v })}
           variant="bordered"
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+          classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
         />
         <Input
           label="Опыт (лет)"
@@ -38,7 +38,7 @@ export const StepExperience = () => {
           value={freelancerData.experienceYears}
           onValueChange={(v) => updateFreelancer({ experienceYears: v })}
           variant="bordered"
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+          classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
         />
       </div>
 

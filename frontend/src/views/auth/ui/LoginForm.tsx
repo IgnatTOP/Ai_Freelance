@@ -56,7 +56,7 @@ export const LoginForm = () => {
                 errorMessage={phoneInvalid ? "Введите корректный номер телефона" : undefined}
                 classNames={{
                     inputWrapper:
-                        "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                        "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                     label: "text-zinc-400",
                     input: "text-zinc-200 placeholder:text-zinc-600",
                 }}
@@ -84,7 +84,7 @@ export const LoginForm = () => {
                 }
                 classNames={{
                     inputWrapper:
-                        "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                        "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                     label: "text-zinc-400",
                     input: "text-zinc-200 placeholder:text-zinc-600",
                 }}
@@ -111,7 +111,7 @@ export const LoginForm = () => {
                 size="lg"
                 isLoading={loginMutation.isPending}
                 isDisabled={!canSubmit}
-                className="bg-purple-600 text-white font-semibold glow-sm hover:bg-purple-500 transition-all duration-300 mt-1"
+                className="bg-emerald-600 text-white font-semibold glow-sm hover:bg-emerald-500 transition-all duration-300 mt-1"
                 endContent={!loginMutation.isPending && <LogIn size={18} />}
             >
                 Войти
@@ -121,7 +121,7 @@ export const LoginForm = () => {
                 Нет аккаунта?{" "}
                 <Link
                     href="/register"
-                    className="text-purple-400 hover:text-purple-300 text-sm"
+                    className="text-emerald-400 hover:text-emerald-300 text-sm"
                 >
                     Зарегистрироваться
                 </Link>

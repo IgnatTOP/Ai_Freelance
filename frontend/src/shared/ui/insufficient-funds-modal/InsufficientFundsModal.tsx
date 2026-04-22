@@ -108,7 +108,7 @@ export const InsufficientFundsModal = ({
                 ) : step === "deposit" ? (
                     <>
                         <ModalHeader className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                                 <ArrowDownLeft size={18} />
                             </div>
                             <div>
@@ -128,7 +128,7 @@ export const InsufficientFundsModal = ({
                                 variant="bordered"
                                 startContent={<span className="text-zinc-500 text-sm">₽</span>}
                                 classNames={{
-                                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                                     label: "text-zinc-400",
                                     input: "text-zinc-200 text-lg font-semibold",
                                 }}
@@ -143,10 +143,10 @@ export const InsufficientFundsModal = ({
                                         className="cursor-pointer transition-all"
                                         classNames={{
                                             base: amount === String(qa)
-                                                ? "bg-purple-500/20 border border-purple-500/40"
+                                                ? "bg-emerald-500/20 border border-emerald-500/40"
                                                 : "bg-zinc-800/60 border border-zinc-700/30 hover:bg-zinc-800 hover:border-zinc-600/50",
                                             content: amount === String(qa)
-                                                ? "text-purple-300 font-medium"
+                                                ? "text-emerald-300 font-medium"
                                                 : "text-zinc-400 font-medium",
                                         }}
                                         onClick={() => setAmount(String(qa))}
@@ -166,7 +166,7 @@ export const InsufficientFundsModal = ({
                                 Назад
                             </Button>
                             <Button
-                                className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-500/20"
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-lg shadow-emerald-500/20"
                                 onPress={handleDeposit}
                                 isLoading={deposit.isPending}
                                 isDisabled={!isValid}
@@ -208,7 +208,7 @@ export const InsufficientFundsModal = ({
                                 Закрыть
                             </Button>
                             <Button
-                                className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-500/20"
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-lg shadow-emerald-500/20"
                                 onPress={() => setStep("deposit")}
                                 startContent={<ArrowDownLeft size={16} />}
                             >

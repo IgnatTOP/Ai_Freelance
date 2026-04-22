@@ -28,7 +28,7 @@ export const StepName = () => {
         value={freelancerData.name}
         onValueChange={(v) => updateFreelancer({ name: v })}
         variant="bordered"
-        classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+        classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
       />
 
       <div className="mt-8 flex justify-end">

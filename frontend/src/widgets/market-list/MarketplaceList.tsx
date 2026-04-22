@@ -263,7 +263,7 @@ export const MarketplaceList = () => {
                             <span className="inline-block h-4 w-32 bg-zinc-800 rounded animate-pulse" />
                         ) : (
                             <>
-                                Найдено <span className="text-purple-400 font-semibold">{total}</span> заказов ·{" "}
+                                Найдено <span className="text-emerald-400 font-semibold">{total}</span> заказов ·{" "}
                                 <span className="text-zinc-300">{addedLastHour}</span> добавлено за час
                             </>
                         )}
@@ -275,7 +275,7 @@ export const MarketplaceList = () => {
                         <button
                             type="button"
                             onClick={() => setViewMode("list")}
-                            className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-purple-600/20 text-purple-400" : "text-zinc-500 hover:text-zinc-300"}`}
+                            className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-emerald-600/20 text-emerald-400" : "text-zinc-500 hover:text-zinc-300"}`}
                             aria-label="Список"
                         >
                             <List size={14} />
@@ -283,7 +283,7 @@ export const MarketplaceList = () => {
                         <button
                             type="button"
                             onClick={() => setViewMode("grid")}
-                            className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-purple-600/20 text-purple-400" : "text-zinc-500 hover:text-zinc-300"}`}
+                            className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-emerald-600/20 text-emerald-400" : "text-zinc-500 hover:text-zinc-300"}`}
                             aria-label="Сетка"
                         >
                             <LayoutGrid size={14} />
@@ -303,7 +303,7 @@ export const MarketplaceList = () => {
                     <Button
                         size="sm"
                         variant="flat"
-                        className={`${showFilters ? "text-purple-400" : "text-zinc-400"}`}
+                        className={`${showFilters ? "text-emerald-400" : "text-zinc-400"}`}
                         startContent={<SlidersHorizontal size={14} />}
                         onPress={() => setShowFilters((v) => !v)}
                     >
@@ -343,7 +343,7 @@ export const MarketplaceList = () => {
                             startContent={<Search size={16} className="text-zinc-500" />}
                             variant="bordered"
                             classNames={{
-                                inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
+                                inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40",
                                 input: "text-zinc-200 placeholder:text-zinc-600",
                             }}
                             className="flex-1"
@@ -357,7 +357,7 @@ export const MarketplaceList = () => {
                             variant="bordered"
                             startContent={<Filter size={16} className="text-zinc-500" />}
                             classNames={{
-                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
+                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40",
                                 value: "text-zinc-200",
                             }}
                             className="sm:w-52"
@@ -376,7 +376,7 @@ export const MarketplaceList = () => {
                             variant="bordered"
                             startContent={<ArrowUpDown size={16} className="text-zinc-500" />}
                             classNames={{
-                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
+                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40",
                                 value: "text-zinc-200",
                             }}
                             className="sm:w-48"
@@ -395,7 +395,7 @@ export const MarketplaceList = () => {
                             variant="bordered"
                             startContent={<Clock size={16} className="text-zinc-500" />}
                             classNames={{
-                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
+                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40",
                                 value: "text-zinc-200",
                             }}
                             className="sm:w-48"
@@ -415,7 +415,7 @@ export const MarketplaceList = () => {
                             variant="bordered"
                             startContent={<Calendar size={16} className="text-zinc-500" />}
                             classNames={{
-                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
+                                trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40",
                                 value: "text-zinc-200",
                             }}
                             className="sm:w-48"
@@ -443,8 +443,8 @@ export const MarketplaceList = () => {
                             classNames={{
                                 label: "text-zinc-400 text-sm",
                                 value: "text-zinc-300 text-sm",
-                                filler: "bg-purple-600",
-                                thumb: "bg-purple-500 border-purple-600",
+                                filler: "bg-emerald-600",
+                                thumb: "bg-emerald-500 border-emerald-600",
                             }}
                         />
                     </div>
@@ -498,7 +498,7 @@ export const MarketplaceList = () => {
                                     <div className="flex items-start justify-between gap-3 mb-2">
                                         <NextLink
                                             href={`/dashboard/orders/${order.id}`}
-                                            className="text-base font-semibold text-zinc-200 line-clamp-1 hover:text-purple-300 transition-colors flex-1"
+                                            className="text-base font-semibold text-zinc-200 line-clamp-1 hover:text-emerald-300 transition-colors flex-1"
                                         >
                                             {order.title}
                                         </NextLink>
@@ -531,7 +531,7 @@ export const MarketplaceList = () => {
                                         </div>
                                     )}
                                     <div className="flex items-center gap-3 flex-wrap">
-                                        <span className="text-sm font-medium text-purple-400">
+                                        <span className="text-sm font-medium text-emerald-400">
                                             ₽{order.budget_min.toLocaleString()} – ₽{order.budget_max.toLocaleString()}
                                         </span>
 
@@ -557,8 +557,8 @@ export const MarketplaceList = () => {
                                                 size="sm"
                                                 variant="flat"
                                                 classNames={{
-                                                    base: "bg-purple-500/10 border-purple-500/20",
-                                                    content: "text-purple-300 text-xs",
+                                                    base: "bg-emerald-500/10 border-emerald-500/20",
+                                                    content: "text-emerald-300 text-xs",
                                                 }}
                                             >
                                                 {tag}
@@ -592,7 +592,7 @@ export const MarketplaceList = () => {
                                 showControls
                                 classNames={{
                                     item: "bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700 border-none",
-                                    cursor: "bg-purple-600 text-white font-semibold shadow-lg shadow-purple-500/30",
+                                    cursor: "bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-500/30",
                                     prev: "bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700",
                                     next: "bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700",
                                 }}

@@ -109,7 +109,7 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                                 description={numericAmount > available ? "Сумма превышает доступный баланс" : undefined}
                                 isInvalid={numericAmount > available}
                                 classNames={{
-                                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                                     label: "text-zinc-400",
                                     input: "text-zinc-200 text-lg font-semibold",
                                 }}
@@ -123,7 +123,7 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                                     onValueChange={(v) => setCardLast4(v.replace(/\D/g, "").slice(0, 4))}
                                     variant="bordered"
                                     classNames={{
-                                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                                         label: "text-zinc-400",
                                         input: "text-zinc-200",
                                     }}
@@ -135,7 +135,7 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                                     onValueChange={setBankName}
                                     variant="bordered"
                                     classNames={{
-                                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+                                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
                                         label: "text-zinc-400",
                                         input: "text-zinc-200",
                                     }}

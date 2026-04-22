@@ -53,11 +53,11 @@ const FEATURES = [
 /* ── Decorative illustration replacement ── */
 const FeaturesIllustration = () => (
     <div className="relative w-full max-w-[380px]">
-        <div className="absolute -inset-8 bg-purple-600/[0.05] blur-[60px] rounded-full" />
+        <div className="absolute -inset-8 bg-emerald-600/[0.05] blur-[60px] rounded-full" />
         <div className="relative glass-card rounded-2xl p-6 space-y-4">
             {/* Feature preview stack */}
             {[
-                { emoji: "🤖", label: "AI-подбор", color: "bg-purple-500/10 border-purple-500/20 text-purple-300" },
+                { emoji: "🤖", label: "AI-подбор", color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" },
                 { emoji: "🔒", label: "Escrow-защита", color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" },
                 { emoji: "⚡", label: "Мгновенные выплаты", color: "bg-amber-500/10 border-amber-500/20 text-amber-300" },
             ].map((item, i) => (

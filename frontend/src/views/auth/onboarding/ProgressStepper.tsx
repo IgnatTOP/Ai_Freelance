@@ -22,9 +22,9 @@ export const ProgressStepper = ({ steps, currentStep }: Props) => (
             <motion.div
               className={`relative flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors ${
                 isCompleted
-                  ? "border-purple-500 bg-purple-500 text-white"
+                  ? "border-emerald-500 bg-emerald-500 text-white"
                   : isActive
-                    ? "border-purple-500 bg-purple-500/20 text-purple-300"
+                    ? "border-emerald-500 bg-emerald-500/20 text-emerald-300"
                     : "border-zinc-700 bg-zinc-800/50 text-zinc-500"
               }`}
               animate={isActive ? { scale: 1.15 } : { scale: 1 }}
@@ -32,7 +32,7 @@ export const ProgressStepper = ({ steps, currentStep }: Props) => (
             >
               {isActive && (
                 <motion.div
-                  className="absolute inset-0 rounded-full border-2 border-purple-400"
+                  className="absolute inset-0 rounded-full border-2 border-emerald-400"
                   animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
@@ -46,7 +46,7 @@ export const ProgressStepper = ({ steps, currentStep }: Props) => (
             <span
               className={`mt-1.5 hidden text-[10px] sm:block ${
                 isActive
-                  ? "text-purple-300"
+                  ? "text-emerald-300"
                   : isCompleted
                     ? "text-zinc-400"
                     : "text-zinc-600"
@@ -60,7 +60,7 @@ export const ProgressStepper = ({ steps, currentStep }: Props) => (
           {i < steps.length - 1 && (
             <div className="mx-1 h-0.5 w-6 sm:w-10 overflow-hidden rounded-full bg-zinc-800">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
                 initial={{ width: "0%" }}
                 animate={{ width: isCompleted ? "100%" : "0%" }}
                 transition={{ duration: 0.4, ease: "easeOut" }}

@@ -10,7 +10,7 @@ type Props = {
 
 export const AIStreamingText = ({ text, isStreaming, className = "" }: Props) => (
   <div
-    className={`relative rounded-xl border border-purple-500/20 bg-purple-500/5 p-4 text-sm leading-relaxed text-zinc-200 ${className}`}
+    className={`relative rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm leading-relaxed text-zinc-200 ${className}`}
   >
     <motion.span
       initial={{ opacity: 0 }}
@@ -20,7 +20,7 @@ export const AIStreamingText = ({ text, isStreaming, className = "" }: Props) =>
       {text}
     </motion.span>
     {isStreaming && (
-      <span className="ml-0.5 inline-block h-4 w-[2px] animate-blink-cursor bg-purple-400" />
+      <span className="ml-0.5 inline-block h-4 w-[2px] animate-blink-cursor bg-emerald-400" />
     )}
   </div>
 );

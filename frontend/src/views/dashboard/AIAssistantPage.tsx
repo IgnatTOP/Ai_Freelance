@@ -37,7 +37,7 @@ const renderInline = (text: string, keyPrefix: string): React.ReactNode[] => {
         if (match[1]) {
             parts.push(<strong key={`${keyPrefix}-b${idx}`} className="font-semibold text-zinc-100">{match[1]}</strong>);
         } else if (match[2]) {
-            parts.push(<code key={`${keyPrefix}-c${idx}`} className="bg-zinc-800 text-purple-300 px-1.5 py-0.5 rounded text-xs font-mono">{match[2]}</code>);
+            parts.push(<code key={`${keyPrefix}-c${idx}`} className="bg-zinc-800 text-emerald-300 px-1.5 py-0.5 rounded text-xs font-mono">{match[2]}</code>);
         }
         lastIndex = match.index + match[0].length;
         idx++;
@@ -60,7 +60,7 @@ const renderMarkdown = (text: string) => {
         if (/^[-•]\s/.test(line)) {
             elements.push(
                 <div key={i} className="flex gap-2 ml-1">
-                    <span className="text-purple-400 mt-0.5 shrink-0">•</span>
+                    <span className="text-emerald-400 mt-0.5 shrink-0">•</span>
                     <span>{renderInline(line.replace(/^[-•]\s/, ""), `${i}`)}</span>
                 </div>
             );
@@ -72,7 +72,7 @@ const renderMarkdown = (text: string) => {
         if (numMatch) {
             elements.push(
                 <div key={i} className="flex gap-2 ml-1">
-                    <span className="text-purple-400 font-medium shrink-0 tabular-nums w-5 text-right">{numMatch[1]}.</span>
+                    <span className="text-emerald-400 font-medium shrink-0 tabular-nums w-5 text-right">{numMatch[1]}.</span>
                     <span>{renderInline(numMatch[2] ?? "", `${i}`)}</span>
                 </div>
             );
@@ -168,8 +168,8 @@ export const AIAssistantPage = () => {
                 <ScrollShadow ref={scrollRef} className="flex-1 p-6 space-y-4 overflow-y-auto scrollbar-styled">
                     {messages.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-full gap-6">
-                            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                <Sparkles size={28} className="text-purple-400" />
+                            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                <Sparkles size={28} className="text-emerald-400" />
                             </div>
                             <div className="text-center">
                                 <h3 className="text-lg font-semibold text-white mb-2">Чем могу помочь?</h3>
@@ -181,7 +181,7 @@ export const AIAssistantPage = () => {
                                         key={s}
                                         variant="bordered"
                                         size="lg"
-                                        className="cursor-pointer hover:bg-purple-600/15 hover:border-purple-500/40 hover:text-purple-300 hover:shadow-[0_0_12px_rgba(168,85,247,0.15)] transition-all duration-300 border-zinc-700/60 text-zinc-300 px-1 animate-fade-in-up"
+                                        className="cursor-pointer hover:bg-emerald-600/15 hover:border-emerald-500/40 hover:text-emerald-300 hover:shadow-[0_0_12px_rgba(168,85,247,0.15)] transition-all duration-300 border-zinc-700/60 text-zinc-300 px-1 animate-fade-in-up"
                                         style={{ animationDelay: `${i * 120}ms` }}
                                         onClick={() => { void handleSend(s); }}
                                     >
@@ -195,14 +195,14 @@ export const AIAssistantPage = () => {
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                             {msg.role === "assistant" && (
-                                <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 mt-1">
-                                    <Bot size={16} className="text-purple-400" />
+                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
+                                    <Bot size={16} className="text-emerald-400" />
                                 </div>
                             )}
                             <div className="max-w-[75%]">
                                 <div
                                     className={`rounded-2xl px-4 py-3 ${msg.role === "user"
-                                        ? "bg-purple-600/20 border border-purple-500/20 text-zinc-200"
+                                        ? "bg-emerald-600/20 border border-emerald-500/20 text-zinc-200"
                                         : "bg-zinc-800/50 border border-zinc-700/30 text-zinc-300"
                                         }`}
                                 >
@@ -224,14 +224,14 @@ export const AIAssistantPage = () => {
 
                     {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
                         <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                <Bot size={16} className="text-purple-400" />
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                <Bot size={16} className="text-emerald-400" />
                             </div>
                             <div className="bg-zinc-800/50 border border-zinc-700/30 rounded-2xl px-4 py-3">
                                 <div className="flex gap-1.5">
-                                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" />
-                                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
-                                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
+                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" />
+                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
+                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
                                 </div>
                             </div>
                         </div>
@@ -249,7 +249,7 @@ export const AIAssistantPage = () => {
                             onKeyDown={handleKeyDown}
                             variant="bordered"
                             classNames={{
-                                inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
+                                inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40",
                                 input: "text-zinc-200 placeholder:text-zinc-600",
                             }}
                             className="flex-1"
@@ -260,7 +260,7 @@ export const AIAssistantPage = () => {
                                 <Square size={16} />
                             </Button>
                         ) : (
-                            <Button isIconOnly className="bg-purple-600 text-white hover:bg-purple-500" onPress={() => { void handleSend(); }} aria-label="Отправить">
+                            <Button isIconOnly className="bg-emerald-600 text-white hover:bg-emerald-500" onPress={() => { void handleSend(); }} aria-label="Отправить">
                                 <Send size={18} />
                             </Button>
                         )}

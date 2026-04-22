@@ -37,7 +37,7 @@ const ClientOrders = () => {
                         <Button
                             as={NextLink}
                             href="/dashboard/orders/new"
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-500/20"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-lg shadow-emerald-500/20"
                             startContent={<Plus size={18} />}
                             radius="full"
                         >
@@ -61,7 +61,7 @@ const ClientOrders = () => {
                     description="Создайте первый заказ, чтобы начать получать отклики от фрилансеров"
                     action={
                         <Button
-                            className="bg-purple-600 text-white shadow-lg glow-sm hover:bg-purple-500 transition-all font-medium"
+                            className="bg-emerald-600 text-white shadow-lg glow-sm hover:bg-emerald-500 transition-all font-medium"
                             onPress={() => router.push("/dashboard/orders/new")}
                         >
                             Создать заказ
@@ -94,7 +94,7 @@ const ClientOrders = () => {
                                 <TableRow key={order.id} className="hover:bg-white/[0.02] cursor-pointer group" onClick={() => router.push(`/dashboard/orders/${order.id}`)}>
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
-                                            <span className="font-semibold text-zinc-200 group-hover:text-purple-400 transition-colors line-clamp-1">{order.title}</span>
+                                            <span className="font-semibold text-zinc-200 group-hover:text-emerald-400 transition-colors line-clamp-1">{order.title}</span>
                                             <span className="text-sm font-medium text-emerald-400">₽{order.budget_min.toLocaleString()} – ₽{order.budget_max.toLocaleString()}</span>
                                         </div>
                                     </TableCell>
@@ -103,7 +103,7 @@ const ClientOrders = () => {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <span className={`text-sm font-medium px-2 py-0.5 rounded-full ${hasProposals ? "bg-purple-500/20 text-purple-300" : "bg-zinc-800 text-zinc-500"}`}>
+                                            <span className={`text-sm font-medium px-2 py-0.5 rounded-full ${hasProposals ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800 text-zinc-500"}`}>
                                                 {order.proposals_count}
                                             </span>
                                             {hasProposals && <span className="text-xs text-zinc-500">новые</span>}
@@ -119,7 +119,7 @@ const ClientOrders = () => {
                                                     isIconOnly
                                                     variant="light"
                                                     size="sm"
-                                                    className="text-zinc-400 hover:text-purple-400"
+                                                    className="text-zinc-400 hover:text-emerald-400"
                                                     onPress={() => router.push(`/dashboard/orders/${order.id}`)}
                                                 >
                                                     <Eye size={18} />
@@ -147,7 +147,7 @@ export const OrdersPage = () => {
                     title="Маркетплейс"
                     description="Найдите подходящие заказы"
                     action={
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                             <ShoppingBag size={20} />
                         </div>
                     }

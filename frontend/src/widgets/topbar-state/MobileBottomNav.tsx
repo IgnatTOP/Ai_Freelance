@@ -41,7 +41,7 @@ export const MobileBottomNav = () => {
             <NextLink
               key={item.href}
               href={item.href as never}
-              className={`flex flex-col items-center justify-center rounded-lg py-2 text-[10px] ${isActive ? "bg-violet-500/20 text-zinc-100" : "text-zinc-400"
+              className={`flex flex-col items-center justify-center rounded-lg py-2 text-[10px] ${isActive ? "bg-emerald-500/20 text-zinc-100" : "text-zinc-400"
                 }`}
             >
               <Icon size={16} />

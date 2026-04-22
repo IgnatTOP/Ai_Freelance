@@ -7,8 +7,8 @@ import type { RealtimeToastType } from "@/shared/store/realtime.store";
 import { useRealtimeStore } from "@/shared/store/realtime.store";
 
 const TOAST_STYLE: Record<RealtimeToastType, { border: string; icon: ReactNode }> = {
-  message: { border: "border-violet-500/40", icon: <MessageSquare size={14} className="text-violet-300" /> },
-  proposal: { border: "border-indigo-500/40", icon: <ClipboardList size={14} className="text-indigo-300" /> },
+  message: { border: "border-emerald-500/40", icon: <MessageSquare size={14} className="text-emerald-300" /> },
+  proposal: { border: "border-teal-500/40", icon: <ClipboardList size={14} className="text-teal-300" /> },
   order: { border: "border-blue-500/40", icon: <Bell size={14} className="text-blue-300" /> },
   balance: { border: "border-amber-500/40", icon: <Wallet size={14} className="text-amber-300" /> },
   review: { border: "border-yellow-500/40", icon: <Star size={14} className="text-yellow-300" /> },

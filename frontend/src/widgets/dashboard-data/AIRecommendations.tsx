@@ -12,18 +12,18 @@ const SearchingState = () => (
         {/* Animated icon header */}
         <div className="flex flex-col items-center py-4 gap-3">
             <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 animate-pulse">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-300 animate-pulse">
                     <Search size={20} />
                 </div>
                 {/* Orbiting sparkles */}
                 <Sparkles
                     size={14}
-                    className="absolute -top-1 -right-1 text-purple-400 animate-bounce"
+                    className="absolute -top-1 -right-1 text-emerald-300 animate-bounce"
                     style={{ animationDelay: "0ms", animationDuration: "1.4s" }}
                 />
                 <Sparkles
                     size={10}
-                    className="absolute -bottom-1 -left-1 text-indigo-400 animate-bounce"
+                    className="absolute -bottom-1 -left-1 text-emerald-400 animate-bounce"
                     style={{ animationDelay: "400ms", animationDuration: "1.4s" }}
                 />
             </div>
@@ -81,7 +81,7 @@ export const AIRecommendations = () => {
         return (
             <div className="glass-card rounded-2xl p-6 overflow-hidden">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Sparkles size={18} className="text-purple-400" />
+                    <Sparkles size={18} className="text-emerald-300" />
                     {heading}
                 </h3>
                 <SearchingState />
@@ -93,14 +93,14 @@ export const AIRecommendations = () => {
         <div className="glass-card rounded-2xl p-6 overflow-hidden relative">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Sparkles size={18} className="text-purple-400" />
+                    <Sparkles size={18} className="text-emerald-300" />
                     {heading}
                 </h3>
                 <Button
                     isIconOnly
                     variant="light"
                     size="sm"
-                    className="text-zinc-500 hover:text-purple-400 bg-white/[0.02] border border-white/[0.05]"
+                    className="text-zinc-500 hover:text-emerald-300 bg-white/[0.02] border border-white/[0.05]"
                     onPress={handleRefresh}
                     isLoading={isRefreshing}
                     aria-label="Обновить рекомендации"
@@ -113,7 +113,7 @@ export const AIRecommendations = () => {
             </div>
             {recommendations.length === 0 ? (
                 <div className="text-center py-8">
-                    <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mx-auto mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-300 mx-auto mb-4">
                         <Sparkles size={24} />
                     </div>
                     <p className="text-zinc-400">
@@ -125,11 +125,11 @@ export const AIRecommendations = () => {
                     {recommendations.map((rec, i) => (
                         <div
                             key={rec.id}
-                            className="bg-black/20 backdrop-blur-md border border-white/[0.08] hover:border-purple-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 animate-fade-in-up group min-w-[300px] w-[300px] flex-shrink-0 snap-start relative overflow-hidden shadow-lg"
+                            className="bg-black/20 backdrop-blur-md border border-white/[0.08] hover:border-emerald-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 animate-fade-in-up group min-w-[300px] w-[300px] flex-shrink-0 snap-start relative overflow-hidden shadow-lg"
                             style={{ animationDelay: `${i * 80}ms` }}
                         >
                             {/* Animated gradient top border layer */}
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500/10 via-indigo-500/40 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500/10 via-emerald-400/40 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
 
                             <div className="mb-4">
                                 <div className="flex items-start justify-between mb-3 gap-2">
@@ -154,7 +154,7 @@ export const AIRecommendations = () => {
                                             </div>
                                         }
                                         classNames={{
-                                            content: "bg-zinc-900 border border-purple-500/20 shadow-xl",
+                                            content: "bg-zinc-900 border border-emerald-500/20 shadow-xl",
                                         }}
                                         placement="top"
                                     >
@@ -169,12 +169,12 @@ export const AIRecommendations = () => {
                                                         rec.match >= 80
                                                             ? "bg-gradient-to-r from-emerald-500 to-green-400"
                                                             : rec.match >= 50
-                                                                ? "bg-gradient-to-r from-purple-500 to-indigo-400"
+                                                                ? "bg-gradient-to-r from-emerald-400 to-teal-400"
                                                                 : "bg-gradient-to-r from-amber-500 to-orange-400",
                                                 }}
                                             />
-                                            <span className="text-xs font-bold text-zinc-300 group-hover/match:text-purple-300 transition-colors tabular-nums flex items-center gap-1">
-                                                <Sparkles size={11} className="text-purple-400/70" />
+                                            <span className="text-xs font-bold text-zinc-300 group-hover/match:text-emerald-300 transition-colors tabular-nums flex items-center gap-1">
+                                                <Sparkles size={11} className="text-emerald-300/70" />
                                                 {rec.match}%
                                             </span>
                                         </div>
@@ -186,7 +186,7 @@ export const AIRecommendations = () => {
                                         as={NextLink}
                                         href={`/dashboard/orders/${rec.id}#respond`}
                                         size="sm"
-                                        className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-md flex-1"
+                                        className="bg-[var(--mint-400)] hover:bg-[var(--mint-300)] text-[#062219] font-semibold shadow-md flex-1"
                                         startContent={<Send size={14} />}
                                     >
                                         {role === "freelancer" ? "Откликнуться" : "Пригласить"}

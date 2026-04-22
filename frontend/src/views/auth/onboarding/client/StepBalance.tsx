@@ -63,8 +63,8 @@ export const StepBalance = ({ onFinish, isFinishing }: Props) => {
             {/* Balance card */}
             <Card className="bg-zinc-900/50 border border-zinc-800 mb-6">
                 <CardBody className="flex flex-row items-center gap-4 p-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10">
-                        <Wallet size={24} className="text-purple-400" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+                        <Wallet size={24} className="text-emerald-400" />
                     </div>
                     <div>
                         <p className="text-xs text-zinc-500">Текущий баланс</p>
@@ -100,7 +100,7 @@ export const StepBalance = ({ onFinish, isFinishing }: Props) => {
                     onValueChange={setAmount}
                     variant="bordered"
                     startContent={<CreditCard size={16} className="text-zinc-500" />}
-                    classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+                    classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
                 />
                 <Button
                     color="secondary"

@@ -43,12 +43,12 @@ export const StepRecommendedOrders = ({ onFinish, isFinishing }: Props) => {
         {isLoading
           ? (
             <>
-              <div className="sm:col-span-2 rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-zinc-900/70 p-4">
+              <div className="sm:col-span-2 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-zinc-900/70 p-4">
                 <div className="flex items-center gap-4">
                   <div className="relative h-14 w-14 shrink-0">
-                    <div className="absolute inset-0 rounded-full border border-purple-400/40 animate-ping" />
-                    <div className="absolute inset-1 rounded-full border border-indigo-400/50 animate-pulse" />
-                    <div className="absolute inset-0 flex items-center justify-center text-purple-300">
+                    <div className="absolute inset-0 rounded-full border border-emerald-400/40 animate-ping" />
+                    <div className="absolute inset-1 rounded-full border border-teal-400/50 animate-pulse" />
+                    <div className="absolute inset-0 flex items-center justify-center text-emerald-300">
                       <Search size={20} className="animate-pulse" />
                     </div>
                   </div>
@@ -56,7 +56,7 @@ export const StepRecommendedOrders = ({ onFinish, isFinishing }: Props) => {
                     <p className="text-sm font-medium text-zinc-100">Ищем релевантные заказы</p>
                     <p className="text-xs text-zinc-400">Сопоставляем ваши навыки, бюджет и активные проекты</p>
                   </div>
-                  <div className="ml-auto flex items-center gap-1 text-purple-300">
+                  <div className="ml-auto flex items-center gap-1 text-emerald-300">
                     <Sparkles size={14} className="animate-bounce" />
                     <Sparkles size={12} className="animate-bounce [animation-delay:120ms]" />
                     <Sparkles size={10} className="animate-bounce [animation-delay:240ms]" />
@@ -74,7 +74,7 @@ export const StepRecommendedOrders = ({ onFinish, isFinishing }: Props) => {
                   <div className="mb-3 h-4 w-2/3 rounded bg-zinc-800 shimmer" />
                   <div className="mb-2 h-3 w-full rounded bg-zinc-800 shimmer" />
                   <div className="mb-2 h-3 w-4/5 rounded bg-zinc-800 shimmer" />
-                  <div className="h-6 w-24 rounded-full bg-purple-500/15" />
+                  <div className="h-6 w-24 rounded-full bg-emerald-500/15" />
                 </motion.div>
               ))}
             </>
@@ -87,7 +87,7 @@ export const StepRecommendedOrders = ({ onFinish, isFinishing }: Props) => {
                 <div className="mb-2 flex items-start gap-2">
                   <Briefcase
                     size={14}
-                    className="mt-0.5 shrink-0 text-purple-400"
+                    className="mt-0.5 shrink-0 text-emerald-400"
                   />
                   <h3 className="text-sm font-semibold text-zinc-200 line-clamp-2">
                     {order.title}
@@ -100,7 +100,7 @@ export const StepRecommendedOrders = ({ onFinish, isFinishing }: Props) => {
                   {order.skill_tags.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] text-purple-300"
+                      className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300"
                     >
                       {tag}
                     </span>

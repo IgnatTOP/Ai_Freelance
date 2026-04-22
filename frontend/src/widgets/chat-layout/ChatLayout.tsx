@@ -308,7 +308,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
             variant="bordered"
             startContent={<Search size={14} className="text-zinc-500" />}
             classNames={{
-              inputWrapper: "bg-zinc-900/50 border-zinc-800 hover:border-purple-500/30 h-9",
+              inputWrapper: "bg-zinc-900/50 border-zinc-800 hover:border-emerald-500/30 h-9",
               input: "text-zinc-300 text-sm placeholder:text-zinc-600"
             }}
           />
@@ -326,7 +326,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 type="button"
                 onClick={() => handleSelectConversation(conversation.id)}
                 className={`w-full text-left p-4 hover:bg-white/[0.04] transition-colors border-b border-white/[0.03] ${selectedId === conversation.id
-                  ? "bg-purple-600/10 border-l-2 border-l-purple-500"
+                  ? "bg-emerald-600/10 border-l-2 border-l-emerald-500"
                   : isAccepted
                     ? "border-l-2 border-l-emerald-500/60"
                     : ""
@@ -346,8 +346,8 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                           ? "ring-2 ring-emerald-500/60 bg-emerald-600/20"
                           : isRejected
                             ? "bg-zinc-700/30"
-                            : "bg-purple-600/20",
-                        icon: isAccepted ? "text-emerald-400" : isRejected ? "text-zinc-600" : "text-purple-400"
+                            : "bg-emerald-600/20",
+                        icon: isAccepted ? "text-emerald-400" : isRejected ? "text-zinc-600" : "text-emerald-400"
                       }}
                     />
                     {isAccepted && (
@@ -410,7 +410,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   {...(selectedConversation.other_user?.display_name
                     ? { name: selectedConversation.other_user.display_name }
                     : {})}
-                  classNames={{ base: "bg-purple-600/20", icon: "text-purple-400" }}
+                  classNames={{ base: "bg-emerald-600/20", icon: "text-emerald-400" }}
                 />
               </div>
               <div>
@@ -435,7 +435,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                         <div key={message.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                           <div
                             className={`max-w-[78%] rounded-2xl px-4 py-2.5 ${isOwn
-                              ? "bg-purple-600/20 border border-purple-500/20 text-zinc-200"
+                              ? "bg-emerald-600/20 border border-emerald-500/20 text-zinc-200"
                               : "bg-zinc-800/50 border border-zinc-700/30 text-zinc-300"
                               }`}
                           >
@@ -488,7 +488,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                                           ? removeReaction.mutate(message.id)
                                           : addReaction.mutate({ messageId: message.id, emoji })
                                       }
-                                      className={`text-xs rounded px-1.5 py-0.5 ${reacted ? "bg-violet-500/30" : "bg-white/5 hover:bg-white/10"
+                                      className={`text-xs rounded px-1.5 py-0.5 ${reacted ? "bg-emerald-500/30" : "bg-white/5 hover:bg-white/10"
                                         }`}
                                       aria-label={`Reaction ${emoji}`}
                                     >
@@ -534,7 +534,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 <button
                   type="button"
                   onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })}
-                  className="sticky bottom-2 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-lg"
+                  className="sticky bottom-2 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg"
                 >
                   <ArrowDown size={16} />
                 </button>
@@ -594,7 +594,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 <div className="rounded-xl border border-white/[0.08] bg-zinc-900/40 p-2">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-                      <Sparkles size={12} className="text-purple-400" />
+                      <Sparkles size={12} className="text-emerald-400" />
                       AI-подсказки
                     </div>
                     <button
@@ -611,7 +611,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                         key={suggestion}
                         type="button"
                         onClick={() => setMessageText(suggestion)}
-                        className="text-xs rounded-full px-3 py-1.5 border border-purple-500/25 bg-purple-500/10 text-purple-200 hover:bg-purple-500/15"
+                        className="text-xs rounded-full px-3 py-1.5 border border-emerald-500/25 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
                       >
                         {suggestion}
                       </button>
@@ -624,7 +624,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 <button
                   type="button"
                   onClick={() => setShowAISuggestions(true)}
-                  className="text-xs text-purple-300 hover:text-purple-200 inline-flex items-center gap-1"
+                  className="text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
                 >
                   <Sparkles size={12} /> Показать AI-подсказки
                 </button>
@@ -644,7 +644,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   isDisabled={isLockedByFirstResponseRule}
                   variant="bordered"
                   classNames={{
-                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
+                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40",
                     input: "text-zinc-200 placeholder:text-zinc-600"
                   }}
                   className="flex-1"
@@ -677,7 +677,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   isIconOnly
                   onPress={handleSend}
                   isLoading={sendMessage.isPending}
-                  className="bg-purple-600 text-white hover:bg-purple-500"
+                  className="bg-emerald-600 text-white hover:bg-emerald-500"
                   isDisabled={isLockedByFirstResponseRule || (!messageText.trim() && uploadedMedia.length === 0)}
                   aria-label="Отправить"
                 >
@@ -716,7 +716,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 return (
                   <Button
                     size="sm"
-                    className="mt-3 bg-purple-600 text-white hover:bg-purple-500"
+                    className="mt-3 bg-emerald-600 text-white hover:bg-emerald-500"
                     onPress={() => router.push(`/dashboard/orders/${orderId}`)}
                   >
                     Выбрать исполнителя

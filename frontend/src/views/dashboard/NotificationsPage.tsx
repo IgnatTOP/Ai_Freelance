@@ -17,7 +17,7 @@ const TYPE_ICONS: Record<string, ReactNode> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  order: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  order: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   proposal: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   message: "bg-green-500/10 text-green-400 border-green-500/20",
   payment: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -137,7 +137,7 @@ export const NotificationsPage = () => {
             <Button
               variant="flat"
               color={hasUnread ? "secondary" : "default"}
-              className={hasUnread ? "bg-purple-500/20 text-purple-300 font-medium shrink-0" : "text-zinc-500 font-medium shrink-0 opacity-50"}
+              className={hasUnread ? "bg-emerald-500/20 text-emerald-300 font-medium shrink-0" : "text-zinc-500 font-medium shrink-0 opacity-50"}
               startContent={<CheckCheck size={16} />}
               onPress={() => hasUnread && markAllRead.mutate()}
               isLoading={markAllRead.isPending}
@@ -191,13 +191,13 @@ export const NotificationsPage = () => {
                         if (!n.read) markRead.mutate(n.id);
                         if (n.link) window.location.href = n.link;
                       }}
-                      className={`w-full text-left glass-card rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:border-purple-500/30 hover:bg-zinc-900/80 animate-fade-in-up relative overflow-hidden ${
-                        !n.read ? "border-l-2 border-l-purple-500 bg-purple-500/[0.02]" : "opacity-80 hover:opacity-100"
+                      className={`w-full text-left glass-card rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:border-emerald-500/30 hover:bg-zinc-900/80 animate-fade-in-up relative overflow-hidden ${
+                        !n.read ? "border-l-2 border-l-emerald-500 bg-emerald-500/[0.02]" : "opacity-80 hover:opacity-100"
                       }`}
                       style={{ animationDelay: `${i * 40}ms` }}
                     >
                       {!n.read && (
-                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500 to-indigo-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-500 to-teal-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
                       )}
 
                       <div className="flex gap-4">
@@ -210,7 +210,7 @@ export const NotificationsPage = () => {
                               <h4 className={`text-base font-semibold truncate ${!n.read ? "text-zinc-100" : "text-zinc-300"}`}>
                                 {n.title}
                               </h4>
-                              {!n.read && <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />}
+                              {!n.read && <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />}
                             </div>
                             <span className="text-xs text-zinc-500 shrink-0 whitespace-nowrap">
                               {parseSafeDate(n.created_at).toLocaleDateString("ru-RU", {
@@ -230,7 +230,7 @@ export const NotificationsPage = () => {
                             <CheckCheck size={18} className="text-zinc-600" />
                           ) : (
                             <div className="w-8 h-8 rounded-full hover:bg-white/[0.04] flex items-center justify-center transition-colors">
-                              <Check size={18} className="text-purple-400" />
+                              <Check size={18} className="text-emerald-400" />
                             </div>
                           )}
                         </div>

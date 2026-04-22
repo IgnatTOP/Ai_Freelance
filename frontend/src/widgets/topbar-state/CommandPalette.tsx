@@ -111,7 +111,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: CommandPaletteProps) =>
                       <button
                         key={item}
                         type="button"
-                        className="rounded-full border border-zinc-700/70 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-300 hover:border-violet-500/40 hover:bg-violet-500/10"
+                        className="rounded-full border border-zinc-700/70 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-300 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                         onClick={() => {
                           setInput(item);
                           setQuery(item);
@@ -137,7 +137,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: CommandPaletteProps) =>
                         <a
                           key={`${scope}:${item.id}`}
                           href={item.href}
-                          className="block rounded-lg border border-transparent px-3 py-2 hover:border-violet-500/40 hover:bg-violet-500/10"
+                          className="block rounded-lg border border-transparent px-3 py-2 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                           onClick={() => {
                             rememberQuery(query);
                             onOpenChange(false);

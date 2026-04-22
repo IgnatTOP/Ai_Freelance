@@ -40,11 +40,11 @@ export const SettingsPage = () => {
                                     key={tab.key}
                                     onClick={() => setSelectedTab(tab.key)}
                                     className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                        ? "bg-purple-600/10 text-purple-400 font-medium"
+                                        ? "bg-emerald-600/10 text-emerald-400 font-medium"
                                         : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]"
                                         }`}
                                 >
-                                    <span className={isActive ? "text-purple-400" : "text-zinc-500"}>{tab.icon}</span>
+                                    <span className={isActive ? "text-emerald-400" : "text-zinc-500"}>{tab.icon}</span>
                                     {tab.label}
                                 </button>
                             );
@@ -193,7 +193,7 @@ const NotificationsTab = () => {
                                         size="sm"
                                         isSelected={Boolean(settings.browser?.[key])}
                                         onValueChange={(v) => updateChannel("browser", key, v)}
-                                        classNames={{ wrapper: "group-data-[selected=true]:bg-purple-600" }}
+                                        classNames={{ wrapper: "group-data-[selected=true]:bg-emerald-600" }}
                                     />
                                     <span className="text-xs text-zinc-400 font-medium">Push</span>
                                 </label>
@@ -203,7 +203,7 @@ const NotificationsTab = () => {
                                         size="sm"
                                         isSelected={Boolean(settings.email?.[key])}
                                         onValueChange={(v) => updateChannel("email", key, v)}
-                                        classNames={{ wrapper: "group-data-[selected=true]:bg-purple-600" }}
+                                        classNames={{ wrapper: "group-data-[selected=true]:bg-emerald-600" }}
                                     />
                                     <span className="text-xs text-zinc-400 font-medium">Email</span>
                                 </label>
@@ -213,7 +213,7 @@ const NotificationsTab = () => {
                                         size="sm"
                                         isSelected={Boolean(settings.sms?.[key])}
                                         onValueChange={(v) => updateChannel("sms", key, v)}
-                                        classNames={{ wrapper: "group-data-[selected=true]:bg-purple-600" }}
+                                        classNames={{ wrapper: "group-data-[selected=true]:bg-emerald-600" }}
                                     />
                                     <span className="text-xs text-zinc-400 font-medium">SMS</span>
                                 </label>
@@ -244,7 +244,7 @@ const NotificationsTab = () => {
                     />
                     <Button
                         size="sm"
-                        className="bg-purple-600 text-white hover:bg-purple-500"
+                        className="bg-emerald-600 text-white hover:bg-emerald-500"
                         onPress={saveQuietHours}
                         isLoading={update.isPending}
                     >
@@ -280,7 +280,7 @@ const PrivacyTab = () => {
                     <Switch
                         isSelected={data?.profile_visible ?? true}
                         onValueChange={(v) => handleChange("profile_visible", v)}
-                        classNames={{ wrapper: "group-data-[selected=true]:bg-purple-600" }}
+                        classNames={{ wrapper: "group-data-[selected=true]:bg-emerald-600" }}
                     />
                 </div>
                 <Divider className="bg-white/[0.04]" />
@@ -292,7 +292,7 @@ const PrivacyTab = () => {
                     <Switch
                         isSelected={data?.show_online_status ?? true}
                         onValueChange={(v) => handleChange("show_online_status", v)}
-                        classNames={{ wrapper: "group-data-[selected=true]:bg-purple-600" }}
+                        classNames={{ wrapper: "group-data-[selected=true]:bg-emerald-600" }}
                     />
                 </div>
                 <Divider className="bg-white/[0.04]" />
@@ -306,7 +306,7 @@ const PrivacyTab = () => {
                         onSelectionChange={(keys) => handleChange("direct_messages", Array.from(keys)[0] as "all" | "none")}
                         variant="bordered"
                         className="w-40"
-                        classNames={{ trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40", value: "text-zinc-200" }}
+                        classNames={{ trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40", value: "text-zinc-200" }}
                         aria-label="Личные сообщения"
                         startContent={<SettingsIcon size={16} className="text-zinc-500 shrink-0" />}
                     >
@@ -334,7 +334,7 @@ const AITab = () => {
                         <p className="text-sm font-medium text-zinc-200">Анализ контекста чатов</p>
                         <p className="text-xs text-zinc-500 mt-1">AI читает чаты для улучшения персональных рекомендаций проектов</p>
                     </div>
-                    <Switch size="sm" onValueChange={handleToggle} classNames={{ wrapper: "group-data-[selected=true]:bg-purple-600" }} />
+                    <Switch size="sm" onValueChange={handleToggle} classNames={{ wrapper: "group-data-[selected=true]:bg-emerald-600" }} />
                 </div>
                 <Divider className="bg-white/[0.04]" />
                 <div className="flex items-center justify-between py-5">
@@ -342,7 +342,7 @@ const AITab = () => {
                         <p className="text-sm font-medium text-zinc-200">Сохранение истории диалогов</p>
                         <p className="text-xs text-zinc-500 mt-1">Ассистент будет 'помнить' контекст прошлых обсуждений</p>
                     </div>
-                    <Switch size="sm" defaultSelected onValueChange={handleToggle} classNames={{ wrapper: "group-data-[selected=true]:bg-purple-600" }} />
+                    <Switch size="sm" defaultSelected onValueChange={handleToggle} classNames={{ wrapper: "group-data-[selected=true]:bg-emerald-600" }} />
                 </div>
                 <Divider className="bg-white/[0.04]" />
                 <div className="flex items-center justify-between py-5">
@@ -354,10 +354,10 @@ const AITab = () => {
                         variant="bordered"
                         defaultSelectedKeys={["neutral"]}
                         className="w-44"
-                        classNames={{ trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40", value: "text-zinc-200" }}
+                        classNames={{ trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40", value: "text-zinc-200" }}
                         aria-label="Стиль ответов"
                         onChange={handleToggle}
-                        startContent={<Sparkles size={16} className="text-purple-400 shrink-0" />}
+                        startContent={<Sparkles size={16} className="text-emerald-400 shrink-0" />}
                     >
                         <SelectItem key="formal">Формальный</SelectItem>
                         <SelectItem key="neutral">Нейтральный</SelectItem>
@@ -381,8 +381,8 @@ const SessionsTab = () => {
 
     const getDeviceIcon = (userAgent: string) => {
         const ua = userAgent.toLowerCase();
-        if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) return <Smartphone size={24} className="text-indigo-400" />;
-        return <Laptop size={24} className="text-purple-400" />;
+        if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) return <Smartphone size={24} className="text-teal-400" />;
+        return <Laptop size={24} className="text-emerald-400" />;
     };
 
     return (
@@ -399,7 +399,7 @@ const SessionsTab = () => {
                     {sessions.map((session: { id: string; device: string; ip: string; last_active: string }, i: number) => {
                         const isCurrent = i === 0; // В реальном АПИ обычно есть флаг is_current
                         return (
-                            <div key={session.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-zinc-900/50 border border-white/[0.04] hover:border-purple-500/20 transition-colors gap-4">
+                            <div key={session.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-zinc-900/50 border border-white/[0.04] hover:border-emerald-500/20 transition-colors gap-4">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
                                         {getDeviceIcon(session.device)}

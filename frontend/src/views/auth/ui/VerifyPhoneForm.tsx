@@ -129,7 +129,7 @@ export const VerifyPhoneForm = () => {
 
       <Button
         fullWidth
-        className="bg-purple-600 text-white font-semibold"
+        className="bg-emerald-600 text-white font-semibold"
         isDisabled={!canSubmit}
         isLoading={verifyMutation.isPending}
         onPress={handleVerify}
@@ -141,7 +141,7 @@ export const VerifyPhoneForm = () => {
         <button
           type="button"
           className={`transition-colors ${
-            resendCountdown > 0 ? "text-zinc-600 cursor-not-allowed" : "text-purple-400 hover:text-purple-300"
+            resendCountdown > 0 ? "text-zinc-600 cursor-not-allowed" : "text-emerald-400 hover:text-emerald-300"
           }`}
           disabled={resendCountdown > 0}
           onClick={() => {

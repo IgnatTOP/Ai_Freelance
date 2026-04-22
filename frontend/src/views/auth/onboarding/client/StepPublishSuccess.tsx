@@ -97,7 +97,7 @@ export const StepPublishSuccess = ({ orderId }: Props) => {
           {clientData.generatedDescription}
         </p>
         {clientData.generatedBudgetMax > 0 && (
-          <p className="mt-2 text-xs text-purple-400">
+          <p className="mt-2 text-xs text-emerald-400">
             до {clientData.generatedBudgetMax.toLocaleString("ru-RU")} ₽
           </p>
         )}

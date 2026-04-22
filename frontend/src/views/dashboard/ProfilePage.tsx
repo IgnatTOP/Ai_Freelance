@@ -53,7 +53,7 @@ export const ProfilePage = () => {
     const completionPercent = Math.round((completionItems.filter(i => i.done).length / completionItems.length) * 100);
 
     const inputClasses = {
-        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
+        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60",
         label: "text-zinc-400",
         input: "text-zinc-200",
     };
@@ -71,25 +71,25 @@ export const ProfilePage = () => {
         <div className="space-y-6 animate-fade-in-up">
             {/* Hero Banner */}
             <div className="relative glass-card rounded-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-indigo-900/20 to-zinc-900/10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 via-teal-900/20 to-zinc-900/10" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(168,85,247,0.15),transparent_60%)]" />
                 <div className="relative p-6 md:p-8">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                         {/* Avatar */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-br from-purple-500/40 to-indigo-500/40 rounded-full blur-sm group-hover:blur-md transition-all" />
+                            <div className="absolute -inset-1 bg-gradient-to-br from-emerald-500/40 to-teal-500/40 rounded-full blur-sm group-hover:blur-md transition-all" />
                             <Avatar
                                 {...(profile?.avatar_url ? { src: profile.avatar_url } : {})}
                                 showFallback
                                 className="w-24 h-24 relative"
                                 classNames={{
-                                    base: "bg-zinc-800 border-2 border-purple-500/30",
-                                    icon: "text-purple-400",
+                                    base: "bg-zinc-800 border-2 border-emerald-500/30",
+                                    icon: "text-emerald-400",
                                 }}
                             />
                             <button
                                 type="button"
-                                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center border-2 border-[#0a0a0f] hover:bg-purple-500 transition-colors shadow-lg shadow-purple-500/30"
+                                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center border-2 border-[#0a0a0f] hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-500/30"
                             >
                                 <Camera size={14} />
                             </button>
@@ -138,7 +138,7 @@ export const ProfilePage = () => {
                                             size="sm"
                                             variant="flat"
                                             startContent={<Briefcase size={12} />}
-                                            classNames={{ base: "bg-purple-500/10 border border-purple-500/20", content: "text-purple-300 text-xs font-medium" }}
+                                            classNames={{ base: "bg-emerald-500/10 border border-emerald-500/20", content: "text-emerald-300 text-xs font-medium" }}
                                         >
                                             {role === "client" ? "Заказчик" : "Фрилансер"}
                                         </Chip>
@@ -164,7 +164,7 @@ export const ProfilePage = () => {
                             {!isEditing ? (
                                 <Button
                                     variant="flat"
-                                    className="bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 font-medium"
+                                    className="bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 font-medium"
                                     startContent={<PenLine size={16} />}
                                     onPress={startEditing}
                                 >
@@ -176,7 +176,7 @@ export const ProfilePage = () => {
                                         Отмена
                                     </Button>
                                     <Button
-                                        className="bg-purple-600 hover:bg-purple-500 text-white font-medium"
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium"
                                         onPress={handleSave}
                                         isLoading={updateProfile.isPending}
                                         startContent={<Save size={14} />}
@@ -193,7 +193,7 @@ export const ProfilePage = () => {
                         <div className="mt-4 pt-4 border-t border-white/[0.06]">
                             <div className="flex items-center justify-between text-xs mb-1.5">
                                 <span className="text-zinc-500">Заполненность профиля</span>
-                                <span className={`font-bold ${completionPercent === 100 ? "text-emerald-400" : "text-purple-400"}`}>
+                                <span className={`font-bold ${completionPercent === 100 ? "text-emerald-400" : "text-emerald-400"}`}>
                                     {completionPercent}%
                                 </span>
                             </div>
@@ -202,7 +202,7 @@ export const ProfilePage = () => {
                                 size="sm"
                                 classNames={{
                                     track: "bg-zinc-800",
-                                    indicator: "bg-gradient-to-r from-purple-600 to-indigo-500",
+                                    indicator: "bg-gradient-to-r from-emerald-600 to-teal-500",
                                 }}
                             />
                         </div>
@@ -216,9 +216,9 @@ export const ProfilePage = () => {
                 variant="underlined"
                 classNames={{
                     tabList: "gap-4 w-full border-b border-white/[0.06] px-2",
-                    cursor: "bg-purple-500",
-                    tab: "text-zinc-500 data-[selected=true]:text-purple-400 data-[hover=true]:text-zinc-300 px-1 py-3",
-                    tabContent: "group-data-[selected=true]:text-purple-400",
+                    cursor: "bg-emerald-500",
+                    tab: "text-zinc-500 data-[selected=true]:text-emerald-400 data-[hover=true]:text-zinc-300 px-1 py-3",
+                    tabContent: "group-data-[selected=true]:text-emerald-400",
                 }}
             >
                 <Tab

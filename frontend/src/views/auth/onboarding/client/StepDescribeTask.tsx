@@ -50,7 +50,7 @@ export const StepDescribeTask = () => {
         onValueChange={(v) => updateClient({ freeText: v })}
         variant="bordered"
         minRows={5}
-        classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+        classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
       />
 
       <div className="mt-4 flex gap-2">
@@ -79,7 +79,7 @@ export const StepDescribeTask = () => {
         <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/70 p-4">
           {isStreaming ? (
             <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <Loader2 size={14} className="animate-spin text-purple-400" />
+              <Loader2 size={14} className="animate-spin text-emerald-400" />
               ИИ анализирует задачу и подготавливает поля формы...
             </div>
           ) : result ? (
@@ -96,8 +96,8 @@ export const StepDescribeTask = () => {
                     size="sm"
                     variant="flat"
                     classNames={{
-                      base: "bg-purple-500/10 border border-purple-500/20",
-                      content: "text-purple-300",
+                      base: "bg-emerald-500/10 border border-emerald-500/20",
+                      content: "text-emerald-300",
                     }}
                   >
                     {skill}

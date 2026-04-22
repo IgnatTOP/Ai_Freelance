@@ -53,7 +53,7 @@ export const StepReviewOrder = ({ onPublish, isPublishing }: Props) => {
           value={clientData.generatedTitle}
           onValueChange={(v) => updateClient({ generatedTitle: v })}
           variant="bordered"
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+          classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
         />
 
         <Textarea
@@ -62,7 +62,7 @@ export const StepReviewOrder = ({ onPublish, isPublishing }: Props) => {
           onValueChange={(v) => updateClient({ generatedDescription: v })}
           variant="bordered"
           minRows={4}
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+          classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
         />
 
         {categories.length > 0 && (
@@ -74,7 +74,7 @@ export const StepReviewOrder = ({ onPublish, isPublishing }: Props) => {
               updateClient({ generatedCategoryId: val });
             }}
             variant="bordered"
-            classNames={{ trigger: "border-zinc-700 hover:border-purple-500/50" }}
+            classNames={{ trigger: "border-zinc-700 hover:border-emerald-500/50" }}
           >
             {categories.map((cat) => (
               <SelectItem key={cat.id}>{cat.name}</SelectItem>
@@ -107,7 +107,7 @@ export const StepReviewOrder = ({ onPublish, isPublishing }: Props) => {
             }}
             variant="bordered"
             size="sm"
-            classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+            classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
           />
         </div>
 
@@ -120,7 +120,7 @@ export const StepReviewOrder = ({ onPublish, isPublishing }: Props) => {
               updateClient({ generatedBudgetMax: Number(v) || 0 })
             }
             variant="bordered"
-            classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+            classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
           />
           <Input
             label="Дедлайн"
@@ -128,7 +128,7 @@ export const StepReviewOrder = ({ onPublish, isPublishing }: Props) => {
             value={clientData.generatedDeadline}
             onValueChange={(v) => updateClient({ generatedDeadline: v })}
             variant="bordered"
-            classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+            classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
           />
         </div>
       </div>

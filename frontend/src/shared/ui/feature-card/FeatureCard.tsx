@@ -4,27 +4,41 @@ import { Card, CardBody } from "@heroui/react";
 import type { ReactNode } from "react";
 
 interface FeatureCardProps {
-  readonly icon: ReactNode;
-  readonly title: string;
-  readonly description: string;
-  readonly number?: number;
+    readonly icon: ReactNode;
+    readonly title: string;
+    readonly description: string;
+    readonly number?: number;
 }
 
 export const FeatureCard = ({ icon, title, description, number }: FeatureCardProps) => (
-  <Card className="glass-card card-hover-glow group transition-all duration-300">
-    <CardBody className="p-6 md:p-8">
-      <div className="flex items-start justify-between mb-5">
-        <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/15 transition-all duration-300">
-          {icon}
-        </div>
-        {number !== undefined && (
-          <span className="text-xs font-bold text-zinc-700 font-[Space_Grotesk] tabular-nums">
-            {String(number).padStart(2, "0")}
-          </span>
-        )}
-      </div>
-      <h3 className="text-lg font-semibold mb-2 text-zinc-100">{title}</h3>
-      <p className="text-zinc-500 text-sm leading-relaxed">{description}</p>
-    </CardBody>
-  </Card>
+    <Card className="glass-card card-hover-glow group transition-all duration-300">
+        <CardBody className="p-6 md:p-8">
+            <div className="mb-5 flex items-start justify-between">
+                <div
+                    className="grid h-12 w-12 place-items-center rounded-xl transition-all duration-300 group-hover:scale-110"
+                    style={{
+                        background: "rgba(52,211,153,0.1)",
+                        border: "1px solid rgba(52,211,153,0.22)",
+                        color: "var(--mint-300)",
+                    }}
+                >
+                    {icon}
+                </div>
+                {number !== undefined && (
+                    <span
+                        className="font-mono text-xs font-bold tabular-nums"
+                        style={{ color: "var(--fg-3)" }}
+                    >
+                        {String(number).padStart(2, "0")}
+                    </span>
+                )}
+            </div>
+            <h3 className="mb-2 text-lg font-semibold" style={{ color: "var(--fg-0)" }}>
+                {title}
+            </h3>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--fg-2)" }}>
+                {description}
+            </p>
+        </CardBody>
+    </Card>
 );

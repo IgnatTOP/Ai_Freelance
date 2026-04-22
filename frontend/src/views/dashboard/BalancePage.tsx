@@ -48,12 +48,12 @@ export const BalancePage = () => {
                 <div className="flex gap-3 shrink-0 mb-4 sm:mb-0">
                     {role === "client" ? (
                         <>
-                            <Button className="bg-purple-600 hover:bg-purple-500 text-white font-medium px-6 shadow-lg shadow-purple-500/20" startContent={<ArrowDownLeft size={18} />} radius="full" onPress={depositModal.onOpen}>
+                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 shadow-lg shadow-emerald-500/20" startContent={<ArrowDownLeft size={18} />} radius="full" onPress={depositModal.onOpen}>
                                 Пополнить счет
                             </Button>
                         </>
                     ) : (
-                        <Button className="bg-purple-600 hover:bg-purple-500 text-white font-medium px-6 shadow-lg shadow-purple-500/20" startContent={<ArrowUpRight size={18} />} radius="full" onPress={withdrawModal.onOpen}>
+                        <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 shadow-lg shadow-emerald-500/20" startContent={<ArrowUpRight size={18} />} radius="full" onPress={withdrawModal.onOpen}>
                             Вывести средства
                         </Button>
                     )}
@@ -65,7 +65,7 @@ export const BalancePage = () => {
                 {[
                     { label: "Доступно", value: balance?.available ?? 0, icon: <Wallet size={20} />, accent: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
                     { label: "На удержании", value: balance?.pending ?? 0, icon: <DollarSign size={20} />, accent: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-                    { label: role === "client" ? "Потрачено в этом мес." : "Заработано в этом мес.", value: role === "client" ? (balance?.total_spent ?? 0) : (balance?.total_earned ?? 0), icon: <TrendingUp size={20} />, accent: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+                    { label: role === "client" ? "Потрачено в этом мес." : "Заработано в этом мес.", value: role === "client" ? (balance?.total_spent ?? 0) : (balance?.total_earned ?? 0), icon: <TrendingUp size={20} />, accent: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
                     { label: role === "client" ? "Всего потрачено" : "Всего заработано", value: role === "client" ? (balance?.total_spent ?? 0) : (balance?.total_earned ?? 0), icon: <CreditCard size={20} />, accent: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
                 ].map((s, i) => (
                     <div key={i} className={`glass-card rounded-2xl p-5 border border-white/[0.04] hover:border-white/10 transition-colors ${balLoading ? "animate-pulse" : "animate-fade-in-up"}`} style={{ animationDelay: `${i * 100}ms` }}>
@@ -85,7 +85,7 @@ export const BalancePage = () => {
             {/* Transactions */}
             <div className="glass-card rounded-2xl p-6 md:p-8 min-h-[400px]">
                 <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                    <Receipt size={20} className="text-purple-400" /> История транзакций
+                    <Receipt size={20} className="text-emerald-400" /> История транзакций
                 </h3>
 
                 {txLoading ? (
@@ -114,7 +114,7 @@ export const BalancePage = () => {
                         {transactions.map((tx, i) => {
                             const isPositive = tx.type === "deposit" || tx.type === "earning";
                             return (
-                                <div key={tx.id} className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900/30 border border-white/[0.04] hover:border-purple-500/20 hover:bg-zinc-900/80 transition-all duration-200">
+                                <div key={tx.id} className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900/30 border border-white/[0.04] hover:border-emerald-500/20 hover:bg-zinc-900/80 transition-all duration-200">
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isPositive ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"
                                         }`}>
                                         {isPositive ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}

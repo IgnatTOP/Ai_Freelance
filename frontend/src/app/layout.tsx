@@ -4,9 +4,9 @@ import { AppProviders } from "@/shared/store/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "НейроБиржа — Фриланс-биржа нового поколения",
+  title: "Филка — Фриланс, который сам находит своих",
   description:
-    "AI-платформа для поиска фрилансеров и заказов. Безопасный escrow, умный подбор, мгновенные выплаты.",
+    "AI-платформа, которая подбирает фрилансеров за секунды. Безопасный escrow, умный поиск, мгновенные выплаты.",
   keywords: ["фриланс", "биржа", "freelance", "AI", "escrow", "разработка"],
 };
 

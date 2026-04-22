@@ -104,7 +104,7 @@ const SkillAutoInput = ({
                 }}
                 inputProps={{
                     classNames: {
-                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 focus-within:!border-purple-500/60",
+                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 focus-within:!border-emerald-500/60",
                         input: "text-zinc-200",
                         label: "text-zinc-400",
                     }
@@ -124,7 +124,7 @@ const SkillAutoInput = ({
                 }}
             >
                 {filteredSkills.map((skill) => (
-                    <AutocompleteItem key={skill.name} textValue={skill.name} className="text-zinc-200 data-[hover=true]:bg-purple-500/20 data-[hover=true]:text-purple-300">
+                    <AutocompleteItem key={skill.name} textValue={skill.name} className="text-zinc-200 data-[hover=true]:bg-emerald-500/20 data-[hover=true]:text-emerald-300">
                         {skill.name}
                     </AutocompleteItem>
                 ))}
@@ -136,7 +136,7 @@ const SkillAutoInput = ({
                     placeholder="Быстро добавить: React, TypeScript, Next.js"
                     variant="bordered"
                     size="sm"
-                    classNames={{ inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40" }}
+                    classNames={{ inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40" }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter" && bulkInput.trim()) {
                             e.preventDefault();
@@ -148,7 +148,7 @@ const SkillAutoInput = ({
                 <Button
                     size="sm"
                     variant="flat"
-                    className="bg-purple-500/10 text-purple-300 border border-purple-500/20"
+                    className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
                     isDisabled={!bulkInput.trim()}
                     onPress={() => {
                         addSkillsFromText(bulkInput);
@@ -169,7 +169,7 @@ const SkillAutoInput = ({
                                 next.add(skill.name);
                                 onSelectionChange(next);
                             }}
-                            className="rounded-full border border-zinc-700/70 bg-zinc-900/60 px-2.5 py-1 text-xs text-zinc-300 hover:border-purple-500/40 hover:text-purple-300"
+                            className="rounded-full border border-zinc-700/70 bg-zinc-900/60 px-2.5 py-1 text-xs text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-300"
                         >
                             + {skill.name}
                         </button>
@@ -198,7 +198,7 @@ const SkillAutoInput = ({
                                     onSelectionChange(newKeys);
                                 }}
                                 variant="flat"
-                                classNames={{ base: "bg-purple-500/10 border border-purple-500/20", content: "text-purple-300", closeButton: "text-purple-400 hover:text-purple-200" }}
+                                classNames={{ base: "bg-emerald-500/10 border border-emerald-500/20", content: "text-emerald-300", closeButton: "text-emerald-400 hover:text-emerald-200" }}
                             >
                                 {s}
                             </Chip>
@@ -439,7 +439,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
     if (role === "freelancer") return null;
 
     const inputClasses = {
-        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60 shadow-sm",
+        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60 shadow-sm",
         label: "text-zinc-400",
         input: "text-zinc-200",
     };
@@ -490,11 +490,11 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                     const isPassed = step > stepNum;
                     return (
                         <div key={label} className="flex items-center shrink-0">
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${isActive ? "bg-purple-600/20 text-purple-400 border border-purple-500/30" : isPassed ? "text-zinc-300" : "text-zinc-600"}`}>
-                                {isPassed ? <CheckCircle2 size={16} className="text-emerald-400" /> : <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${isActive ? "bg-purple-600 text-white" : "bg-zinc-800 text-zinc-500"}`}>{stepNum}</span>}
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${isActive ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30" : isPassed ? "text-zinc-300" : "text-zinc-600"}`}>
+                                {isPassed ? <CheckCircle2 size={16} className="text-emerald-400" /> : <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${isActive ? "bg-emerald-600 text-white" : "bg-zinc-800 text-zinc-500"}`}>{stepNum}</span>}
                                 {label}
                             </div>
-                            {stepNum < STEPS.length && <div className={`w-8 h-px mx-2 ${isPassed ? "bg-purple-500/50" : "bg-zinc-800"}`} />}
+                            {stepNum < STEPS.length && <div className={`w-8 h-px mx-2 ${isPassed ? "bg-emerald-500/50" : "bg-zinc-800"}`} />}
                         </div>
                     );
                 })}
@@ -525,7 +525,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                         <Button
                                             size="sm"
                                             variant="flat"
-                                            className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 h-7"
+                                            className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 h-7"
                                             startContent={<Sparkles size={14} />}
                                             onPress={() => { void handleAIGenerate(); }}
                                             isDisabled={!draft.title.trim() || draft.title.trim().length < 4}
@@ -554,7 +554,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                         <Button
                                             size="sm"
                                             variant="flat"
-                                            className="bg-purple-500/10 text-purple-300 border border-purple-500/20"
+                                            className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
                                             startContent={isAutoClassifying ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                                             onPress={() => { void handleAutoClassify(); }}
                                             isDisabled={!draft.title.trim() || !draft.description.trim() || isAutoClassifying}
@@ -576,7 +576,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                         variant="bordered"
                                         labelPlacement="outside"
                                         isLoading={catLoading}
-                                        classNames={{ trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40", label: "text-zinc-400", value: "text-zinc-200" }}
+                                        classNames={{ trigger: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40", label: "text-zinc-400", value: "text-zinc-200" }}
                                         startContent={<LayoutList size={16} className="text-zinc-500" />}
                                     >
                                         {categories.map((c) => (
@@ -635,13 +635,13 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                         {budgetMin > 0 && budgetMax > 0 && budgetMin > budgetMax && (
                                             <p className="text-xs text-red-400">Минимальный бюджет не может быть больше максимального.</p>
                                         )}
-                                        <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-3 space-y-2">
+                                        <div className="rounded-xl border border-teal-500/30 bg-teal-500/10 p-3 space-y-2">
                                             <div className="flex items-center justify-between gap-2">
-                                                <p className="text-xs text-indigo-200">Цена по мнению ИИ</p>
+                                                <p className="text-xs text-teal-200">Цена по мнению ИИ</p>
                                                 <Button
                                                     size="sm"
                                                     variant="flat"
-                                                    className="h-7 bg-indigo-500/20 text-indigo-200 border border-indigo-500/30"
+                                                    className="h-7 bg-teal-500/20 text-teal-200 border border-teal-500/30"
                                                     startContent={isAiBudgetLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                                                     onPress={() => { void handleAIBudgetSuggest(); }}
                                                     isDisabled={isAiBudgetLoading || !draft.title.trim()}
@@ -650,13 +650,13 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                                 </Button>
                                             </div>
                                             {aiBudgetSuggestion?.max || aiBudgetSuggestion?.min ? (
-                                                <p className="text-sm text-indigo-100">
+                                                <p className="text-sm text-teal-100">
                                                     {aiBudgetSuggestion?.min ? `от ${aiBudgetSuggestion.min.toLocaleString("ru-RU")} ₽` : ""}
                                                     {aiBudgetSuggestion?.min && aiBudgetSuggestion?.max ? " " : ""}
                                                     {aiBudgetSuggestion?.max ? `до ${aiBudgetSuggestion.max.toLocaleString("ru-RU")} ₽` : ""}
                                                 </p>
                                             ) : (
-                                                <p className="text-xs text-indigo-300/80">Нажмите «Рассчитать», и ИИ предложит бюджет по вашему описанию.</p>
+                                                <p className="text-xs text-teal-300/80">Нажмите «Рассчитать», и ИИ предложит бюджет по вашему описанию.</p>
                                             )}
                                             {aiBudgetError && <p className="text-xs text-red-300">{aiBudgetError}</p>}
                                         </div>
@@ -674,7 +674,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                                     headerWrapper: "text-zinc-200",
                                                     title: "text-zinc-100",
                                                     gridHeaderCell: "text-zinc-500",
-                                                    cellButton: "data-[hover=true]:bg-purple-500/20 data-[selected=true]:bg-purple-600 data-[selected=true]:text-white",
+                                                    cellButton: "data-[hover=true]:bg-emerald-500/20 data-[selected=true]:bg-emerald-600 data-[selected=true]:text-white",
                                                 }}
                                             />
                                         </div>
@@ -696,7 +696,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                     <div className="space-y-2">
                                         <h3 className="text-xl font-semibold text-zinc-100">{draft.title || "—"}</h3>
                                         <div className="flex flex-wrap items-center gap-3 text-sm">
-                                            <span className="text-purple-400 font-medium">{formatBudgetRange()}</span>
+                                            <span className="text-emerald-400 font-medium">{formatBudgetRange()}</span>
                                             <span className="text-zinc-600">•</span>
                                             <span className="text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded flex items-center gap-1.5">
                                                 <Calendar size={14} className="text-zinc-500" />
@@ -722,7 +722,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                             <p className="text-zinc-500 text-sm font-medium">Требуемые навыки</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {draft.skill_tags.map((tag) => (
-                                                    <Chip key={tag} size="sm" variant="flat" classNames={{ base: "bg-purple-500/10 border border-purple-500/20", content: "text-purple-300 font-medium" }}>
+                                                    <Chip key={tag} size="sm" variant="flat" classNames={{ base: "bg-emerald-500/10 border border-emerald-500/20", content: "text-emerald-300 font-medium" }}>
                                                         {tag}
                                                     </Chip>
                                                 ))}
@@ -741,8 +741,8 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                 <Card className="bg-zinc-900/50 border border-zinc-800">
                                     <CardBody className="p-6 space-y-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
-                                                <Shield size={24} className="text-purple-400" />
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                                <Shield size={24} className="text-emerald-400" />
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-zinc-100">Безопасная сделка</p>
@@ -762,7 +762,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                             <div className="h-px bg-zinc-800" />
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm font-medium text-zinc-200">Итого к заморозке</span>
-                                                <span className="text-lg font-bold text-purple-400">до ₽{budgetMax.toLocaleString("ru-RU")}</span>
+                                                <span className="text-lg font-bold text-emerald-400">до ₽{budgetMax.toLocaleString("ru-RU")}</span>
                                             </div>
                                         </div>
 
@@ -791,7 +791,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
 
                         {step < 5 ? (
                             <Button
-                                className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-8 shadow-lg shadow-purple-500/25 disabled:opacity-50"
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-8 shadow-lg shadow-emerald-500/25 disabled:opacity-50"
                                 onPress={() => setStep((step + 1) as 1 | 2 | 3 | 4 | 5)}
                                 endContent={<ArrowRight size={16} />}
                                 isDisabled={!isStepValid}
@@ -800,7 +800,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                             </Button>
                         ) : (
                             <Button
-                                className="bg-gradient-to-r from-purple-600 to-indigo-500 hover:from-purple-500 hover:to-indigo-400 text-white font-semibold px-8 shadow-lg shadow-purple-500/30"
+                                className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold px-8 shadow-lg shadow-emerald-500/30"
                                 onPress={() => { void handlePublish(); }}
                                 isLoading={createOrder.isPending || publishOrder.isPending}
                                 startContent={!createOrder.isPending ? <Sparkles size={16} /> : null}
@@ -823,7 +823,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                         <ul className="space-y-4">
                             {TIPS[step as keyof typeof TIPS]?.map((tip, i) => (
                                 <li key={i} className="flex gap-3 text-sm text-zinc-400 animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                                     <span>{tip}</span>
                                 </li>
                             ))}
@@ -845,8 +845,8 @@ ${draft.description.trim() ? `Текущий черновик описания: 
             >
                 <ModalContent>
                     <ModalHeader className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                            <Bot size={16} className="text-purple-400" />
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                            <Bot size={16} className="text-emerald-400" />
                         </div>
                         <div>
                             <p className="text-base font-semibold text-zinc-100">AI генерирует описание</p>
@@ -856,7 +856,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                     <ModalBody className="py-4">
                         {!aiGenerated && aiAssistant.isStreaming ? (
                             <div className="flex items-center justify-center py-8 gap-3">
-                                <Loader2 size={20} className="text-purple-400 animate-spin" />
+                                <Loader2 size={20} className="text-emerald-400 animate-spin" />
                                 <span className="text-sm text-zinc-400">Генерация описания...</span>
                             </div>
                         ) : (
@@ -865,7 +865,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                                     {aiGenerated || "Описание пока не сгенерировано"}
                                 </p>
                                 {aiAssistant.isStreaming && (
-                                    <span className="inline-block w-2 h-4 bg-purple-400 animate-pulse ml-0.5" />
+                                    <span className="inline-block w-2 h-4 bg-emerald-400 animate-pulse ml-0.5" />
                                 )}
                             </div>
                         )}
@@ -879,7 +879,7 @@ ${draft.description.trim() ? `Текущий черновик описания: 
                             Отмена
                         </Button>
                         <Button
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-medium"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium"
                             onPress={handleApplyAI}
                             isDisabled={!aiGenerated || aiAssistant.isStreaming}
                             startContent={<CheckCircle2 size={14} />}

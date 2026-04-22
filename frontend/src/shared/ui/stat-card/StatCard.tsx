@@ -104,13 +104,25 @@ export const StatCard = ({ value, label, icon, accentColor }: StatCardProps) => 
     return (
         <Card className={`glass-card card-hover-glow transition-all duration-300 h-full ${accentColor ?? ""}`}>
             <CardBody className="flex flex-col items-center justify-center gap-4 p-6 md:p-8 text-center h-full">
-                <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                <div
+                    className="grid h-11 w-11 place-items-center rounded-xl shrink-0"
+                    style={{
+                        background: "rgba(52,211,153,0.1)",
+                        border: "1px solid rgba(52,211,153,0.22)",
+                        color: "var(--mint-300)",
+                    }}
+                >
                     {icon}
                 </div>
                 <div ref={ref} className="stat-value text-3xl md:text-4xl font-bold">
                     {display}
                 </div>
-                <p className="text-zinc-500 text-sm leading-relaxed min-h-[40px] flex items-center">{label}</p>
+                <p
+                    className="flex min-h-[40px] items-center text-sm leading-relaxed"
+                    style={{ color: "var(--fg-2)" }}
+                >
+                    {label}
+                </p>
             </CardBody>
         </Card>
     );

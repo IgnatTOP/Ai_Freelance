@@ -21,7 +21,7 @@ export const StepWelcomeTemplate = ({ onFinish, isFinishing }: Props) => {
             transition={{ delay: 0.1 }}
         >
             <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                     <MessageSquareHeart size={20} />
                 </div>
                 <h2 className="text-2xl font-bold text-zinc-100">
@@ -38,7 +38,7 @@ export const StepWelcomeTemplate = ({ onFinish, isFinishing }: Props) => {
                     <Button
                         size="sm"
                         variant="flat"
-                        className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 h-7"
+                        className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 h-7"
                         startContent={<Sparkles size={14} />}
                         onPress={() => {
                             const aiTemplate = `Здравствуйте! Меня заинтересовал ваш проект.\nМой опыт и навыки (${freelancerData.skills.slice(0, 3).join(", ")}) отлично подходят для решения ваших задач. Я внимательно изучил требования и готов обсудить детали в чате.\n\nРаботаю на результат, соблюдаю сроки. Обращайтесь!`;
@@ -57,7 +57,7 @@ export const StepWelcomeTemplate = ({ onFinish, isFinishing }: Props) => {
                     maxRows={10}
                     variant="bordered"
                     classNames={{
-                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60 shadow-sm",
+                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-emerald-500/40 group-data-[focus=true]:border-emerald-500/60 shadow-sm",
                         input: "text-zinc-200 text-sm leading-relaxed",
                     }}
                 />
@@ -80,7 +80,7 @@ export const StepWelcomeTemplate = ({ onFinish, isFinishing }: Props) => {
                     Назад
                 </Button>
                 <Button
-                    className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-600/25"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-lg shadow-emerald-600/25"
                     startContent={<CheckCircle2 size={16} />}
                     onPress={() => onFinish()}
                     isLoading={isFinishing}

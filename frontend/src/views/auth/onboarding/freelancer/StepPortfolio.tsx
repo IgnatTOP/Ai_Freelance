@@ -71,7 +71,7 @@ export const StepPortfolio = () => {
               onValueChange={(v) => updateItem(i, { title: v })}
               variant="bordered"
               size="sm"
-              classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+              classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
             />
             <Textarea
               label="Описание"
@@ -80,7 +80,7 @@ export const StepPortfolio = () => {
               variant="bordered"
               size="sm"
               minRows={2}
-              classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+              classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
             />
             <Input
               label="Ссылка (необязательно)"
@@ -88,7 +88,7 @@ export const StepPortfolio = () => {
               onValueChange={(v) => updateItem(i, { link: v })}
               variant="bordered"
               size="sm"
-              classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+              classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
             />
           </div>
         ))}

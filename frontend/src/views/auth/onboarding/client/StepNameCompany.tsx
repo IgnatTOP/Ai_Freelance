@@ -32,7 +32,7 @@ export const StepNameCompany = () => {
                     onValueChange={(v) => updateClient({ name: v })}
                     variant="bordered"
                     startContent={<User size={16} className="text-zinc-500" />}
-                    classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+                    classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
                 />
 
                 <Input
@@ -42,7 +42,7 @@ export const StepNameCompany = () => {
                     onValueChange={(v) => updateClient({ company: v })}
                     variant="bordered"
                     startContent={<Building2 size={16} className="text-zinc-500" />}
-                    classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+                    classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
                 />
             </div>
 

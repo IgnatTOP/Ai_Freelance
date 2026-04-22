@@ -32,7 +32,7 @@ export const StepDescription = () => {
                 minRows={5}
                 maxRows={10}
                 startContent={<FileText size={16} className="text-zinc-500 mt-2" />}
-                classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+                classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
             />
 
             <div className="mt-2 text-right">

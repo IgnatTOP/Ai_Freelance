@@ -167,7 +167,7 @@ export const StepSkills = () => {
             }
           }}
           variant="bordered"
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
+          classNames={{ inputWrapper: "border-zinc-700 hover:border-emerald-500/50" }}
           endContent={
             <Button
               size="sm"
@@ -194,7 +194,7 @@ export const StepSkills = () => {
                 key={skill}
                 type="button"
                 onClick={() => addSkill(skill)}
-                className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-zinc-300 hover:bg-purple-500/10 hover:text-purple-300"
+                className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-zinc-300 hover:bg-emerald-500/10 hover:text-emerald-300"
               >
                 {skill}
               </button>
@@ -224,7 +224,7 @@ export const StepSkills = () => {
               <Chip
                 key={skill}
                 variant="bordered"
-                className="cursor-pointer border-purple-500/30 hover:bg-purple-500/10"
+                className="cursor-pointer border-emerald-500/30 hover:bg-emerald-500/10"
                 onClick={() => addSkill(skill)}
               >
                 + {skill}

@@ -174,7 +174,7 @@ export const StepAvatarUpload = () => {
                             onChange={(v) => setZoom(v as number)}
                             classNames={{
                                 track: "bg-zinc-800",
-                                filler: "bg-purple-500",
+                                filler: "bg-emerald-500",
                             }}
                         />
                     </div>
