@@ -1,0 +1,2 @@
+export { useGlobalSearch } from "./model";
+

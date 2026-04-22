@@ -1,0 +1,619 @@
+openapi: 3.0.3
+info:
+  title: НейроБиржа API
+  version: 0.2.0
+  description: Source-of-truth contract for frontend generation (top RT domains + core auth/settings/presence).
+servers:
+  - url: http://localhost:8080/api
+paths:
+  /auth/register-phone:
+    post:
+      summary: Register by phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPhoneRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /auth/login-phone:
+    post:
+      summary: Login by phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginPhoneRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /auth/verify-phone:
+    post:
+      summary: Verify phone code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyPhoneRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+        default:
+          $ref: '#/components/responses/ApiError'
+
+  /settings/notifications:
+    get:
+      summary: Get notification settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+    put:
+      summary: Update notification settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+  /settings/privacy:
+    get:
+      summary: Get privacy settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+    put:
+      summary: Update privacy settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+  /settings/ai:
+    get:
+      summary: Get AI settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+    put:
+      summary: Update AI settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+
+  /presence/online-count:
+    get:
+      summary: Online users count
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [online_count]
+                        properties:
+                          online_count:
+                            type: integer
+
+  /onboarding/state:
+    get:
+      summary: Get onboarding state for current user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/OnboardingState'
+
+  /search/global:
+    get:
+      summary: Global search for command palette
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GlobalSearchItem'
+
+  /conversations/{conversationId}/read:
+    post:
+      summary: Mark one or many messages as read
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkConversationReadRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [conversation_id, messages_count, marked_read]
+                        properties:
+                          conversation_id:
+                            type: string
+                          messages_count:
+                            type: integer
+                          marked_read:
+                            type: boolean
+
+  /orders/{id}/proposals:
+    get:
+      summary: List proposals by order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalListResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+
+  /notifications:
+    get:
+      summary: List notifications
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+  /notifications/unread/count:
+    get:
+      summary: Count unread notifications
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [unread_count]
+                        properties:
+                          unread_count:
+                            type: integer
+  /notifications/{id}/read:
+    post:
+      summary: Mark notification as read
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+  /notifications/read-all:
+    post:
+      summary: Mark all notifications as read
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+
+  /payments/transactions:
+    get:
+      summary: List transactions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+  /payments/escrow/{orderId}:
+    get:
+      summary: Get escrow by order
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscrowResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /payments/escrow/{orderId}/release:
+    post:
+      summary: Release escrow funds
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscrowResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /payments/escrow/{orderId}/refund:
+    post:
+      summary: Refund escrow funds
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscrowResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+
+components:
+  responses:
+    ApiError:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+  schemas:
+    ErrorCode:
+      type: string
+      enum:
+        - bad_request
+        - unauthorized
+        - forbidden
+        - not_found
+        - conflict
+        - validation_error
+        - rate_limited
+        - internal_server_error
+        - request_failed
+
+    ApiError:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              $ref: '#/components/schemas/ErrorCode'
+            message:
+              type: string
+
+    Pagination:
+      type: object
+      required: [total, limit, offset, has_more]
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+    ApiSuccess:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          nullable: true
+
+    RegisterPhoneRequest:
+      type: object
+      required: [phone, password, role]
+      properties:
+        phone:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [client, freelancer]
+
+    LoginPhoneRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+        password:
+          type: string
+
+    VerifyPhoneRequest:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+
+    OnboardingState:
+      type: object
+      required: [role, onboarding_completed]
+      properties:
+        role:
+          type: string
+          enum: [client, freelancer]
+        onboarding_completed:
+          type: boolean
+        onboarding_completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    GlobalSearchItem:
+      type: object
+      required: [id, type, title]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [order, user, chat]
+        title:
+          type: string
+        subtitle:
+          type: string
+          nullable: true
+        href:
+          type: string
+          nullable: true
+
+    WsServerEvent:
+      type: object
+      description: Versioned realtime event envelope for WS channel
+      required: [type, version, event_id, ts, data]
+      properties:
+        type:
+          type: string
+          example: session.revoked
+        version:
+          type: integer
+          enum: [1]
+        event_id:
+          type: string
+        ts:
+          type: string
+          format: date-time
+        data:
+          type: object
+          additionalProperties: true
+
+    MarkConversationReadRequest:
+      type: object
+      properties:
+        message_id:
+          type: string
+        message_ids:
+          type: array
+          items:
+            type: string
+
+    ProposalListResponse:
+      type: object
+      required: [success, data, pagination]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [proposals]
+          properties:
+            proposals:
+              type: array
+              items:
+                type: object
+            best_recommendation:
+              type: object
+              nullable: true
+              properties:
+                proposal_id:
+                  type: string
+                justification:
+                  type: string
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    NotificationListResponse:
+      type: object
+      required: [success, data, pagination]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [notifications, unread_count]
+          properties:
+            notifications:
+              type: array
+              items:
+                type: object
+            unread_count:
+              type: integer
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    EscrowEntity:
+      type: object
+      required: [id, order_id, client_id, freelancer_id, amount, status, created_at]
+      properties:
+        id:
+          type: string
+        order_id:
+          type: string
+        client_id:
+          type: string
+        freelancer_id:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    EscrowResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/EscrowEntity'
+
+    TransactionListResponse:
+      type: object
+      required: [success, data, pagination]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    AuthResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+            token_pair:
+              type: object
