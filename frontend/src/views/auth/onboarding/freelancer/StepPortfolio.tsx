@@ -280,19 +280,28 @@ export const StepPortfolio = () => {
   const { freelancerData, updateFreelancer, nextStep, prevStep } = useOnboardingStore();
   const items = freelancerData.portfolioItems;
 
-  const updateItem = (index: number, patch: Partial<PortfolioEntry>) => {
-    const updated = items.map((item, i) => (i === index ? { ...item, ...patch } : item));
-    updateFreelancer({ portfolioItems: updated });
-  };
+  // Читаем текущий state из store, чтобы избежать race condition при
+  // последовательных async-апдейтах одного и того же элемента (например,
+  // FileReader превью и резолв uploadPhoto могут срабатывать вразнобой).
+  const updateItem = useCallback(
+    (index: number, patch: Partial<PortfolioEntry>) => {
+      const current = useOnboardingStore.getState().freelancerData.portfolioItems;
+      const updated = current.map((item, i) => (i === index ? { ...item, ...patch } : item));
+      updateFreelancer({ portfolioItems: updated });
+    },
+    [updateFreelancer],
+  );
 
   const addItem = () => {
-    if (items.length < MAX_ITEMS) {
-      updateFreelancer({ portfolioItems: [...items, emptyEntry()] });
+    const current = useOnboardingStore.getState().freelancerData.portfolioItems;
+    if (current.length < MAX_ITEMS) {
+      updateFreelancer({ portfolioItems: [...current, emptyEntry()] });
     }
   };
 
   const removeItem = (index: number) => {
-    updateFreelancer({ portfolioItems: items.filter((_, i) => i !== index) });
+    const current = useOnboardingStore.getState().freelancerData.portfolioItems;
+    updateFreelancer({ portfolioItems: current.filter((_, i) => i !== index) });
   };
 
   const filledCount = items.filter((it) => it.title.trim() && it.description.trim()).length;
