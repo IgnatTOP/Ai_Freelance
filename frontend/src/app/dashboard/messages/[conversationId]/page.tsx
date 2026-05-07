@@ -1,5 +1,7 @@
 import { ChatPage } from "@/views/dashboard/ChatPage";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
     params: Promise<{ conversationId: string }>;
 };

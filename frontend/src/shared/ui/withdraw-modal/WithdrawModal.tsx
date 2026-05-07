@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useBalance, useWithdraw } from "@/features/balance-management";
+import { formatMoney } from "@/shared/lib/money";
 import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-    Input,
-} from "@heroui/react";
-import { ArrowUpRight, CheckCircle2 } from "lucide-react";
-import { useWithdraw, useBalance } from "@/features/balance-management";
+    FilkaButton,
+    FilkaField,
+    FilkaInput,
+    FilkaModal,
+    FilkaModalBody,
+    FilkaModalFooter,
+    FilkaModalHeader,
+    FilkaModalTitle,
+    FilkaModalDescription,
+    IconArrowUpRight,
+    IconCircleCheck,
+} from "@/shared/ui/filka";
 
 interface WithdrawModalProps {
     readonly isOpen: boolean;
@@ -28,11 +32,9 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
     const available = balance?.available ?? 0;
     const numericAmount = Number(amount);
+    const isOverLimit = numericAmount > available;
     const isValid =
-        Number.isFinite(numericAmount) &&
-        numericAmount > 0 &&
-        numericAmount <= available &&
-        cardLast4.length === 4;
+        Number.isFinite(numericAmount) && numericAmount > 0 && !isOverLimit && cardLast4.length === 4;
 
     const handleWithdraw = () => {
         if (!isValid) return;
@@ -49,7 +51,7 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                         onClose();
                     }, 1500);
                 },
-            }
+            },
         );
     };
 
@@ -64,106 +66,98 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={handleClose}
-            classNames={{
-                base: "bg-zinc-950 border border-white/[0.08]",
-                header: "border-b border-white/[0.06]",
-                footer: "border-t border-white/[0.06]",
-            }}
-            backdrop="blur"
-            placement="center"
-        >
-            <ModalContent>
-                {success ? (
-                    <ModalBody className="py-12 flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center animate-fade-in-up">
-                            <CheckCircle2 size={32} className="text-emerald-400" />
-                        </div>
-                        <p className="text-lg font-semibold text-white">Заявка на вывод создана!</p>
-                        <p className="text-sm text-zinc-400">₽{numericAmount.toLocaleString("ru-RU")} на карту •••• {cardLast4}</p>
-                    </ModalBody>
-                ) : (
-                    <>
-                        <ModalHeader className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                                <ArrowUpRight size={18} />
-                            </div>
+        <FilkaModal open={isOpen} onClose={handleClose} size="md">
+            {success ? (
+                <FilkaModalBody className="flex flex-col items-center gap-4 py-12">
+                    <div
+                        className="grid h-16 w-16 place-items-center rounded-full"
+                        style={{
+                            background: "rgba(52,211,153,0.18)",
+                            border: "1px solid rgba(52,211,153,0.32)",
+                            color: "var(--mint-300)",
+                        }}
+                    >
+                        <IconCircleCheck size={32} />
+                    </div>
+                    <p className="text-lg font-semibold">Заявка на вывод создана</p>
+                    <p className="text-sm" style={{ color: "var(--fg-2)" }}>
+                        {formatMoney(numericAmount)} на карту •••• {cardLast4}
+                    </p>
+                </FilkaModalBody>
+            ) : (
+                <>
+                    <FilkaModalHeader>
+                        <div className="flex items-center gap-3">
+                            <span
+                                className="grid h-10 w-10 place-items-center rounded-[var(--r-md)]"
+                                style={{
+                                    background: "rgba(52,211,153,0.1)",
+                                    border: "1px solid rgba(52,211,153,0.22)",
+                                    color: "var(--mint-300)",
+                                }}
+                            >
+                                <IconArrowUpRight size={18} />
+                            </span>
                             <div>
-                                <p className="text-base font-semibold text-white">Вывод средств</p>
-                                <p className="text-xs text-zinc-500 font-normal">
-                                    Доступно: ₽{available.toLocaleString("ru-RU")}
-                                </p>
+                                <FilkaModalTitle>Вывод средств</FilkaModalTitle>
+                                <FilkaModalDescription>Доступно: {formatMoney(available)}</FilkaModalDescription>
                             </div>
-                        </ModalHeader>
-                        <ModalBody className="space-y-4">
-                            <Input
-                                label="Сумма вывода"
+                        </div>
+                    </FilkaModalHeader>
+                    <FilkaModalBody className="flex flex-col gap-4">
+                        <FilkaField
+                            label="Сумма вывода"
+                            error={isOverLimit ? "Сумма превышает доступный баланс" : undefined}
+                        >
+                            <FilkaInput
+                                type="number"
+                                inputMode="numeric"
                                 placeholder="0"
                                 value={amount}
-                                onValueChange={setAmount}
-                                type="number"
-                                variant="bordered"
-                                startContent={<span className="text-zinc-500 text-sm">₽</span>}
-                                description={numericAmount > available ? "Сумма превышает доступный баланс" : undefined}
-                                isInvalid={numericAmount > available}
-                                classNames={{
-                                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
-                                    label: "text-zinc-400",
-                                    input: "text-zinc-200 text-lg font-semibold",
-                                }}
+                                hasError={isOverLimit}
+                                onChange={(e) => setAmount(e.target.value)}
+                                style={{ fontSize: 17, fontWeight: 600 }}
                                 autoFocus
                             />
-                            <div className="grid grid-cols-2 gap-3">
-                                <Input
-                                    label="Последние 4 цифры карты"
+                        </FilkaField>
+                        <div className="grid grid-cols-2 gap-3">
+                            <FilkaField label="Последние 4 цифры карты">
+                                <FilkaInput
                                     placeholder="0000"
+                                    inputMode="numeric"
                                     value={cardLast4}
-                                    onValueChange={(v) => setCardLast4(v.replace(/\D/g, "").slice(0, 4))}
-                                    variant="bordered"
-                                    classNames={{
-                                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
-                                        label: "text-zinc-400",
-                                        input: "text-zinc-200",
-                                    }}
+                                    onChange={(e) => setCardLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
                                 />
-                                <Input
-                                    label="Банк"
-                                    placeholder="Сбербанк"
-                                    value={bankName}
-                                    onValueChange={setBankName}
-                                    variant="bordered"
-                                    classNames={{
-                                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
-                                        label: "text-zinc-400",
-                                        input: "text-zinc-200",
-                                    }}
-                                />
-                            </div>
-                            {withdraw.isError && (
-                                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-                                    Не удалось создать заявку на вывод. Попробуйте снова.
-                                </p>
-                            )}
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button variant="light" className="text-zinc-400" onPress={handleClose}>
-                                Отмена
-                            </Button>
-                            <Button
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-lg shadow-emerald-500/20"
-                                onPress={handleWithdraw}
-                                isLoading={withdraw.isPending}
-                                isDisabled={!isValid}
-                                startContent={<ArrowUpRight size={16} />}
+                            </FilkaField>
+                            <FilkaField label="Банк">
+                                <FilkaInput placeholder="Сбербанк" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+                            </FilkaField>
+                        </div>
+                        {withdraw.isError ? (
+                            <div
+                                className="rounded-[var(--r-md)] border px-3 py-2 text-sm"
+                                style={{ background: "rgba(248,113,113,0.08)", borderColor: "rgba(248,113,113,0.22)", color: "var(--err)" }}
                             >
-                                Вывести
-                            </Button>
-                        </ModalFooter>
-                    </>
-                )}
-            </ModalContent>
-        </Modal>
+                                Не удалось создать заявку на вывод. Попробуйте снова.
+                            </div>
+                        ) : null}
+                    </FilkaModalBody>
+                    <FilkaModalFooter>
+                        <FilkaButton variant="ghost" onClick={handleClose}>
+                            Отмена
+                        </FilkaButton>
+                        <FilkaButton
+                            variant="primary"
+                            onClick={handleWithdraw}
+                            loading={withdraw.isPending}
+                            disabled={!isValid}
+                            startContent={<IconArrowUpRight size={16} />}
+                        >
+                            Вывести
+                        </FilkaButton>
+                    </FilkaModalFooter>
+                </>
+            )}
+        </FilkaModal>
     );
 };

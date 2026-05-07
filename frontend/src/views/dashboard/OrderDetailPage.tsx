@@ -1,1355 +1,707 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Button, Card, CardBody, Chip, Textarea, Input, Avatar, Divider, Progress, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@heroui/react";
-import {
-    ArrowLeft, Send, Check, X, MessageSquare, Calendar, Tag, Wallet,
-    Clock, Sparkles, Pencil, Save, Search, Users, Timer,
-    ArrowUpDown, ChevronDown, ChevronUp, Zap, Shield, Star,
-} from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionStore } from "@/shared/store/session.store";
+import { profileApi } from "@/shared/api/endpoints/profile";
+import { useOrderDetail, usePublishOrder, useDeleteOrder } from "@/features/order-management";
+import {
+    useMyOrderProposal,
+    useOrderProposals,
+    useSubmitProposal,
+    useUpdateProposalStatus,
+} from "@/features/proposal-management";
+import { useBalance, useEscrowStatus, useReleaseEscrow } from "@/features/balance-management";
 import { apiClient } from "@/shared/api/client";
-import { useOrderDetail, useUpdateOrder } from "@/features/order-management";
-import { useMyProposals, useOrderProposals, useSubmitProposal, useUpdateProposalStatus } from "@/features/proposal-management";
-import { StatusBadge } from "@/shared/ui/status-badge/StatusBadge";
 import {
     InsufficientFundsModal,
-    parseInsufficientFundsError,
     isInsufficientFundsError,
+    parseInsufficientFundsError,
 } from "@/shared/ui/insufficient-funds-modal/InsufficientFundsModal";
+import { StatusBadge } from "@/shared/ui/status-badge/StatusBadge";
+import { formatMoney } from "@/shared/lib/money";
+import {
+    FilkaAISphere,
+    FilkaAvatar,
+    FilkaButton,
+    FilkaCard,
+    FilkaChip,
+    FilkaField,
+    FilkaInput,
+    FilkaModal,
+    FilkaModalBody,
+    FilkaModalFooter,
+    FilkaModalHeader,
+    FilkaModalTitle,
+    FilkaProgressBar,
+    FilkaSegmented,
+    FilkaSpinner,
+    FilkaTabs,
+    FilkaTextarea,
+    IconArrowRight,
+    IconCheck,
+    IconChat,
+    IconClock,
+    IconShield,
+    IconSpark,
+    IconStar,
+    IconTrash,
+    useFilkaToast,
+} from "@/shared/ui/filka";
 
 interface OrderDetailPageProps {
     readonly orderId: string;
 }
 
-/* ── Status timeline ── */
-const STATUS_FLOW = [
-    { key: "draft", label: "Черновик" },
-    { key: "published", label: "Опубликован" },
-    { key: "in_progress", label: "В работе" },
-    { key: "completed", label: "Завершён" },
-];
+const STATUS_TIMELINE = [
+    { id: "draft", label: "Черновик", percent: 5 },
+    { id: "published", label: "Опубликован", percent: 25 },
+    { id: "in_progress", label: "В работе", percent: 65 },
+    { id: "completed", label: "Завершён", percent: 100 },
+] as const;
 
-const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
-    const currentIdx = STATUS_FLOW.findIndex((s) => s.key === currentStatus);
-    const isCancelled = currentStatus === "cancelled";
-
-    return (
-        <div className="flex items-center gap-1 overflow-x-auto pb-2">
-            {STATUS_FLOW.map((step, i) => {
-                const isPast = i <= currentIdx && !isCancelled;
-                const isCurrent = i === currentIdx && !isCancelled;
-                return (
-                    <div key={step.key} className="flex items-center shrink-0">
-                        <div className="flex items-center gap-2">
-                            <div className="relative">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isCurrent
-                                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/40 ring-2 ring-purple-500/20 ring-offset-2 ring-offset-zinc-950"
-                                    : isPast
-                                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                        : "bg-zinc-800/60 text-zinc-600 border border-zinc-700/40"
-                                    }`}>
-                                    {isPast && !isCurrent ? <Check size={12} /> : i + 1}
-                                </div>
-                                {isCurrent && (
-                                    <span className="absolute inset-0 rounded-full bg-purple-500/30 animate-ping" />
-                                )}
-                            </div>
-                            <span className={`text-xs font-medium transition-colors ${isCurrent ? "text-purple-300" : isPast ? "text-zinc-300" : "text-zinc-600"}`}>
-                                {step.label}
-                            </span>
-                        </div>
-                        {i < STATUS_FLOW.length - 1 && (
-                            <div className={`w-10 h-0.5 mx-2 rounded-full transition-colors ${isPast ? "bg-gradient-to-r from-emerald-500/40 to-emerald-500/10" : "bg-zinc-800/60"}`} />
-                        )}
-                    </div>
-                );
-            })}
-            {isCancelled && (
-                <div className="flex items-center gap-2 ml-2">
-                    <div className="w-8 h-8 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center">
-                        <X size={12} />
-                    </div>
-                    <span className="text-xs font-medium text-red-400">Отменён</span>
-                </div>
-            )}
-        </div>
-    );
+const formatDeadline = (dateString: string): string => {
+    if (!dateString) return "без срока";
+    const date = new Date(dateString);
+    if (!Number.isFinite(date.getTime())) return "без срока";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(date);
+    dueDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / 86_400_000);
+    if (diffDays <= 0) return "сегодня";
+    if (diffDays === 1) return "1 день";
+    if (diffDays < 5) return `${diffDays} дня`;
+    return `${diffDays} дней`;
 };
 
-const formatCurrency = (value: number | null | undefined): string => {
-    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return "—";
-    return `₽${value.toLocaleString("ru-RU")}`;
+const formatRelative = (dateString: string): string => {
+    const date = new Date(dateString);
+    if (!Number.isFinite(date.getTime())) return "недавно";
+    const diffMin = Math.floor((Date.now() - date.getTime()) / 60_000);
+    if (diffMin < 60) return diffMin <= 0 ? "только что" : `${diffMin} мин назад`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours} ч назад`;
+    return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 };
-
-const formatDays = (value: number | null | undefined): string => {
-    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return "—";
-    return `${value} дн`;
-};
-
-const formatDate = (dateStr: string): string => {
-    return new Date(dateStr).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
-};
-
-const getDaysUntilDeadline = (deadline: string | null | undefined): number | null => {
-    if (!deadline) return null;
-    const diff = new Date(deadline).getTime() - Date.now();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-};
-
-/* ── Waiting for proposals animation ── */
-const WaitingForProposals = () => (
-    <div className="relative py-12 px-4">
-        {/* Radar animation */}
-        <div className="flex flex-col items-center justify-center relative">
-            <div className="relative w-28 h-28 mb-8">
-                {/* Radar rings */}
-                <div className="absolute inset-0 rounded-full border border-purple-500/20 animate-radar-ping" />
-                <div className="absolute inset-0 rounded-full border border-purple-500/15 animate-radar-ping-delay" />
-                <div className="absolute inset-0 rounded-full border border-purple-500/10 animate-radar-ping-delay-2" />
-                {/* Center icon */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-lg shadow-purple-500/10">
-                        <Search size={24} className="text-purple-400" />
-                    </div>
-                </div>
-            </div>
-
-            <h3 className="text-lg font-semibold text-white mb-2">Ищем исполнителей</h3>
-            <p className="text-sm text-zinc-400 mb-1 flex items-center gap-1">
-                Ваш заказ виден исполнителям
-                <span className="inline-flex gap-0.5">
-                    <span className="w-1 h-1 rounded-full bg-purple-400 animate-typing-dot-1" />
-                    <span className="w-1 h-1 rounded-full bg-purple-400 animate-typing-dot-2" />
-                    <span className="w-1 h-1 rounded-full bg-purple-400 animate-typing-dot-3" />
-                </span>
-            </p>
-            <p className="text-xs text-zinc-600 mb-8">Обычно первые отклики приходят в течение 1–2 часов</p>
-
-            {/* Shimmer placeholder cards */}
-            <div className="w-full max-w-md space-y-3">
-                {[0, 1, 2].map((i) => (
-                    <div
-                        key={i}
-                        className="glass-card rounded-xl p-4 animate-fade-in-up"
-                        style={{ animationDelay: `${i * 150}ms`, opacity: 1 - i * 0.25 }}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-zinc-800 shimmer" />
-                            <div className="flex-1 space-y-2">
-                                <div className="h-3.5 bg-zinc-800 rounded-lg w-2/5 shimmer" />
-                                <div className="h-3 bg-zinc-800 rounded-lg w-4/5 shimmer" />
-                            </div>
-                            <div className="h-6 w-16 bg-zinc-800 rounded-full shimmer" />
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    </div>
-);
-
-/* ── AI Recommendation Hero Card ── */
-const AIRecommendationCard = ({
-    bestRecommendation,
-    proposals,
-}: {
-    bestRecommendation: { proposal_id: string; justification: string; score?: number };
-    proposals: { id: string; freelancer_name?: string }[];
-}) => {
-    const bestProposal = proposals.find((p) => p.id === bestRecommendation.proposal_id);
-
-    return (
-        <div className="relative rounded-2xl overflow-hidden animate-fade-in-up">
-            {/* Animated gradient border */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-600/40 via-indigo-500/40 to-fuchsia-500/40 animate-gradient-border" />
-            <div className="m-[1px] rounded-2xl bg-zinc-950/90 backdrop-blur-xl p-5">
-                <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-purple-500/20 flex items-center justify-center shrink-0">
-                        <Sparkles size={20} className="text-purple-300 animate-sparkle" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-bold text-purple-200">AI-рекомендация</h3>
-                            {bestRecommendation.score != null && (
-                                <Chip size="sm" classNames={{ base: "bg-purple-500/15 border border-purple-500/25", content: "text-purple-300 text-xs font-bold" }}>
-                                    {bestRecommendation.score}% совпадение
-                                </Chip>
-                            )}
-                        </div>
-                        {bestProposal?.freelancer_name && (
-                            <p className="text-xs text-purple-400/70 mb-2">
-                                Лучший кандидат: <span className="text-purple-300 font-medium">{bestProposal.freelancer_name}</span>
-                            </p>
-                        )}
-                        <p className="text-sm text-zinc-300 leading-relaxed">{bestRecommendation.justification}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-/* ── Proposals Stats Bar ── */
-const ProposalsStats = ({
-    proposals,
-}: {
-    proposals: { proposed_budget: number; estimated_days: number; ai_analysis_for_client?: string | null }[];
-}) => {
-    const withBudget = proposals.filter((p) => p.proposed_budget > 0);
-    const withDays = proposals.filter((p) => p.estimated_days > 0);
-    const avgBudget = withBudget.length > 0
-        ? Math.round(withBudget.reduce((s, p) => s + p.proposed_budget, 0) / withBudget.length)
-        : 0;
-    const avgDays = withDays.length > 0
-        ? Math.round(withDays.reduce((s, p) => s + p.estimated_days, 0) / withDays.length)
-        : 0;
-    const aiAnalyzed = proposals.filter((p) => p.ai_analysis_for_client).length;
-
-    const stats = [
-        { icon: <Users size={14} />, label: "Откликов", value: String(proposals.length), color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
-        { icon: <Wallet size={14} />, label: "Средняя цена", value: formatCurrency(avgBudget), color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-        { icon: <Timer size={14} />, label: "Средний срок", value: formatDays(avgDays), color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-        { icon: <Sparkles size={14} />, label: "AI-анализ", value: `${aiAnalyzed}/${proposals.length}`, color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
-    ];
-
-    return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-up">
-            {stats.map((s) => (
-                <div key={s.label} className="glass-card rounded-xl p-3 flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${s.bg} ${s.color}`}>
-                        {s.icon}
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-xs text-zinc-500 truncate">{s.label}</p>
-                        <p className={`text-sm font-semibold ${s.color}`}>{s.value}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
-
-/* ── AI Analysis In-Progress Banner ── */
-const AIAnalysisInProgress = ({ analyzed, total }: { analyzed: number; total: number }) => {
-    const pct = total > 0 ? Math.round((analyzed / total) * 100) : 0;
-
-    return (
-        <div className="rounded-xl bg-indigo-500/[0.06] border border-indigo-500/15 p-4 animate-fade-in-up">
-            <div className="flex items-center gap-3 mb-3">
-                <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
-                    <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20 border-t-indigo-400 animate-spin" />
-                    <Sparkles size={14} className="text-indigo-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-indigo-200">AI анализирует отклики</p>
-                    <p className="text-xs text-zinc-500">
-                        Проанализировано {analyzed} из {total}
-                        <span className="inline-flex gap-0.5 ml-1">
-                            <span className="w-1 h-1 rounded-full bg-indigo-400 animate-typing-dot-1" />
-                            <span className="w-1 h-1 rounded-full bg-indigo-400 animate-typing-dot-2" />
-                            <span className="w-1 h-1 rounded-full bg-indigo-400 animate-typing-dot-3" />
-                        </span>
-                    </p>
-                </div>
-                <span className="text-xs font-bold text-indigo-300">{pct}%</span>
-            </div>
-            <Progress
-                value={pct}
-                size="sm"
-                classNames={{
-                    track: "bg-zinc-800/60 h-1.5",
-                    indicator: "bg-gradient-to-r from-indigo-500 to-purple-500",
-                }}
-            />
-        </div>
-    );
-};
-
-/* ── Sort options ── */
-type SortKey = "date" | "budget_asc" | "budget_desc" | "ai";
-
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-    { key: "date", label: "По дате" },
-    { key: "budget_asc", label: "Цена ↑" },
-    { key: "budget_desc", label: "Цена ↓" },
-    { key: "ai", label: "AI-анализ" },
-];
-
-type ProposalFilterKey = "all" | "pending" | "accepted" | "rejected";
-
-const PROPOSAL_FILTERS: { key: ProposalFilterKey; label: string }[] = [
-    { key: "all", label: "Все" },
-    { key: "pending", label: "Новые" },
-    { key: "accepted", label: "Принятые" },
-    { key: "rejected", label: "Отклонённые" },
-];
 
 export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const role = useSessionStore((s) => s.role);
     const userId = useSessionStore((s) => s.userId);
+    const toast = useFilkaToast();
     const { data: order, isLoading } = useOrderDetail(orderId);
-    const { data: proposalsData } = useOrderProposals(orderId);
-    const { data: myProposalsData } = useMyProposals();
+    const { data: clientProfile } = useQuery({
+        queryKey: ["profile", "public", order?.client_id],
+        queryFn: () => profileApi.getPublicProfile(order?.client_id ?? ""),
+        enabled: Boolean(order?.client_id),
+        retry: false,
+    });
+    const isClient = role === "client" && order?.client_id === userId;
+    const isFreelancer = role === "freelancer";
+    const { data: proposalsData } = useOrderProposals(orderId, Boolean(isClient));
+    const { data: myProposalData } = useMyOrderProposal(orderId, isFreelancer);
     const submitProposal = useSubmitProposal();
     const updateStatus = useUpdateProposalStatus();
-    const updateOrder = useUpdateOrder();
-    const proposalStatusModal = useDisclosure();
+    const publish = usePublishOrder();
+    const remove = useDeleteOrder();
+    const releaseEscrow = useReleaseEscrow();
+    const { data: escrow } = useEscrowStatus(orderId);
+    const { data: balance } = useBalance();
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-    const [editTitle, setEditTitle] = useState("");
-    const [editDescription, setEditDescription] = useState("");
-    const [editBudgetMin, setEditBudgetMin] = useState("");
-    const [editBudgetMax, setEditBudgetMax] = useState("");
-    const [editDeadline, setEditDeadline] = useState("");
-    const [editSkills, setEditSkills] = useState("");
-
+    const [proposalOpen, setProposalOpen] = useState(false);
     const [coverLetter, setCoverLetter] = useState("");
     const [proposedBudget, setProposedBudget] = useState("");
     const [estimatedDays, setEstimatedDays] = useState("");
-    const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
-    const [isSuggestingTerms, setIsSuggestingTerms] = useState(false);
-    const [aiHint, setAiHint] = useState("");
-    const [aiError, setAiError] = useState("");
-    const [sortBy, setSortBy] = useState<SortKey>("date");
-    const [proposalFilter, setProposalFilter] = useState<ProposalFilterKey>("all");
-    const [proposalActionNotice, setProposalActionNotice] = useState("");
-    const [proposalFormError, setProposalFormError] = useState("");
-    const [expandedAI, setExpandedAI] = useState<Set<string>>(new Set());
-    const [pendingStatusAction, setPendingStatusAction] = useState<{
-        proposalId: string;
-        status: "accepted" | "rejected";
-    } | null>(null);
-    const [fundsModal, setFundsModal] = useState<{
-        isOpen: boolean;
-        available: number;
-        required: number;
-        retryProposalId: string;
-    }>({ isOpen: false, available: 0, required: 0, retryProposalId: "" });
+    const [insufficient, setInsufficient] = useState<{ available: number; required: number } | null>(null);
+    const [pendingAcceptProposalId, setPendingAcceptProposalId] = useState<string | null>(null);
+    const [sortBy, setSortBy] = useState<"match" | "price" | "deadline">("match");
+    const [tab, setTab] = useState<"proposals" | "details">("proposals");
 
-    const proposals = proposalsData?.items ?? [];
-    const myProposals = myProposalsData?.items ?? [];
-    const bestRecommendation = proposalsData?.best_recommendation;
-    const existingProposal =
-        proposals.find((proposal) => proposal.freelancer_id === userId) ??
-        myProposals.find((proposal) => proposal.order_id === orderId);
-    const hasExistingProposal = Boolean(existingProposal);
-
-    const sortedProposals = useMemo(() => {
-        const sorted = [...proposals];
+    const proposals = useMemo(() => {
+        const list = [...(proposalsData?.items ?? [])];
         switch (sortBy) {
-            case "budget_asc":
-                sorted.sort((a, b) => a.proposed_budget - b.proposed_budget);
+            case "price":
+                list.sort((a, b) => a.proposed_budget - b.proposed_budget);
                 break;
-            case "budget_desc":
-                sorted.sort((a, b) => b.proposed_budget - a.proposed_budget);
+            case "deadline":
+                list.sort((a, b) => a.estimated_days - b.estimated_days);
                 break;
-            case "ai":
-                sorted.sort((a, b) => (b.ai_analysis_for_client ? 1 : 0) - (a.ai_analysis_for_client ? 1 : 0));
-                break;
+            case "match":
             default:
-                sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                break;
         }
-        // Best recommendation always first
-        if (bestRecommendation) {
-            const idx = sorted.findIndex((p) => p.id === bestRecommendation.proposal_id);
-            if (idx > 0) {
-                const [best] = sorted.splice(idx, 1);
-                if (best) {
-                    sorted.unshift(best);
-                }
-            }
-        }
-        return sorted;
-    }, [proposals, sortBy, bestRecommendation]);
+        return list;
+    }, [proposalsData?.items, sortBy]);
 
-    const proposalCounters = useMemo(
-        () => ({
-            all: proposals.length,
-            pending: proposals.filter((proposal) => proposal.status === "pending").length,
-            accepted: proposals.filter((proposal) => proposal.status === "accepted").length,
-            rejected: proposals.filter((proposal) => proposal.status === "rejected").length,
-        }),
-        [proposals]
+    const myProposal = useMemo(
+        () => myProposalData ?? (proposalsData?.items ?? []).find((p) => p.freelancer_id === userId) ?? null,
+        [myProposalData, proposalsData?.items, userId],
     );
 
-    const visibleProposals = useMemo(() => {
-        if (proposalFilter === "all") return sortedProposals;
-        return sortedProposals.filter((proposal) => proposal.status === proposalFilter);
-    }, [proposalFilter, sortedProposals]);
+    const bestId = proposalsData?.best_recommendation?.proposal_id;
+    const visibleProposalCount = Math.max(order?.proposals_count ?? 0, proposals.length);
+    const currentStatusIdx = STATUS_TIMELINE.findIndex((s) => s.id === order?.status);
+    const escrowPercent =
+        order?.status === "completed"
+            ? 100
+            : order?.status === "in_progress"
+              ? 65
+              : order?.status === "published"
+                ? 25
+                : 0;
 
-    const toggleAIExpanded = (id: string) => {
-        setExpandedAI((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    };
-
-    const handleSubmitProposal = () => {
-        if (hasExistingProposal) return;
-        if (!order) return;
-        const normalizedCoverLetter = coverLetter.trim();
-        const budget = Number(proposedBudget);
-        const days = Number(estimatedDays);
-
-        if (normalizedCoverLetter.length < 40) {
-            setProposalFormError("Добавьте чуть больше деталей в отклик (минимум 40 символов).");
-            return;
-        }
-        if (!Number.isFinite(budget) || budget <= 0) {
-            setProposalFormError("Укажите корректную цену больше 0.");
-            return;
-        }
-        if (budget < order.budget_min || budget > order.budget_max) {
-            setProposalFormError(`Сумма отклика должна быть в диапазоне ${formatCurrency(order.budget_min)} - ${formatCurrency(order.budget_max)}.`);
-            return;
-        }
-        if (!Number.isFinite(days) || days <= 0) {
-            setProposalFormError("Укажите корректный срок в днях.");
-            return;
-        }
-
-        setProposalFormError("");
-        submitProposal.mutate({
-            orderId,
-            input: {
-                cover_letter: normalizedCoverLetter,
-                proposed_budget: budget,
-                estimated_days: days,
-            },
-        }, {
-            onError: () => {
-                setProposalFormError("Не удалось отправить отклик. Попробуйте снова.");
-            },
-            onSuccess: () => {
-                setProposalFormError("");
-                setCoverLetter("");
-                setProposedBudget("");
-                setEstimatedDays("");
-            },
-        });
-    };
-
-    const handleStatusUpdate = (proposalId: string, status: "accepted" | "rejected") => {
-        setPendingStatusAction({ proposalId, status });
-        proposalStatusModal.onOpen();
-    };
-
-    const closeStatusModal = () => {
-        if (updateStatus.isPending) return;
-        setPendingStatusAction(null);
-        proposalStatusModal.onClose();
-    };
-
-    const confirmStatusUpdate = () => {
-        if (!pendingStatusAction) return;
-        setProposalActionNotice("");
-        updateStatus.mutate({ orderId, proposalId: pendingStatusAction.proposalId, status: pendingStatusAction.status }, {
-            onSuccess: () => {
-                setProposalActionNotice(pendingStatusAction.status === "accepted" ? "Отклик принят." : "Отклик отклонён.");
-            },
-            onError: (error) => {
-                if (isInsufficientFundsError(error)) {
-                    const parsed = parseInsufficientFundsError((error as Error).message);
-                    setFundsModal({
-                        isOpen: true,
-                        available: parsed?.available ?? 0,
-                        required: parsed?.required ?? 0,
-                        retryProposalId: pendingStatusAction.proposalId,
-                    });
-                } else {
-                    setProposalActionNotice("Не удалось обновить статус отклика. Повторите попытку.");
-                }
-            },
-            onSettled: () => {
-                setPendingStatusAction(null);
-                proposalStatusModal.onClose();
-            },
-        });
-    };
-
-    const handleFundsDepositSuccess = () => {
-        if (fundsModal.retryProposalId) {
-            updateStatus.mutate(
-                { orderId, proposalId: fundsModal.retryProposalId, status: "accepted" },
-                {
-                    onSuccess: () => setProposalActionNotice("Отклик принят."),
-                    onError: () => setProposalActionNotice("Не удалось принять отклик после пополнения. Попробуйте ещё раз."),
-                }
-            );
-        }
-    };
-
-    const handleGenerateProposalWithAI = async () => {
-        setAiError("");
-        setAiHint("");
-        setIsGeneratingProposal(true);
-        try {
-            const data = await apiClient.request<{ proposal?: string }>(`/ai/orders/${orderId}/proposal`, {
-                method: "POST",
-                body: JSON.stringify({}),
-            });
-            const proposal = (data.proposal ?? "").trim();
-            if (proposal) {
-                setCoverLetter(proposal);
-            } else {
-                setAiError("ИИ не смог сгенерировать текст. Попробуйте ещё раз.");
-            }
-        } catch {
-            setAiError("Не удалось получить текст отклика от ИИ.");
-        } finally {
-            setIsGeneratingProposal(false);
-        }
-    };
-
-    const handleSuggestTermsWithAI = async () => {
-        setAiError("");
-        setAiHint("");
-        setIsSuggestingTerms(true);
-        try {
-            const data = await apiClient.request<{
-                recommended_amount?: number | null;
-                min_amount?: number | null;
-                max_amount?: number | null;
-                recommended_days?: number | null;
-                min_days?: number | null;
-                max_days?: number | null;
-                explanation?: string;
-            }>(`/ai/orders/${orderId}/price-timeline`);
-
-            const amount = data.recommended_amount ?? data.min_amount ?? data.max_amount ?? null;
-            const days = data.recommended_days ?? data.min_days ?? data.max_days ?? null;
-
-            if (typeof amount === "number" && Number.isFinite(amount)) {
-                setProposedBudget(String(Math.max(1, Math.round(amount))));
-            }
-            if (typeof days === "number" && Number.isFinite(days)) {
-                setEstimatedDays(String(Math.max(1, Math.round(days))));
-            }
-            if (data.explanation) {
-                setAiHint(data.explanation);
-            }
-        } catch {
-            setAiError("Не удалось получить рекомендацию по цене и сроку.");
-        } finally {
-            setIsSuggestingTerms(false);
-        }
-    };
-
-    const startEditing = () => {
-        if (!order) return;
-        setEditTitle(order.title);
-        setEditDescription(order.description);
-        setEditBudgetMin(String(order.budget_min));
-        setEditBudgetMax(String(order.budget_max));
-        setEditDeadline(order.deadline ? order.deadline.slice(0, 10) : "");
-        setEditSkills(order.skill_tags.join(", "));
-        setIsEditing(true);
-    };
-
-    const handleSaveOrder = async () => {
-        if (!order) return;
-        const nextBudgetMin = Number(editBudgetMin) || order.budget_min;
-        const nextBudgetMax = Number(editBudgetMax) || order.budget_max;
-        if (nextBudgetMin <= 0 || nextBudgetMax <= 0) {
-            setProposalActionNotice("Бюджет заказа должен быть больше 0.");
-            return;
-        }
-        if (nextBudgetMin > nextBudgetMax) {
-            setProposalActionNotice("Минимальный бюджет не может быть больше максимального.");
-            return;
-        }
-        await updateOrder.mutateAsync({
-            id: order.id,
-            input: {
-                title: editTitle.trim(),
-                description: editDescription.trim(),
-                budget_min: nextBudgetMin,
-                budget_max: nextBudgetMax,
-                deadline: editDeadline || order.deadline,
-                skill_tags: editSkills
-                    .split(",")
-                    .map((skill) => skill.trim())
-                    .filter(Boolean),
-            },
-        });
-        setIsEditing(false);
-    };
-
-    /* ── Loading skeleton ── */
     if (isLoading) {
         return (
-            <div className="max-w-5xl mx-auto space-y-6">
-                {/* Header skeleton */}
-                <div className="glass-card rounded-2xl p-8 animate-pulse">
-                    <div className="flex items-start justify-between mb-6">
-                        <div className="space-y-3 flex-1">
-                            <div className="h-8 bg-zinc-800 rounded-lg w-2/3 shimmer" />
-                            <div className="h-4 bg-zinc-800 rounded-lg w-1/4 shimmer" />
-                        </div>
-                        <div className="h-7 w-24 bg-zinc-800 rounded-full shimmer" />
-                    </div>
-                    <div className="flex items-center gap-3 mb-6">
-                        {[0, 1, 2, 3].map((i) => (
-                            <div key={i} className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-zinc-800 rounded-full shimmer" />
-                                <div className="h-3 w-16 bg-zinc-800 rounded shimmer" />
-                                {i < 3 && <div className="w-10 h-0.5 bg-zinc-800 mx-1" />}
-                            </div>
-                        ))}
-                    </div>
-                    <Divider className="bg-white/[0.04] my-6" />
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 space-y-3">
-                            <div className="h-4 bg-zinc-800 rounded w-full shimmer" />
-                            <div className="h-4 bg-zinc-800 rounded w-full shimmer" />
-                            <div className="h-4 bg-zinc-800 rounded w-3/4 shimmer" />
-                            <div className="flex gap-2 pt-3">
-                                {[0, 1, 2].map((i) => (
-                                    <div key={i} className="h-6 w-16 bg-zinc-800 rounded-full shimmer" />
-                                ))}
-                            </div>
-                        </div>
-                        <div className="space-y-4">
-                            {[0, 1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-zinc-800 rounded-lg shimmer" />
-                                    <div className="space-y-1.5 flex-1">
-                                        <div className="h-3 w-16 bg-zinc-800 rounded shimmer" />
-                                        <div className="h-4 w-24 bg-zinc-800 rounded shimmer" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-                {/* Proposals skeleton */}
-                <div className="space-y-3">
-                    {[0, 1].map((i) => (
-                        <div key={i} className="glass-card rounded-2xl p-5 animate-pulse">
-                            <div className="flex gap-3">
-                                <div className="w-10 h-10 bg-zinc-800 rounded-full shimmer" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 w-1/3 bg-zinc-800 rounded shimmer" />
-                                    <div className="h-3 w-full bg-zinc-800 rounded shimmer" />
-                                    <div className="h-3 w-2/3 bg-zinc-800 rounded shimmer" />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+            <div className="flex items-center justify-center py-24">
+                <FilkaSpinner size={28} />
             </div>
         );
     }
 
     if (!order) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 animate-fade-in-up">
-                <div className="w-16 h-16 rounded-2xl bg-zinc-800/50 border border-zinc-700/30 flex items-center justify-center text-zinc-500 mb-4">
-                    <Search size={24} />
-                </div>
-                <p className="text-zinc-400 mb-4">Заказ не найден</p>
-                <Button variant="light" className="text-purple-400" onPress={() => router.back()}>
-                    Назад
-                </Button>
-            </div>
+            <FilkaCard className="px-6 py-12 text-center">
+                <h2 className="t-h3 mb-2">Заказ не найден</h2>
+                <p className="t-body-sm" style={{ color: "var(--fg-2)" }}>
+                    Возможно, он был удалён или ссылка устарела.
+                </p>
+                <Link href="/dashboard/orders" className="mt-5 inline-flex">
+                    <FilkaButton size="sm">К списку заказов</FilkaButton>
+                </Link>
+            </FilkaCard>
         );
     }
 
-    const isOwner = role === "client" && userId === order.client_id;
-    const isLongDescription = order.description.trim().length > 700;
-    const daysUntilDeadline = getDaysUntilDeadline(order.deadline);
-    const normalizedCoverLetter = coverLetter.trim();
-    const proposalBudget = Number(proposedBudget);
-    const proposalDays = Number(estimatedDays);
-    const canSubmitProposal =
-        normalizedCoverLetter.length >= 40 &&
-        Number.isFinite(proposalBudget) &&
-        proposalBudget > 0 &&
-        Number.isFinite(proposalDays) &&
-        proposalDays > 0 &&
-        !submitProposal.isPending &&
-        !hasExistingProposal;
+    const handleSubmitProposal = async () => {
+        if (!coverLetter.trim() || !proposedBudget || !estimatedDays) {
+            toast.warn("Заполните все поля отклика");
+            return;
+        }
+        try {
+            await submitProposal.mutateAsync({
+                orderId,
+                input: {
+                    cover_letter: coverLetter.trim(),
+                    proposed_budget: Number(proposedBudget),
+                    estimated_days: Number(estimatedDays),
+                },
+            });
+            toast.success("Отклик отправлен");
+            setProposalOpen(false);
+            setCoverLetter("");
+            setProposedBudget("");
+            setEstimatedDays("");
+        } catch (e) {
+            toast.error("Не удалось отправить отклик", e instanceof Error ? e.message : undefined);
+        }
+    };
 
-    const inputClasses = {
-        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
-        label: "text-zinc-400",
-        input: "text-zinc-200",
+    const handleAccept = async (proposalId: string) => {
+        try {
+            await updateStatus.mutateAsync({ orderId, proposalId, status: "accepted" });
+            setPendingAcceptProposalId(null);
+            toast.success("Отклик принят", "Эскроу зарезервирован");
+        } catch (e) {
+            if (isInsufficientFundsError(e)) {
+                const parsed = parseInsufficientFundsError((e as Error).message);
+                setPendingAcceptProposalId(proposalId);
+                setInsufficient(parsed ?? {
+                    available: balance?.available ?? 0,
+                    required: order?.budget_max ?? order?.budget_min ?? 0,
+                });
+                return;
+            }
+            const message = e instanceof Error ? e.message : "";
+            toast.error(
+                "Не удалось принять отклик",
+                /repository|sql|destination|updated_at|conversation/i.test(message)
+                    ? "Обновите страницу и повторите действие"
+                    : message || undefined,
+            );
+        }
+    };
+
+    const handleReject = async (proposalId: string) => {
+        if (typeof window !== "undefined" && !window.confirm("Отклонить этот отклик?")) return;
+        try {
+            await updateStatus.mutateAsync({ orderId, proposalId, status: "rejected" });
+            toast.info("Отклик отклонён");
+        } catch (e) {
+            toast.error("Не удалось отклонить", e instanceof Error ? e.message : undefined);
+        }
+    };
+
+    const handlePublishOrder = async () => {
+        try {
+            await publish.mutateAsync(orderId);
+            toast.success("Заказ опубликован");
+        } catch (e) {
+            toast.error("Не удалось опубликовать", e instanceof Error ? e.message : undefined);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (typeof window !== "undefined" && !window.confirm("Удалить заказ безвозвратно?")) return;
+        try {
+            await remove.mutateAsync(orderId);
+            toast.success("Заказ удалён");
+            router.replace("/dashboard/orders" as never);
+        } catch (e) {
+            toast.error("Не удалось удалить", e instanceof Error ? e.message : undefined);
+        }
+    };
+
+    const handleOpenChat = async () => {
+        try {
+            const conv = await apiClient.request<{ id: string }>(`/orders/${orderId}/chat`, { method: "GET" });
+            router.push(`/dashboard/messages/${conv.id}` as never);
+        } catch {
+            toast.error("Чат пока недоступен");
+        }
+    };
+
+    const handleCompleteByFreelancer = async () => {
+        try {
+            await apiClient.request<unknown>(`/orders/${orderId}/complete-by-freelancer`, { method: "POST" });
+            await queryClient.invalidateQueries({ queryKey: ["orders", orderId] });
+            await queryClient.invalidateQueries({ queryKey: ["orders"] });
+            toast.success("Работа отправлена на приёмку");
+        } catch (e) {
+            toast.error("Не удалось завершить", e instanceof Error ? e.message : undefined);
+        }
+    };
+
+    const handleReleaseEscrow = async () => {
+        if (typeof window !== "undefined" && !window.confirm("Подтвердить выполнение и выплатить исполнителю?")) return;
+        try {
+            await releaseEscrow.mutateAsync(orderId);
+            toast.success("Эскроу выплачен исполнителю");
+        } catch (e) {
+            toast.error("Не удалось выполнить", e instanceof Error ? e.message : undefined);
+        }
     };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6 animate-fade-in-up">
-            <Button variant="light" className="text-zinc-400 hover:text-zinc-200" onPress={() => router.back()} startContent={<ArrowLeft size={16} />}>
-                Назад
-            </Button>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="flex min-w-0 flex-col gap-5">
+                <FilkaCard className="p-6">
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
+                        <StatusBadge status={order.status} />
+                        <FilkaChip tone="muted">{order.category || "Без категории"}</FilkaChip>
+                        <span className="t-caption ml-auto">опубликовано {formatRelative(order.created_at)}</span>
+                    </div>
+                    <h1 className="t-h2 mb-4">{order.title}</h1>
+                    <p className="t-body whitespace-pre-wrap" style={{ color: "var(--fg-1)" }}>
+                        {order.description}
+                    </p>
 
-            {/* ═══ Order header + timeline ═══ */}
-            <div className="glass-card rounded-2xl overflow-hidden relative">
-                {/* Decorative background gradient */}
-                <div className="absolute top-0 right-0 w-72 h-72 bg-purple-600/[0.04] rounded-full blur-[80px] pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-600/[0.03] rounded-full blur-[60px] pointer-events-none" />
-
-                <div className="relative p-6 space-y-5">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-3 flex-1 min-w-0">
-                            {isEditing ? (
-                                <Input
-                                    value={editTitle}
-                                    onValueChange={setEditTitle}
-                                    variant="bordered"
-                                    classNames={inputClasses}
-                                />
-                            ) : (
-                                <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">{order.title}</h1>
-                            )}
-                            <div className="flex items-center gap-3 flex-wrap">
-                                <StatusBadge status={order.status} />
-                                {order.created_at && (
-                                    <span className="text-xs text-zinc-500">
-                                        Создан {formatDate(order.created_at)}
-                                    </span>
-                                )}
-                                {isOwner && !isEditing && (
-                                    <Button
-                                        size="sm"
-                                        variant="light"
-                                        className="text-zinc-500 hover:text-purple-400"
-                                        startContent={<Pencil size={13} />}
-                                        onPress={startEditing}
-                                    >
-                                        Редактировать
-                                    </Button>
-                                )}
-                                {isEditing && (
-                                    <>
-                                        <Button
-                                            size="sm"
-                                            className="bg-purple-600/20 text-purple-300 border border-purple-500/30"
-                                            startContent={<Save size={14} />}
-                                            isLoading={updateOrder.isPending}
-                                            onPress={() => { void handleSaveOrder(); }}
-                                        >
-                                            Сохранить
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="light"
-                                            className="text-zinc-400"
-                                            onPress={() => setIsEditing(false)}
-                                        >
-                                            Отмена
-                                        </Button>
-                                    </>
-                                )}
+                    <div
+                        className="mt-6 grid grid-cols-2 gap-3 border-t pt-4 lg:grid-cols-4"
+                        style={{ borderColor: "var(--line)" }}
+                    >
+                        <div>
+                            <div className="t-caption">Бюджет</div>
+                            <div className="text-[20px] font-bold tracking-[-0.01em]">
+                                {formatMoney(order.budget_min)} – {formatMoney(order.budget_max)}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="t-caption">Срок</div>
+                            <div className="text-[16px] font-semibold">{formatDeadline(order.deadline)}</div>
+                        </div>
+                        <div>
+                            <div className="t-caption">Откликов</div>
+                            <div className="text-[16px] font-semibold">{visibleProposalCount}</div>
+                        </div>
+                        <div>
+                            <div className="t-caption">AI-совпадений</div>
+                            <div className="text-[16px] font-semibold" style={{ color: "var(--mint-300)" }}>
+                                {bestId ? "1 топ" : "—"}
                             </div>
                         </div>
                     </div>
 
-                    {/* Timeline */}
-                    <OrderTimeline currentStatus={order.status} />
-                </div>
-
-                <Divider className="bg-white/[0.04]" />
-
-                {/* ── Order body ── */}
-                <div className="relative p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main content */}
-                    <div className="lg:col-span-2 space-y-5">
-                        {isEditing ? (
-                            <Textarea
-                                value={editDescription}
-                                onValueChange={setEditDescription}
-                                variant="bordered"
-                                minRows={6}
-                                classNames={{ ...inputClasses, input: "text-zinc-200 min-h-[140px]" }}
-                            />
-                        ) : (
-                            <div className="space-y-2">
-                                <div className={`relative ${isLongDescription && !isDescriptionExpanded ? "max-h-56 overflow-hidden" : ""}`}>
-                                    <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed text-[15px]">{order.description}</p>
-                                    {isLongDescription && !isDescriptionExpanded && (
-                                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[rgba(15,15,25,0.95)] to-transparent" />
-                                    )}
-                                </div>
-                                {isLongDescription && (
-                                    <button
-                                        type="button"
-                                        className="text-sm font-medium text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
-                                        onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                                    >
-                                        {isDescriptionExpanded ? (
-                                            <>Свернуть <ChevronUp size={14} /></>
-                                        ) : (
-                                            <>Показать полностью <ChevronDown size={14} /></>
-                                        )}
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        {!isEditing && order.skill_tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                                {order.skill_tags.map((tag) => (
-                                    <Chip
-                                        key={tag}
-                                        size="sm"
-                                        variant="flat"
-                                        classNames={{
-                                            base: "bg-purple-500/10 border border-purple-500/15 hover:bg-purple-500/20 hover:border-purple-500/30 hover:shadow-[0_0_8px_rgba(139,92,246,0.15)] transition-all duration-200 cursor-default",
-                                            content: "text-purple-300 text-xs font-medium",
-                                        }}
-                                    >
-                                        {tag}
-                                    </Chip>
-                                ))}
-                            </div>
-                        )}
-
-                        {isEditing && (
-                            <Input
-                                label="Навыки (через запятую)"
-                                value={editSkills}
-                                onValueChange={setEditSkills}
-                                variant="bordered"
-                                classNames={inputClasses}
-                            />
-                        )}
-                    </div>
-
-                    {/* ── Sidebar meta ── */}
-                    <div className="space-y-4">
-                        <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-5">
-                            {/* Budget */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                                    <Wallet size={18} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-zinc-500 mb-0.5">Бюджет</p>
-                                    {isEditing ? (
-                                        <div className="grid grid-cols-2 gap-2 pt-1">
-                                            <Input size="sm" label="От" type="number" value={editBudgetMin} onValueChange={setEditBudgetMin} variant="bordered" classNames={inputClasses} />
-                                            <Input size="sm" label="До" type="number" value={editBudgetMax} onValueChange={setEditBudgetMax} variant="bordered" classNames={inputClasses} />
-                                        </div>
-                                    ) : (
-                                        <p className="text-base font-bold gradient-text">
-                                            {formatCurrency(order.budget_min)} – {formatCurrency(order.budget_max)}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Deadline */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                                    <Calendar size={18} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-zinc-500 mb-0.5">Дедлайн</p>
-                                    {isEditing ? (
-                                        <Input size="sm" type="date" value={editDeadline} onValueChange={setEditDeadline} variant="bordered" classNames={inputClasses} />
-                                    ) : (
-                                        <div>
-                                            <p className="text-sm text-zinc-200 font-medium">
-                                                {order.deadline ? new Date(order.deadline).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "—"}
-                                            </p>
-                                            {daysUntilDeadline != null && daysUntilDeadline > 0 && (
-                                                <p className={`text-xs mt-0.5 flex items-center gap-1 ${daysUntilDeadline <= 7 ? "text-amber-400" : "text-zinc-500"}`}>
-                                                    <Clock size={10} />
-                                                    Осталось {daysUntilDeadline} дн
-                                                </p>
-                                            )}
-                                            {daysUntilDeadline != null && daysUntilDeadline <= 0 && (
-                                                <p className="text-xs text-red-400 mt-0.5 flex items-center gap-1">
-                                                    <Clock size={10} />
-                                                    Просрочен
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Category */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                                    <Tag size={18} />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-zinc-500 mb-0.5">Категория</p>
-                                    <p className="text-sm text-zinc-200 font-medium">{order.category}</p>
-                                </div>
-                            </div>
-
-                            {/* Responses count */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                    <MessageSquare size={18} />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-zinc-500 mb-0.5">Откликов</p>
-                                    <p className="text-sm text-zinc-200 font-medium">{proposals.length}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ═══ Client: proposals section ═══ */}
-            {isOwner && (
-                <div className="space-y-5">
-                    {proposalCounters.pending > 0 && (
-                        <div className="sticky top-20 z-20 rounded-xl border border-purple-500/20 bg-zinc-950/90 backdrop-blur p-3 flex items-center justify-between gap-3">
-                            <p className="text-sm text-zinc-300">
-                                Новых откликов: <span className="text-purple-300 font-semibold">{proposalCounters.pending}</span>
-                            </p>
-                            <Button
-                                size="sm"
-                                className="bg-purple-600/20 text-purple-300 border border-purple-500/25"
-                                onPress={() => setProposalFilter("pending")}
-                            >
-                                Разобрать новые
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Section header */}
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                <MessageSquare size={16} className="text-purple-400" />
-                            </div>
-                            Отклики
-                            {proposals.length > 0 && (
-                                <Chip size="sm" classNames={{ base: "bg-purple-500/15 border border-purple-500/25", content: "text-purple-300 text-xs font-bold" }}>
-                                    {proposals.length}
-                                </Chip>
-                            )}
-                        </h2>
-
-                        {/* Sort buttons */}
-                        {proposals.length > 1 && (
-                            <div className="flex items-center gap-1.5">
-                                <ArrowUpDown size={13} className="text-zinc-500 mr-1" />
-                                {SORT_OPTIONS.map((opt) => (
-                                    <button
-                                        key={opt.key}
-                                        type="button"
-                                        onClick={() => setSortBy(opt.key)}
-                                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${sortBy === opt.key
-                                            ? "bg-purple-500/15 text-purple-300 border border-purple-500/25"
-                                            : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
-                                            }`}
-                                    >
-                                        {opt.label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Status filters */}
-                    {proposals.length > 0 && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {PROPOSAL_FILTERS.map((filter) => (
-                                <button
-                                    key={filter.key}
-                                    type="button"
-                                    onClick={() => setProposalFilter(filter.key)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${proposalFilter === filter.key
-                                        ? "bg-purple-500/15 text-purple-200 border-purple-500/30"
-                                        : "bg-white/[0.01] text-zinc-400 border-white/[0.06] hover:text-zinc-200"
-                                        }`}
-                                >
-                                    {filter.label} · {proposalCounters[filter.key]}
-                                </button>
+                    {(order.skill_tags ?? []).length > 0 ? (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {(order.skill_tags ?? []).map((tag) => (
+                                <FilkaChip key={tag} tone="muted">
+                                    {tag}
+                                </FilkaChip>
                             ))}
                         </div>
-                    )}
+                    ) : null}
 
-                    {proposalActionNotice && (
-                        <div className="rounded-xl border border-zinc-700/60 bg-zinc-900/60 px-4 py-3">
-                            <p className="text-sm text-zinc-300">{proposalActionNotice}</p>
+                    <div
+                        className="mt-6 flex flex-wrap gap-2 border-t pt-4"
+                        style={{ borderColor: "var(--line)" }}
+                    >
+                        {isFreelancer ? (
+                            myProposal ? (
+                                <FilkaButton variant="ghost" disabled>
+                                    Отклик отправлен · {myProposal.status}
+                                </FilkaButton>
+                            ) : order.status === "published" ? (
+                                <FilkaButton variant="primary" onClick={() => setProposalOpen(true)}>
+                                    Откликнуться <IconArrowRight size={14} />
+                                </FilkaButton>
+                            ) : null
+                        ) : null}
+
+                        {isFreelancer && order.status === "in_progress" && myProposal?.status === "accepted" ? (
+                            <FilkaButton variant="primary" onClick={handleCompleteByFreelancer} startContent={<IconCheck size={14} />}>
+                                Сдать работу
+                            </FilkaButton>
+                        ) : null}
+
+                        {isClient && order.status === "draft" ? (
+                            <FilkaButton variant="primary" onClick={handlePublishOrder} loading={publish.isPending}>
+                                Опубликовать <IconArrowRight size={14} />
+                            </FilkaButton>
+                        ) : null}
+
+                        {isClient && order.status === "in_progress" ? (
+                            <FilkaButton
+                                variant="primary"
+                                onClick={handleReleaseEscrow}
+                                loading={releaseEscrow.isPending}
+                                startContent={<IconCheck size={14} />}
+                            >
+                                Принять работу и выплатить
+                            </FilkaButton>
+                        ) : null}
+
+                        {["in_progress", "completed"].includes(order.status) ? (
+                            <FilkaButton variant="ghost" onClick={handleOpenChat} startContent={<IconChat size={14} />}>
+                                Открыть чат
+                            </FilkaButton>
+                        ) : null}
+
+                        {isClient && (order.status === "draft" || order.status === "cancelled") ? (
+                            <FilkaButton
+                                variant="ghost"
+                                onClick={handleDelete}
+                                startContent={<IconTrash size={14} />}
+                                className="ml-auto"
+                            >
+                                Удалить
+                            </FilkaButton>
+                        ) : null}
+                    </div>
+                </FilkaCard>
+
+                {bestId ? (
+                    <FilkaCard
+                        glow
+                        className="relative overflow-hidden p-5"
+                        style={{
+                            background: "linear-gradient(135deg, rgba(52,211,153,0.10), rgba(16,185,129,0.04))",
+                            borderColor: "rgba(52,211,153,0.32)",
+                        }}
+                    >
+                        <div className="absolute -right-8 -top-8 opacity-40">
+                            <FilkaAISphere size={150} />
                         </div>
-                    )}
-
-                    {/* Stats bar */}
-                    {proposals.length > 0 && (
-                        <ProposalsStats proposals={proposals} />
-                    )}
-
-                    {/* AI analysis in progress */}
-                    {proposals.length > 0 && proposals.some((p) => !p.ai_analysis_for_client) && (
-                        <AIAnalysisInProgress
-                            analyzed={proposals.filter((p) => p.ai_analysis_for_client).length}
-                            total={proposals.length}
-                        />
-                    )}
-
-                    {/* AI recommendation */}
-                    {bestRecommendation && (
-                        <AIRecommendationCard bestRecommendation={bestRecommendation} proposals={proposals} />
-                    )}
-
-                    {/* Empty state with animation */}
-                    {proposals.length === 0 ? (
-                        <Card className="glass-card overflow-visible">
-                            <CardBody className="p-0">
-                                <WaitingForProposals />
-                            </CardBody>
-                        </Card>
-                    ) : visibleProposals.length === 0 ? (
-                        <Card className="glass-card">
-                            <CardBody className="p-6">
-                                <p className="text-sm text-zinc-400">В текущем фильтре откликов нет.</p>
-                            </CardBody>
-                        </Card>
-                    ) : (
-                        /* ── Proposal cards ── */
-                        <div className="space-y-4">
-                            {visibleProposals.map((p, i) => {
-                                const isBestRecommended = bestRecommendation?.proposal_id === p.id;
-                                const isAIExpanded = expandedAI.has(p.id);
-
-                                return (
-                                    <div
-                                        key={p.id}
-                                        className="animate-fade-in-up"
-                                        style={{ animationDelay: `${i * 60}ms` }}
-                                    >
-                                        <Card className={`glass-card card-hover-glow transition-all duration-300 ${isBestRecommended ? "ring-1 ring-purple-500/25 shadow-[0_0_24px_rgba(139,92,246,0.08)]" : ""}`}>
-                                            <CardBody className="p-5">
-                                                {/* Best recommended badge */}
-                                                {isBestRecommended && (
-                                                    <div className="flex items-center gap-2 mb-3 pb-3 border-b border-purple-500/10">
-                                                        <Chip
-                                                            size="sm"
-                                                            startContent={<Star size={11} className="ml-1" />}
-                                                            classNames={{
-                                                                base: "bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border border-purple-500/25",
-                                                                content: "text-purple-200 text-xs font-bold",
-                                                            }}
-                                                        >
-                                                            AI рекомендует
-                                                        </Chip>
-                                                        {bestRecommendation.score != null && (
-                                                            <span className="text-xs text-purple-400/70">{bestRecommendation.score}% match</span>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                {/* Header row */}
-                                                <div className="flex items-start justify-between mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <Avatar
-                                                            size="md"
-                                                            showFallback
-                                                            name={p.freelancer_name?.charAt(0)?.toUpperCase() ?? ""}
-                                                            classNames={{
-                                                                base: `${isBestRecommended ? "bg-purple-600/30 ring-2 ring-purple-500/20" : "bg-purple-600/15"} w-11 h-11`,
-                                                                icon: "text-purple-400",
-                                                                name: "text-purple-300 font-bold text-sm",
-                                                            }}
-                                                        />
-                                                        <div>
-                                                            <p className="text-sm font-semibold text-zinc-100">{p.freelancer_name ?? "Фрилансер"}</p>
-                                                            <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-                                                                <span className="text-xs text-yellow-400 font-medium flex items-center gap-1">
-                                                                    <Star size={11} className="fill-yellow-400/20" />
-                                                                    <span>4.9</span>
-                                                                </span>
-                                                                {p.proposed_budget > 0 && (
-                                                                    <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                                                                        <Wallet size={11} />
-                                                                        {formatCurrency(p.proposed_budget)}
-                                                                    </span>
-                                                                )}
-                                                                {p.estimated_days > 0 && (
-                                                                    <span className="text-xs text-amber-400/80 flex items-center gap-1">
-                                                                        <Timer size={11} />
-                                                                        {formatDays(p.estimated_days)}
-                                                                    </span>
-                                                                )}
-                                                                <span className="text-xs text-zinc-600">
-                                                                    {formatDate(p.created_at)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-2">
-                                                        <StatusBadge status={p.status} />
-                                                        <Button
-                                                            size="sm"
-                                                            variant="light"
-                                                            className="text-zinc-400 hover:text-purple-400 h-7 text-xs px-2"
-                                                            onPress={() => router.push(`/dashboard/profile/${p.freelancer_id}` as never)}
-                                                        >
-                                                            Профиль
-                                                        </Button>
-                                                    </div>
-                                                </div>
-
-                                                {/* Cover letter */}
-                                                <p className="text-sm text-zinc-300 leading-relaxed mb-4">{p.cover_letter}</p>
-
-                                                {/* AI Analysis */}
-                                                {p.ai_analysis_for_client && (
-                                                    <div className="rounded-xl bg-indigo-500/[0.07] border border-indigo-500/15 overflow-hidden mb-4">
-                                                        <button
-                                                            type="button"
-                                                            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-indigo-500/[0.05] transition-colors"
-                                                            onClick={() => toggleAIExpanded(p.id)}
-                                                        >
-                                                            <span className="text-xs text-indigo-300 font-medium flex items-center gap-1.5">
-                                                                <Sparkles size={12} />
-                                                                AI-анализ отклика
-                                                            </span>
-                                                            {isAIExpanded ? <ChevronUp size={13} className="text-indigo-400" /> : <ChevronDown size={13} className="text-indigo-400" />}
-                                                        </button>
-                                                        {isAIExpanded && (
-                                                            <div className="px-4 pb-3 animate-fade-in-up" style={{ animationDuration: "0.3s" }}>
-                                                                <p className="text-sm text-zinc-300 leading-relaxed">{p.ai_analysis_for_client}</p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                {/* Action buttons */}
-                                                {p.status === "pending" && (
-                                                    <div className="flex items-center gap-2 pt-1">
-                                                        <Button
-                                                            size="sm"
-                                                            className="bg-emerald-600/15 text-emerald-400 border border-emerald-600/25 hover:bg-emerald-600/25 hover:shadow-[0_0_12px_rgba(52,211,153,0.1)] transition-all"
-                                                            startContent={<Check size={14} />}
-                                                            onPress={() => handleStatusUpdate(p.id, "accepted")}
-                                                        >
-                                                            Принять
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            className="bg-red-600/10 text-red-400 border border-red-600/20 hover:bg-red-600/20 transition-all"
-                                                            startContent={<X size={14} />}
-                                                            onPress={() => handleStatusUpdate(p.id, "rejected")}
-                                                        >
-                                                            Отклонить
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="light"
-                                                            className="text-zinc-500 hover:text-purple-400 ml-auto"
-                                                            startContent={<MessageSquare size={13} />}
-                                                            onPress={() => router.push("/dashboard/messages")}
-                                                        >
-                                                            Написать
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                                {p.status === "accepted" && (
-                                                    <Button
-                                                        size="sm"
-                                                        className="bg-purple-600/15 text-purple-400 border border-purple-500/25 hover:bg-purple-600/25 transition-all"
-                                                        startContent={<MessageSquare size={14} />}
-                                                        onPress={() => router.push("/dashboard/messages")}
-                                                    >
-                                                        Начать чат
-                                                    </Button>
-                                                )}
-                                            </CardBody>
-                                        </Card>
-                                    </div>
-                                );
-                            })}
+                        <div className="t-eyebrow mb-2">AI-рекомендация</div>
+                        <div className="mb-1 max-w-[420px] text-[16px] font-semibold">
+                            {proposalsData?.best_recommendation?.justification ??
+                                "AI выделил наиболее подходящий отклик"}
                         </div>
-                    )}
-                </div>
-            )}
-
-            {/* ═══ Freelancer: submit proposal ═══ */}
-            {role === "freelancer" && (
-                <div id="respond" className="glass-card rounded-2xl overflow-hidden relative">
-                    {/* Decorative gradient */}
-                    <div className="absolute top-0 left-0 w-48 h-48 bg-purple-600/[0.03] rounded-full blur-[60px] pointer-events-none" />
-
-                    <div className="relative p-6 space-y-5">
-                        {submitProposal.isSuccess || hasExistingProposal ? (
-                            <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-fade-in-up">
-                                <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.15)] border border-emerald-500/20">
-                                    <Check size={28} />
+                        {typeof proposalsData?.best_recommendation?.score === "number" ? (
+                            <div className="mt-2 max-w-[300px]">
+                                <FilkaProgressBar value={proposalsData.best_recommendation.score} max={100} />
+                                <div className="t-mono mt-1 text-xs" style={{ color: "var(--mint-300)" }}>
+                                    {proposalsData.best_recommendation.score}% совпадение
                                 </div>
-                                <h3 className="text-xl font-bold text-white">Отклик отправлен</h3>
-                                <p className="text-sm text-zinc-400 text-center max-w-sm">
-                                    Вы уже откликнулись на этот заказ. Заказчик увидит ваше предложение и свяжется с вами.
-                                    {existingProposal?.status && (
-                                        <span className="block mt-2">
-                                            Статус: <StatusBadge status={existingProposal.status} />
-                                        </span>
-                                    )}
-                                </p>
-                                <Button
-                                    className="mt-2 bg-purple-600/15 text-purple-400 hover:bg-purple-600/25 font-medium border border-purple-500/20"
-                                    onPress={() => router.push("/dashboard/orders")}
-                                >
-                                    Вернуться к маркетплейсу
-                                </Button>
+                            </div>
+                        ) : null}
+                    </FilkaCard>
+                ) : null}
+
+                <FilkaTabs
+                    value={tab}
+                    onChange={setTab}
+                    items={[
+                        { id: "proposals", label: `Отклики · ${proposals.length}` },
+                        { id: "details", label: "Подробности" },
+                    ]}
+                />
+
+                {tab === "proposals" ? (
+                    <FilkaCard className="p-5">
+                        <div className="mb-4 flex flex-wrap items-center gap-3">
+                            <h3 className="t-h4 m-0">Все отклики</h3>
+                            <FilkaChip>{proposals.length}</FilkaChip>
+                            <div className="ml-auto">
+                                <FilkaSegmented
+                                    value={sortBy}
+                                    onChange={setSortBy}
+                                    items={[
+                                        { id: "match", label: "По AI" },
+                                        { id: "price", label: "По цене" },
+                                        { id: "deadline", label: "По сроку" },
+                                    ]}
+                                />
+                            </div>
+                        </div>
+
+                        {proposals.length === 0 ? (
+                            <div className="py-8 text-center text-sm" style={{ color: "var(--fg-2)" }}>
+                                Откликов пока нет — поделитесь ссылкой или дайте AI ещё немного времени.
                             </div>
                         ) : (
-                            <>
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                            <Send size={15} className="text-purple-400" />
+                            <div className="grid gap-3">
+                                {proposals.map((p) => {
+                                    const isBest = p.id === bestId;
+                                    return (
+                                        <div
+                                            key={p.id}
+                                            className="flex flex-col gap-3 rounded-[var(--r-lg)] border p-4 sm:flex-row"
+                                            style={{
+                                                background: isBest
+                                                    ? "rgba(52,211,153,0.06)"
+                                                    : "var(--bg-1)",
+                                                borderColor: isBest
+                                                    ? "rgba(52,211,153,0.32)"
+                                                    : "var(--line)",
+                                            }}
+                                        >
+                                            <FilkaAvatar
+                                                name={p.freelancer_name ?? "Исполнитель"}
+                                                size={42}
+                                                rounded="full"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    {isBest ? <FilkaChip>Лучшее совпадение AI</FilkaChip> : null}
+                                                    <Link
+                                                        href={`/dashboard/profile/${p.freelancer_id}` as never}
+                                                        className="font-semibold hover:text-[var(--mint-300)]"
+                                                    >
+                                                        {p.freelancer_name ?? "Исполнитель"}
+                                                    </Link>
+                                                    <StatusBadge status={p.status} />
+                                                    <span className="t-caption ml-auto">
+                                                        {formatRelative(p.created_at)}
+                                                    </span>
+                                                </div>
+                                                <p
+                                                    className="mt-2 text-[13.5px] leading-[1.5]"
+                                                    style={{ color: "var(--fg-1)" }}
+                                                >
+                                                    {p.cover_letter}
+                                                </p>
+                                                <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px]">
+                                                    <div>
+                                                        <span className="t-caption">Цена</span>
+                                                        <div className="font-bold">
+                                                            {formatMoney(p.proposed_budget)}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="t-caption">Срок</span>
+                                                        <div className="font-medium">
+                                                            <IconClock size={12} className="inline" /> {p.estimated_days || "—"} дн.
+                                                        </div>
+                                                    </div>
+                                                    <div className="ml-auto flex flex-wrap gap-2">
+                                                        {isClient && order.status === "published" ? (
+                                                            <>
+                                                                <FilkaButton
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    onClick={() => handleReject(p.id)}
+                                                                    loading={updateStatus.isPending}
+                                                                >
+                                                                    Отклонить
+                                                                </FilkaButton>
+                                                                <FilkaButton
+                                                                    size="sm"
+                                                                    variant="primary"
+                                                                    onClick={() => handleAccept(p.id)}
+                                                                    loading={updateStatus.isPending}
+                                                                    startContent={<IconCheck size={12} />}
+                                                                >
+                                                                    Принять
+                                                                </FilkaButton>
+                                                            </>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        Откликнуться
-                                    </h2>
-                                </div>
-
-                                {/* AI helper buttons */}
-                                <div className="flex flex-wrap gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="flat"
-                                        className="bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 hover:shadow-[0_0_12px_rgba(139,92,246,0.1)] transition-all"
-                                        startContent={<Sparkles size={14} />}
-                                        onPress={() => { void handleGenerateProposalWithAI(); }}
-                                        isLoading={isGeneratingProposal}
-                                    >
-                                        Сгенерировать текст
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="flat"
-                                        className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20 hover:shadow-[0_0_12px_rgba(99,102,241,0.1)] transition-all"
-                                        startContent={<Zap size={14} />}
-                                        onPress={() => { void handleSuggestTermsWithAI(); }}
-                                        isLoading={isSuggestingTerms}
-                                    >
-                                        Подсказать цену и срок
-                                    </Button>
-                                </div>
-
-                                {aiHint && (
-                                    <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] px-4 py-3 animate-fade-in-up" style={{ animationDuration: "0.3s" }}>
-                                        <p className="text-xs text-indigo-200 flex items-start gap-2">
-                                            <Sparkles size={13} className="shrink-0 mt-0.5 text-indigo-400" />
-                                            {aiHint}
-                                        </p>
-                                    </div>
-                                )}
-                                {aiError && (
-                                    <div className="rounded-xl border border-red-500/20 bg-red-500/[0.07] px-4 py-2.5">
-                                        <p className="text-xs text-red-400 flex items-center gap-2">
-                                            <Shield size={13} />
-                                            {aiError}
-                                        </p>
-                                    </div>
-                                )}
-
-                                <Textarea
-                                    label="Сопроводительное письмо"
-                                    placeholder="Расскажите, почему вы подходите для этого заказа..."
-                                    value={coverLetter}
-                                    onValueChange={setCoverLetter}
-                                    variant="bordered"
-                                    minRows={4}
-                                    description="Минимум 40 символов: релевантный опыт, подход и ожидаемый результат."
-                                    classNames={{ ...inputClasses, input: "text-zinc-200 min-h-[100px]" }}
-                                />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Input
-                                        label="Ваша цена (₽)"
-                                        type="number"
-                                        value={proposedBudget}
-                                        onValueChange={setProposedBudget}
-                                        variant="bordered"
-                                        classNames={inputClasses}
-                                        startContent={<span className="text-zinc-500 text-sm">₽</span>}
-                                    />
-                                    <Input
-                                        label="Срок (дней)"
-                                        type="number"
-                                        value={estimatedDays}
-                                        onValueChange={setEstimatedDays}
-                                        variant="bordered"
-                                        classNames={inputClasses}
-                                    />
-                                </div>
-                                {proposalFormError && (
-                                    <div className="rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-2.5">
-                                        <p className="text-xs text-red-300">{proposalFormError}</p>
-                                    </div>
-                                )}
-                                <Button
-                                    className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 transition-all"
-                                    onPress={handleSubmitProposal}
-                                    isLoading={submitProposal.isPending}
-                                    isDisabled={!canSubmitProposal}
-                                    endContent={<Send size={16} />}
-                                >
-                                    Отправить отклик
-                                </Button>
-                            </>
+                                    );
+                                })}
+                            </div>
                         )}
+                    </FilkaCard>
+                ) : (
+                    <FilkaCard className="p-5">
+                        <h3 className="t-h4 mb-3">Подробности заказа</h3>
+                        <div className="space-y-3 text-[14px]" style={{ color: "var(--fg-1)" }}>
+                            <div className="flex justify-between">
+                                <span style={{ color: "var(--fg-2)" }}>Идентификатор</span>
+                                <span className="t-mono">{order.id}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span style={{ color: "var(--fg-2)" }}>Создан</span>
+                                <span>{new Date(order.created_at).toLocaleString("ru-RU")}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span style={{ color: "var(--fg-2)" }}>Обновлён</span>
+                                <span>{new Date(order.updated_at).toLocaleString("ru-RU")}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span style={{ color: "var(--fg-2)" }}>Срок</span>
+                                <span>{formatDeadline(order.deadline)}</span>
+                            </div>
+                        </div>
+                    </FilkaCard>
+                )}
+            </div>
+
+            <div className="space-y-4">
+                <FilkaCard className="p-5">
+                    <div className="t-eyebrow mb-3 flex items-center gap-2">
+                        <IconShield size={12} /> Эскроу
                     </div>
-                </div>
-            )}
+                    <div className="text-[24px] font-bold tracking-[-0.02em]">
+                        {escrow ? formatMoney(escrow.amount) : formatMoney(order.budget_max || order.budget_min || 0)}
+                    </div>
+                    <div className="t-caption mb-4">
+                        {escrow?.status === "held"
+                            ? "заморожено"
+                            : escrow?.status === "released"
+                              ? "выплачено"
+                              : escrow?.status === "refunded"
+                                ? "возвращено"
+                                : "будет заморожено при принятии отклика"}
+                    </div>
+                    <FilkaProgressBar value={escrowPercent} />
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+                        {STATUS_TIMELINE.map((step, i) => {
+                            const reached = currentStatusIdx >= i;
+                            return (
+                                <div key={step.id} className="flex items-center gap-1.5">
+                                    <span
+                                        className="grid h-4 w-4 place-items-center rounded-full text-[8px] font-bold"
+                                        style={{
+                                            background: reached ? "var(--mint-400)" : "var(--bg-3)",
+                                            color: reached ? "#062219" : "var(--fg-3)",
+                                        }}
+                                    >
+                                        {reached ? "✓" : i + 1}
+                                    </span>
+                                    <span style={{ color: reached ? "var(--fg-0)" : "var(--fg-3)" }}>
+                                        {step.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </FilkaCard>
 
-            <Modal
-                isOpen={proposalStatusModal.isOpen}
-                onOpenChange={(isOpen) => {
-                    if (!isOpen) closeStatusModal();
-                }}
+                <FilkaCard className="p-5">
+                    <div className="t-eyebrow mb-3">Заказчик</div>
+                    <div className="flex items-center gap-3">
+                        <FilkaAvatar size={44} rounded="full" />
+                        <div className="min-w-0 flex-1">
+                            <Link
+                                href={`/dashboard/profile/${order.client_id}` as never}
+                                className="block truncate text-[15px] font-semibold hover:text-[var(--mint-300)]"
+                            >
+                                {clientProfile?.name ?? "Заказчик"}
+                            </Link>
+                            <div className="t-caption flex items-center gap-1 text-[11px]">
+                                <IconStar size={11} style={{ color: "var(--accent-sun)" }} /> 4.92 · 38 заказов
+                            </div>
+                        </div>
+                    </div>
+                </FilkaCard>
+
+                <FilkaCard className="p-5">
+                    <div className="mb-3 flex items-center gap-2">
+                        <IconSpark size={14} className="text-[var(--mint-300)]" />
+                        <div className="t-eyebrow">AI-совет</div>
+                    </div>
+                    <p className="text-[13px] leading-[1.5]" style={{ color: "var(--fg-1)" }}>
+                        {isClient
+                            ? "Принимайте отклики с лучшим AI-совпадением — это сократит время поиска и риски споров."
+                            : "Чтобы повысить шанс принятия, добавьте релевантный кейс из портфолио в текст отклика."}
+                    </p>
+                </FilkaCard>
+            </div>
+
+            <FilkaModal
+                open={proposalOpen}
+                onClose={() => setProposalOpen(false)}
                 size="md"
-                classNames={{
-                    base: "bg-zinc-900 border border-white/[0.06]",
-                    header: "border-b border-white/[0.06]",
-                    footer: "border-t border-white/[0.06]",
-                }}
             >
-                <ModalContent>
-                    <ModalHeader className="flex items-center gap-2">
-                        <span className="text-zinc-100">
-                            {pendingStatusAction?.status === "accepted" ? "Подтвердить принятие" : "Подтвердить отклонение"}
-                        </span>
-                    </ModalHeader>
-                    <ModalBody className="py-4">
-                        <p className="text-sm text-zinc-300">
-                            {pendingStatusAction?.status === "accepted"
-                                ? "Исполнитель будет выбран, а отклик перейдёт в статус «принят»."
-                                : "Отклик будет отклонён. Позже вы сможете рассмотреть другие предложения."}
-                        </p>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="light" className="text-zinc-400" onPress={closeStatusModal} isDisabled={updateStatus.isPending}>
-                            Отмена
-                        </Button>
-                        <Button
-                            className={
-                                pendingStatusAction?.status === "accepted"
-                                    ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
-                                    : "bg-red-600/20 text-red-300 border border-red-500/30"
-                            }
-                            onPress={confirmStatusUpdate}
-                            isLoading={updateStatus.isPending}
-                        >
-                            {pendingStatusAction?.status === "accepted" ? "Принять отклик" : "Отклонить отклик"}
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                <FilkaModalHeader>
+                    <FilkaModalTitle>Отклик на заказ</FilkaModalTitle>
+                </FilkaModalHeader>
+                <FilkaModalBody className="flex flex-col gap-4">
+                    <FilkaField label="Сопроводительное письмо">
+                        <FilkaTextarea
+                            value={coverLetter}
+                            onChange={(e) => setCoverLetter(e.target.value)}
+                            rows={5}
+                            placeholder="Расскажите, почему вы подходите. Кратко и по делу."
+                        />
+                    </FilkaField>
+                    <div className="grid grid-cols-2 gap-3">
+                        <FilkaField label="Ваша цена, ₽">
+                            <FilkaInput
+                                type="number"
+                                inputMode="numeric"
+                                value={proposedBudget}
+                                onChange={(e) => setProposedBudget(e.target.value)}
+                                placeholder={String(order.budget_max || order.budget_min || "")}
+                            />
+                        </FilkaField>
+                        <FilkaField label="Срок, дней">
+                            <FilkaInput
+                                type="number"
+                                inputMode="numeric"
+                                value={estimatedDays}
+                                onChange={(e) => setEstimatedDays(e.target.value)}
+                                placeholder="14"
+                            />
+                        </FilkaField>
+                    </div>
+                </FilkaModalBody>
+                <FilkaModalFooter>
+                    <FilkaButton variant="ghost" onClick={() => setProposalOpen(false)}>
+                        Отмена
+                    </FilkaButton>
+                    <FilkaButton
+                        variant="primary"
+                        onClick={handleSubmitProposal}
+                        loading={submitProposal.isPending}
+                    >
+                        Отправить отклик
+                    </FilkaButton>
+                </FilkaModalFooter>
+            </FilkaModal>
 
-            <InsufficientFundsModal
-                isOpen={fundsModal.isOpen}
-                onClose={() => setFundsModal((prev) => ({ ...prev, isOpen: false }))}
-                availableBalance={fundsModal.available}
-                requiredAmount={fundsModal.required}
-                onDepositSuccess={handleFundsDepositSuccess}
-            />
+            {insufficient ? (
+                <InsufficientFundsModal
+                    isOpen={insufficient !== null}
+                    onClose={() => setInsufficient(null)}
+                    availableBalance={insufficient.available}
+                    requiredAmount={insufficient.required}
+                    onDepositSuccess={() => {
+                        setInsufficient(null);
+                        if (pendingAcceptProposalId) {
+                            void handleAccept(pendingAcceptProposalId);
+                        }
+                    }}
+                />
+            ) : null}
         </div>
     );
 };

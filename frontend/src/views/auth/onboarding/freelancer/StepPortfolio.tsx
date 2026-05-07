@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Button, Input, Textarea } from "@heroui/react";
 import { ArrowLeft, ArrowRight, Plus, Trash2 } from "lucide-react";
 import { useOnboardingStore, type PortfolioEntry } from "@/features/onboarding/model";
+import { FilkaButton, FilkaField, FilkaInput, FilkaTextarea } from "@/shared/ui/filka/FilkaPrimitives";
 
 const MAX_ITEMS = 3;
 
@@ -14,14 +14,11 @@ const emptyEntry = (): PortfolioEntry => ({
 });
 
 export const StepPortfolio = () => {
-  const { freelancerData, updateFreelancer, nextStep, prevStep } =
-    useOnboardingStore();
+  const { freelancerData, updateFreelancer, nextStep, prevStep } = useOnboardingStore();
   const items = freelancerData.portfolioItems;
 
   const updateItem = (index: number, patch: Partial<PortfolioEntry>) => {
-    const updated = items.map((item, i) =>
-      i === index ? { ...item, ...patch } : item
-    );
+    const updated = items.map((item, i) => (i === index ? { ...item, ...patch } : item));
     updateFreelancer({ portfolioItems: updated });
   };
 
@@ -42,77 +39,57 @@ export const StepPortfolio = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
     >
-      <h2 className="mb-1 text-2xl font-bold text-zinc-100">Портфолио</h2>
-      <p className="mb-6 text-sm text-zinc-500">
-        Добавьте до {MAX_ITEMS} работ (можно пропустить)
-      </p>
+      <h2 className="mb-1 text-2xl font-bold text-[var(--fg-0)]">Портфолио</h2>
+      <p className="mb-6 text-sm text-[var(--fg-3)]">Добавьте до {MAX_ITEMS} работ (можно пропустить)</p>
 
       <div className="space-y-4">
         {items.map((item, i) => (
-          <div
-            key={i}
-            className="rounded-xl border border-zinc-700/50 bg-zinc-900/30 p-4 space-y-3"
-          >
+          <div key={i} className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--bg-1)]/50 p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-zinc-500">
-                Работа {i + 1}
-              </span>
+              <span className="text-xs font-medium text-[var(--fg-3)]">Работа {i + 1}</span>
               <button
                 type="button"
                 onClick={() => removeItem(i)}
-                className="text-zinc-500 hover:text-red-400 transition-colors"
+                className="text-[var(--fg-3)] transition-colors hover:text-[var(--err)]"
               >
                 <Trash2 size={14} />
               </button>
             </div>
-            <Input
-              label="Название"
-              value={item.title}
-              onValueChange={(v) => updateItem(i, { title: v })}
-              variant="bordered"
-              size="sm"
-              classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
-            />
-            <Textarea
-              label="Описание"
-              value={item.description}
-              onValueChange={(v) => updateItem(i, { description: v })}
-              variant="bordered"
-              size="sm"
-              minRows={2}
-              classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
-            />
-            <Input
-              label="Ссылка (необязательно)"
-              value={item.link ?? ""}
-              onValueChange={(v) => updateItem(i, { link: v })}
-              variant="bordered"
-              size="sm"
-              classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
-            />
+            <FilkaField label="Название">
+              <FilkaInput value={item.title} onChange={(e) => updateItem(i, { title: e.target.value })} className="text-sm" />
+            </FilkaField>
+            <FilkaField label="Описание">
+              <FilkaTextarea
+                value={item.description}
+                onChange={(e) => updateItem(i, { description: e.target.value })}
+                className="min-h-[72px] text-sm"
+              />
+            </FilkaField>
+            <FilkaField label="Ссылка (необязательно)">
+              <FilkaInput value={item.link ?? ""} onChange={(e) => updateItem(i, { link: e.target.value })} className="text-sm" />
+            </FilkaField>
           </div>
         ))}
 
         {items.length < MAX_ITEMS && (
-          <Button
-            variant="bordered"
-            className="border-dashed border-zinc-700"
+          <FilkaButton
+            variant="ghost"
+            className="w-full border border-dashed border-[var(--line)]"
             startContent={<Plus size={14} />}
-            onPress={addItem}
-            fullWidth
+            onClick={addItem}
           >
             Добавить работу
-          </Button>
+          </FilkaButton>
         )}
       </div>
 
       <div className="mt-8 flex justify-between">
-        <Button variant="light" startContent={<ArrowLeft size={16} />} onPress={prevStep}>
+        <FilkaButton variant="ghost" startContent={<ArrowLeft size={16} />} onClick={prevStep}>
           Назад
-        </Button>
-        <Button color="secondary" endContent={<ArrowRight size={16} />} onPress={nextStep}>
+        </FilkaButton>
+        <FilkaButton variant="primary" endContent={<ArrowRight size={16} />} onClick={nextStep}>
           {items.length === 0 ? "Пропустить" : "Далее"}
-        </Button>
+        </FilkaButton>
       </div>
     </motion.div>
   );

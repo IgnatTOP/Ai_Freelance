@@ -257,6 +257,56 @@ func (r *MessageRepositoryAdapter) GetLastMessage(ctx context.Context, conversat
 	return m.toEntity(), nil
 }
 
+func (r *MessageRepositoryAdapter) AddAttachments(ctx context.Context, messageID uuid.UUID, mediaIDs []uuid.UUID) error {
+	for _, mediaID := range mediaIDs {
+		_, err := r.db.ExecContext(
+			ctx,
+			`INSERT INTO message_attachments (message_id, media_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+			messageID,
+			mediaID,
+		)
+		if err != nil {
+			return apperror.Wrap(err, apperror.ErrCodeDatabaseError, "не удалось добавить вложение")
+		}
+	}
+	return nil
+}
+
+func (r *MessageRepositoryAdapter) GetAttachments(ctx context.Context, messageID uuid.UUID) ([]entity.MessageAttachment, error) {
+	var rows []messageAttachmentRow
+	query := `
+		SELECT
+			ma.id,
+			ma.message_id,
+			ma.media_id,
+			mf.file_path,
+			mf.file_type,
+			mf.file_size,
+			ma.created_at
+		FROM message_attachments ma
+		JOIN media_files mf ON mf.id = ma.media_id
+		WHERE ma.message_id = $1
+		ORDER BY ma.created_at
+	`
+	if err := r.db.SelectContext(ctx, &rows, query, messageID); err != nil {
+		return nil, apperror.Wrap(err, apperror.ErrCodeDatabaseError, "не удалось получить вложения")
+	}
+
+	result := make([]entity.MessageAttachment, len(rows))
+	for i, row := range rows {
+		result[i] = entity.MessageAttachment{
+			ID:        row.ID,
+			MessageID: row.MessageID,
+			MediaID:   row.MediaID,
+			FilePath:  row.FilePath,
+			FileType:  row.FileType,
+			FileSize:  row.FileSize,
+			CreatedAt: row.CreatedAt,
+		}
+	}
+	return result, nil
+}
+
 func (r *MessageRepositoryAdapter) AddReaction(ctx context.Context, reaction *entity.MessageReaction) error {
 	query := `INSERT INTO message_reactions (id, message_id, user_id, emoji, created_at) VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (message_id, user_id) DO UPDATE SET emoji = $4`
@@ -296,6 +346,16 @@ type messageRow struct {
 	IsEdited       bool      `db:"is_edited"`
 	CreatedAt      time.Time `db:"created_at"`
 	UpdatedAt      time.Time `db:"updated_at"`
+}
+
+type messageAttachmentRow struct {
+	ID        uuid.UUID `db:"id"`
+	MessageID uuid.UUID `db:"message_id"`
+	MediaID   uuid.UUID `db:"media_id"`
+	FilePath  string    `db:"file_path"`
+	FileType  string    `db:"file_type"`
+	FileSize  int64     `db:"file_size"`
+	CreatedAt time.Time `db:"created_at"`
 }
 
 func (m *messageRow) toEntity() *entity.Message {

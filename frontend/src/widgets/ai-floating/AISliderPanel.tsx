@@ -1,18 +1,26 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Input, Button, ScrollShadow, Chip } from "@heroui/react";
-import { Send, X, Sparkles, Bot, User, Square, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSessionStore } from "@/shared/store/session.store";
 import { useAIAssistant } from "@/features/ai-assistant";
 import { useAIFloatingStore } from "./store";
+import {
+    FilkaAISphere,
+    FilkaSpinner,
+    FilkaTypingDots,
+    IconClose,
+    IconMic,
+    IconSend,
+    IconSpark,
+    IconTrash,
+} from "@/shared/ui/filka";
 
 type ChatMessage = { role: "user" | "assistant"; content: string; timestamp: number };
 
 const CLIENT_SUGGESTIONS = [
     "Помоги составить описание заказа",
-    "Как выбрать фрилансера?",
+    "Как выбрать исполнителя?",
     "Оптимальный бюджет для проекта",
 ];
 
@@ -22,7 +30,6 @@ const FREELANCER_SUGGESTIONS = [
     "Советы по ценообразованию",
 ];
 
-/* ── Safe markdown renderer (no dangerouslySetInnerHTML) ── */
 const renderInline = (text: string, keyPrefix: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
     const regex = /\*\*(.+?)\*\*|`([^`]+)`/g;
@@ -31,63 +38,72 @@ const renderInline = (text: string, keyPrefix: string): React.ReactNode[] => {
     let idx = 0;
 
     while ((match = regex.exec(text)) !== null) {
-        if (match.index > lastIndex) {
-            parts.push(text.slice(lastIndex, match.index));
-        }
+        if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
         if (match[1]) {
-            parts.push(<strong key={`${keyPrefix}-b${idx}`} className="font-semibold text-zinc-100">{match[1]}</strong>);
+            parts.push(
+                <strong key={`${keyPrefix}-b${idx}`} className="font-semibold">
+                    {match[1]}
+                </strong>,
+            );
         } else if (match[2]) {
-            parts.push(<code key={`${keyPrefix}-c${idx}`} className="bg-zinc-800 text-purple-300 px-1 py-0.5 rounded text-xs font-mono">{match[2]}</code>);
+            parts.push(
+                <code
+                    key={`${keyPrefix}-c${idx}`}
+                    className="t-mono rounded px-1 py-0.5 text-[12px]"
+                    style={{ background: "var(--bg-3)", color: "var(--mint-300)" }}
+                >
+                    {match[2]}
+                </code>,
+            );
         }
         lastIndex = match.index + match[0].length;
         idx++;
     }
-    if (lastIndex < text.length) {
-        parts.push(text.slice(lastIndex));
-    }
+    if (lastIndex < text.length) parts.push(text.slice(lastIndex));
     return parts;
 };
 
 const renderMarkdown = (text: string) => {
     const lines = text.split("\n");
     const elements: React.ReactNode[] = [];
-
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i] ?? "";
         if (!line && i > 0 && !(lines[i - 1] ?? "")) continue;
-
         if (/^[-•]\s/.test(line)) {
             elements.push(
-                <div key={i} className="flex gap-2 ml-1">
-                    <span className="text-purple-400 mt-0.5 shrink-0">•</span>
+                <div key={i} className="ml-1 flex gap-2">
+                    <span className="mt-0.5 shrink-0" style={{ color: "var(--mint-300)" }}>
+                        •
+                    </span>
                     <span>{renderInline(line.replace(/^[-•]\s/, ""), `${i}`)}</span>
-                </div>
+                </div>,
             );
             continue;
         }
-
         const numMatch = line.match(/^(\d+)[.)]\s(.*)/);
         if (numMatch) {
             elements.push(
-                <div key={i} className="flex gap-2 ml-1">
-                    <span className="text-purple-400 font-medium shrink-0 tabular-nums w-5 text-right">{numMatch[1]}.</span>
+                <div key={i} className="ml-1 flex gap-2">
+                    <span
+                        className="t-mono w-5 shrink-0 text-right font-medium tabular-nums"
+                        style={{ color: "var(--mint-300)" }}
+                    >
+                        {numMatch[1]}.
+                    </span>
                     <span>{renderInline(numMatch[2] ?? "", `${i}`)}</span>
-                </div>
+                </div>,
             );
             continue;
         }
-
         if (!line.trim()) {
             elements.push(<div key={i} className="h-2" />);
             continue;
         }
-
         elements.push(<span key={i}>{renderInline(line, `${i}`)}</span>);
         if (i < lines.length - 1 && lines[i + 1]?.trim()) {
             elements.push(<br key={`br-${i}`} />);
         }
     }
-
     return elements;
 };
 
@@ -121,6 +137,15 @@ export const AISliderPanel = () => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }, [messages]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") close();
+        };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [isOpen, close]);
+
     const handleSend = async (text?: string) => {
         const prompt = text ?? input.trim();
         if (!prompt) return;
@@ -136,173 +161,204 @@ export const AISliderPanel = () => {
         }
     };
 
-    const handleClear = () => setMessages([]);
+    if (!isOpen || typeof document === "undefined") return null;
 
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <>
-                    {/* Backdrop for mobile */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden"
-                        onClick={close}
-                    />
-
-                    {/* Panel */}
-                    <motion.div
-                        initial={{ x: "100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed top-0 right-0 z-[61] flex h-full w-[380px] max-w-[90vw] flex-col border-l border-white/[0.06] bg-[#0c0c14]/95 backdrop-blur-xl shadow-2xl shadow-purple-900/10"
-                    >
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
-                                    <Sparkles size={18} className="text-purple-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-semibold text-zinc-100">AI Ассистент</h3>
-                                    <p className="text-xs text-zinc-500">
-                                        {role === "freelancer" ? "Помощь с откликами" : "Помощь с заказами"}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                {messages.length > 0 && (
-                                    <Button
-                                        isIconOnly
-                                        size="sm"
-                                        variant="light"
-                                        className="text-zinc-500 hover:text-zinc-300"
-                                        onPress={handleClear}
-                                        aria-label="Очистить"
-                                    >
-                                        <Trash2 size={14} />
-                                    </Button>
-                                )}
-                                <Button
-                                    isIconOnly
-                                    size="sm"
-                                    variant="light"
-                                    className="text-zinc-500 hover:text-zinc-300"
-                                    onPress={close}
-                                    aria-label="Закрыть"
-                                >
-                                    <X size={16} />
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Messages */}
-                        <ScrollShadow ref={scrollRef} className="flex-1 p-4 space-y-3 overflow-y-auto scrollbar-styled">
-                            {messages.length === 0 && (
-                                <div className="flex flex-col items-center justify-center h-full gap-4 px-2">
-                                    <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                        <Sparkles size={22} className="text-purple-400" />
-                                    </div>
-                                    <div className="text-center">
-                                        <h3 className="text-base font-semibold text-white mb-1">Чем могу помочь?</h3>
-                                        <p className="text-zinc-500 text-xs">Выберите подсказку или задайте вопрос</p>
-                                    </div>
-                                    <div className="flex flex-col gap-2 w-full">
-                                        {suggestions.map((s, i) => (
-                                            <Chip
-                                                key={s}
-                                                variant="bordered"
-                                                className="cursor-pointer w-full justify-start hover:bg-purple-600/15 hover:border-purple-500/40 hover:text-purple-300 transition-all duration-200 border-zinc-700/60 text-zinc-300 text-xs px-1 animate-fade-in-up"
-                                                style={{ animationDelay: `${i * 80}ms` }}
-                                                onClick={() => { void handleSend(s); }}
-                                            >
-                                                {s}
-                                            </Chip>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {messages.map((msg, i) => (
-                                <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                                    {msg.role === "assistant" && (
-                                        <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 mt-1">
-                                            <Bot size={14} className="text-purple-400" />
-                                        </div>
-                                    )}
-                                    <div className="max-w-[80%]">
-                                        <div
-                                            className={`rounded-2xl px-3 py-2 ${msg.role === "user"
-                                                ? "bg-purple-600/20 border border-purple-500/20 text-zinc-200"
-                                                : "bg-zinc-800/50 border border-zinc-700/30 text-zinc-300"
-                                                }`}
-                                        >
-                                            <div className="text-xs whitespace-pre-wrap leading-relaxed space-y-1">
-                                                {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
-                                            </div>
-                                        </div>
-                                        <p className={`text-[9px] text-zinc-600 mt-0.5 ${msg.role === "user" ? "text-right" : "text-left"}`}>
-                                            {formatTime(msg.timestamp)}
-                                        </p>
-                                    </div>
-                                    {msg.role === "user" && (
-                                        <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/50 flex items-center justify-center shrink-0 mt-1">
-                                            <User size={14} className="text-zinc-400" />
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-
-                            {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
-                                <div className="flex gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                        <Bot size={14} className="text-purple-400" />
-                                    </div>
-                                    <div className="bg-zinc-800/50 border border-zinc-700/30 rounded-2xl px-3 py-2">
-                                        <div className="flex gap-1.5">
-                                            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" />
-                                            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
-                                            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </ScrollShadow>
-
-                        {/* Input */}
-                        <div className="p-3 border-t border-white/[0.06]">
-                            <div className="flex gap-2">
-                                <Input
-                                    aria-label="Задайте вопрос AI"
-                                    placeholder="Задайте вопрос..."
-                                    value={input}
-                                    onValueChange={setInput}
-                                    onKeyDown={handleKeyDown}
-                                    variant="bordered"
-                                    size="sm"
-                                    classNames={{
-                                        inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
-                                        input: "text-zinc-200 placeholder:text-zinc-600 text-xs",
-                                    }}
-                                    className="flex-1"
-                                    isDisabled={isStreaming}
-                                />
+    return createPortal(
+        <>
+            <div
+                className="fixed inset-0 z-[60] lg:hidden"
+                style={{ background: "rgba(7,17,12,0.6)", backdropFilter: "blur(4px)" }}
+                onClick={close}
+                role="presentation"
+            />
+            <aside
+                className="fixed right-0 top-0 z-[61] flex h-full w-[400px] max-w-[92vw] flex-col border-l shadow-[var(--shadow-lg)]"
+                style={{ background: "rgba(12, 24, 18, 0.95)", borderColor: "var(--line-2)", backdropFilter: "blur(20px)" }}
+                role="dialog"
+                aria-label="AI-ассистент"
+            >
+                <header className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: "var(--line)" }}>
+                    <div className="flex items-center gap-3">
+                        <FilkaAISphere size={36} speaking={isStreaming} />
+                        <div>
+                            <div className="text-sm font-semibold">AI-ассистент</div>
+                            <div className="t-caption flex items-center gap-1.5 text-[11px]">
                                 {isStreaming ? (
-                                    <Button isIconOnly size="sm" className="bg-red-600/20 text-red-400 border border-red-600/30" onPress={() => { void stop(); }} aria-label="Остановить">
-                                        <Square size={14} />
-                                    </Button>
+                                    <>
+                                        <FilkaTypingDots />
+                                        думает…
+                                    </>
                                 ) : (
-                                    <Button isIconOnly size="sm" className="bg-purple-600 text-white hover:bg-purple-500" onPress={() => { void handleSend(); }} aria-label="Отправить">
-                                        <Send size={14} />
-                                    </Button>
+                                    "готов помочь"
                                 )}
                             </div>
                         </div>
-                    </motion.div>
-                </>
-            )}
-        </AnimatePresence>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {messages.length > 0 ? (
+                            <button
+                                type="button"
+                                onClick={() => setMessages([])}
+                                className="grid h-8 w-8 place-items-center rounded-md text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
+                                aria-label="Очистить диалог"
+                            >
+                                <IconTrash size={14} />
+                            </button>
+                        ) : null}
+                        <button
+                            type="button"
+                            onClick={close}
+                            className="grid h-8 w-8 place-items-center rounded-md text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
+                            aria-label="Закрыть"
+                        >
+                            <IconClose size={16} />
+                        </button>
+                    </div>
+                </header>
+
+                <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4 f-scroll">
+                    {messages.length === 0 ? (
+                        <div className="flex h-full flex-col items-center justify-center gap-4 px-2 text-center">
+                            <div
+                                className="grid h-12 w-12 place-items-center rounded-[var(--r-md)]"
+                                style={{
+                                    background: "rgba(52,211,153,0.1)",
+                                    border: "1px solid rgba(52,211,153,0.22)",
+                                    color: "var(--mint-300)",
+                                }}
+                            >
+                                <IconSpark size={22} />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-semibold">Чем могу помочь?</h3>
+                                <p className="text-xs" style={{ color: "var(--fg-2)" }}>
+                                    Задайте вопрос или выберите подсказку
+                                </p>
+                            </div>
+                            <div className="flex w-full flex-col gap-2">
+                                {suggestions.map((s, i) => (
+                                    <button
+                                        key={s}
+                                        type="button"
+                                        onClick={() => void handleSend(s)}
+                                        className="filka-chip filka-chip-muted animate-fade-in-up cursor-pointer justify-start"
+                                        style={{ animationDelay: `${i * 80}ms` }}
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {messages.map((msg, i) => (
+                        <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                            {msg.role === "assistant" ? (
+                                <div
+                                    className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-md"
+                                    style={{ background: "var(--grad-ai-sphere)" }}
+                                />
+                            ) : null}
+                            <div className="max-w-[80%]">
+                                <div
+                                    className="rounded-[12px] px-3 py-2 text-[13px] leading-relaxed"
+                                    style={{
+                                        background:
+                                            msg.role === "user" ? "rgba(52,211,153,0.14)" : "var(--bg-3)",
+                                        border: `1px solid ${msg.role === "user" ? "rgba(52,211,153,0.22)" : "var(--line)"}`,
+                                        color: "var(--fg-0)",
+                                        borderTopLeftRadius: msg.role === "assistant" ? 4 : undefined,
+                                        borderTopRightRadius: msg.role === "user" ? 4 : undefined,
+                                    }}
+                                >
+                                    <div className="space-y-1 whitespace-pre-wrap">
+                                        {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                                    </div>
+                                </div>
+                                <p
+                                    className="mt-0.5 text-[10px]"
+                                    style={{
+                                        color: "var(--fg-3)",
+                                        textAlign: msg.role === "user" ? "right" : "left",
+                                    }}
+                                >
+                                    {formatTime(msg.timestamp)}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+
+                    {isStreaming && messages[messages.length - 1]?.role !== "assistant" ? (
+                        <div className="flex gap-2">
+                            <div
+                                className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-md"
+                                style={{ background: "var(--grad-ai-sphere)" }}
+                            />
+                            <div
+                                className="rounded-[12px] px-3 py-2"
+                                style={{
+                                    background: "var(--bg-3)",
+                                    border: "1px solid var(--line)",
+                                    borderTopLeftRadius: 4,
+                                }}
+                            >
+                                <FilkaTypingDots />
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
+
+                <footer className="border-t p-3" style={{ borderColor: "var(--line)" }}>
+                    <div className="flex items-end gap-2">
+                        <button
+                            type="button"
+                            className="grid h-10 w-10 place-items-center rounded-[var(--r-md)] border"
+                            style={{ background: "var(--bg-1)", borderColor: "var(--line-2)", color: "var(--fg-2)" }}
+                            aria-label="Голос (скоро)"
+                            disabled
+                        >
+                            <IconMic size={16} />
+                        </button>
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Задайте вопрос…"
+                            disabled={isStreaming}
+                            rows={1}
+                            className="filka-textarea flex-1 resize-none"
+                            style={{ minHeight: 40, maxHeight: 120 }}
+                        />
+                        {isStreaming ? (
+                            <button
+                                type="button"
+                                onClick={() => void stop()}
+                                className="grid h-10 w-10 place-items-center rounded-[var(--r-md)]"
+                                style={{
+                                    background: "rgba(248,113,113,0.14)",
+                                    border: "1px solid rgba(248,113,113,0.32)",
+                                    color: "var(--err)",
+                                }}
+                                aria-label="Остановить"
+                            >
+                                <FilkaSpinner size={14} />
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => void handleSend()}
+                                disabled={!input.trim()}
+                                className="filka-btn filka-btn-primary"
+                                style={{ height: 40, width: 40, padding: 0 }}
+                                aria-label="Отправить"
+                            >
+                                <IconSend size={16} />
+                            </button>
+                        )}
+                    </div>
+                </footer>
+            </aside>
+        </>,
+        document.body,
     );
 };

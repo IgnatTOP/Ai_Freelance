@@ -9,6 +9,7 @@ export const LoginPage = () => (
         <AuthLayout
             title="Добро пожаловать"
             subtitle="Войдите, чтобы продолжить работу на платформе"
+            mode="login"
         >
             <LoginForm />
         </AuthLayout>

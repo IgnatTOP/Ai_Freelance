@@ -12,17 +12,22 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "reset:dev": "npm run clean && npm run dev"
+    "reset:dev": "npm run clean && npm run dev",
+    "lint:ru": "node ./scripts/lint-ru.mjs",
+    "openapi": "openapi-typescript ../freelance_AI_back-main/docs/openapi.yaml -o src/shared/api/generated/openapi.ts"
   },
   "dependencies": {
-    "@heroui/react": "^2.8.9",
+    "@floating-ui/react": "^0.27.19",
+    "@floating-ui/react-dom": "^2.1.8",
     "@tailwindcss/postcss": "^4.2.1",
     "@tanstack/react-query": "^5.64.2",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.575.0",
     "next": "15.1.6",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1",
     "zod": "^3.24.1",
     "zustand": "^5.0.2"
@@ -35,6 +40,7 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "jsdom": "^28.1.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5.7.3",
     "vitest": "^4.0.18"
   }

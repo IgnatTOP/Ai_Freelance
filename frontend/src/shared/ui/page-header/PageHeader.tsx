@@ -8,11 +8,11 @@ interface PageHeaderProps {
 
 export const PageHeader = ({ title, description, action }: PageHeaderProps) => {
     return (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="filka-page-header">
             <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-zinc-100 mb-1">{title}</h1>
+                <h1 className="t-h2 m-0">{title}</h1>
                 {description && (
-                    <p className="text-sm text-zinc-400">{description}</p>
+                    <p className="t-body-sm mt-2 max-w-2xl text-[var(--fg-1)]">{description}</p>
                 )}
             </div>
             {action && (

@@ -1,16 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Button, Chip, Input } from "@heroui/react";
 import { ArrowLeft, ArrowRight, Plus, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOnboardingStore } from "@/features/onboarding/model";
 import { useAISuggestSkills } from "@/features/onboarding/hooks/useAISuggestSkills";
 import { catalogApi } from "@/shared/api/endpoints/catalog";
+import { FilkaButton, FilkaChip, FilkaField, FilkaInput } from "@/shared/ui/filka/FilkaPrimitives";
 
 export const StepSkills = () => {
-  const { freelancerData, updateFreelancer, nextStep, prevStep } =
-    useOnboardingStore();
+  const { freelancerData, updateFreelancer, nextStep, prevStep } = useOnboardingStore();
   const { suggestedSkills, isStreaming, suggest } = useAISuggestSkills();
   const [query, setQuery] = useState("");
   const [allSkills, setAllSkills] = useState<string[]>([]);
@@ -18,9 +17,12 @@ export const StepSkills = () => {
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    catalogApi.listSkills().then((skills) => {
-      setAllSkills(skills.map((s) => s.name));
-    }).catch(() => {});
+    catalogApi
+      .listSkills()
+      .then((skills) => {
+        setAllSkills(skills.map((s) => s.name));
+      })
+      .catch(() => {});
   }, []);
 
   const splitSkills = useCallback((value: string): string[] => {
@@ -43,16 +45,11 @@ export const StepSkills = () => {
 
     const timer = window.setTimeout(async () => {
       try {
-        const skills =
-          allSkills.length > 0
-            ? allSkills
-            : (await catalogApi.listSkills()).map((s) => s.name);
+        const skills = allSkills.length > 0 ? allSkills : (await catalogApi.listSkills()).map((s) => s.name);
 
         if (cancelled) return;
 
-        const selected = new Set(
-          freelancerData.skills.map((s) => s.trim().toLowerCase())
-        );
+        const selected = new Set(freelancerData.skills.map((s) => s.trim().toLowerCase()));
         const filtered = skills
           .filter((s) => s.toLowerCase().includes(normalizedQuery))
           .filter((s) => !selected.has(s.toLowerCase()))
@@ -91,14 +88,14 @@ export const StepSkills = () => {
       updateFreelancer({ skills: [...freelancerData.skills, ...uniqueToAdd] });
       setQuery("");
     },
-    [freelancerData.skills, splitSkills, updateFreelancer]
+    [freelancerData.skills, splitSkills, updateFreelancer],
   );
 
   const addSkill = useCallback(
     (skill: string) => {
       addSkills(skill);
     },
-    [addSkills]
+    [addSkills],
   );
 
   const removeSkill = useCallback(
@@ -107,13 +104,10 @@ export const StepSkills = () => {
         skills: freelancerData.skills.filter((s) => s !== skill),
       });
     },
-    [freelancerData.skills, updateFreelancer]
+    [freelancerData.skills, updateFreelancer],
   );
 
-  const selectedSkillSet = useMemo(
-    () => new Set(freelancerData.skills.map((skill) => skill.toLowerCase())),
-    [freelancerData.skills]
-  );
+  const selectedSkillSet = useMemo(() => new Set(freelancerData.skills.map((skill) => skill.toLowerCase())), [freelancerData.skills]);
 
   const handleAISuggest = () => {
     suggest({
@@ -131,70 +125,67 @@ export const StepSkills = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
     >
-      <h2 className="mb-1 text-2xl font-bold text-zinc-100">Ваши навыки</h2>
-      <p className="mb-6 text-sm text-zinc-500">
-        Выберите навыки из каталога или добавьте свои
-      </p>
+      <h2 className="mb-1 text-2xl font-bold text-[var(--fg-0)]">Ваши навыки</h2>
+      <p className="mb-6 text-sm text-[var(--fg-3)]">Выберите навыки из каталога или добавьте свои</p>
 
-      {/* Selected skills */}
       {freelancerData.skills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {freelancerData.skills.map((skill) => (
-            <Chip
-              key={skill}
-              variant="flat"
-              color="secondary"
-              onClose={() => removeSkill(skill)}
-              endContent={<X size={12} />}
-            >
-              {skill}
-            </Chip>
+            <span key={skill} className="filka-chip inline-flex items-center gap-1 pr-0.5">
+              <span className="text-[var(--mint-200)]">{skill}</span>
+              <button
+                type="button"
+                className="rounded p-0.5 text-[var(--mint-300)] hover:bg-[rgba(52,211,153,0.12)]"
+                aria-label={`Удалить ${skill}`}
+                onClick={() => removeSkill(skill)}
+              >
+                <X size={12} />
+              </button>
+            </span>
           ))}
         </div>
       )}
 
-      {/* Search input */}
       <div className="relative">
-        <Input
-          label="Поиск навыков"
-          placeholder="React, TypeScript..."
-          value={query}
-          onValueChange={setQuery}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && query.trim()) {
-              e.preventDefault();
-              addSkills(query);
-            }
-          }}
-          variant="bordered"
-          classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
-          endContent={
-            <Button
+        <FilkaField label="Поиск навыков">
+          <div className="flex gap-2">
+            <FilkaInput
+              className="flex-1"
+              placeholder="React, TypeScript..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && query.trim()) {
+                  e.preventDefault();
+                  addSkills(query);
+                }
+              }}
+            />
+            <FilkaButton
               size="sm"
-              color="secondary"
-              variant="flat"
-              isIconOnly
-              isDisabled={!query.trim()}
-              onPress={() => addSkills(query)}
-              className="min-w-8 h-8"
+              variant="soft"
+              className="h-10 min-w-10 shrink-0 px-0"
+              disabled={!query.trim()}
+              onClick={() => addSkills(query)}
+              aria-label="Добавить"
             >
               <Plus size={14} />
-            </Button>
-          }
-        />
+            </FilkaButton>
+          </div>
+        </FilkaField>
         {isSearching && query.trim().length > 0 && (
-          <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-400">
+          <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-xl border border-[var(--line)] bg-[var(--bg-2)] p-3 text-sm text-[var(--fg-2)]">
             Ищем навыки...
           </div>
         )}
         {searchResults.length > 0 && !isSearching && (
-          <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-40 overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 p-2">
+          <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-40 overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--bg-2)] p-2">
             {searchResults.map((skill) => (
               <button
                 key={skill}
                 type="button"
                 onClick={() => addSkill(skill)}
-                className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-zinc-300 hover:bg-purple-500/10 hover:text-purple-300"
+                className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-[var(--fg-1)] hover:bg-[rgba(52,211,153,0.1)] hover:text-[var(--mint-200)]"
               >
                 {skill}
               </button>
@@ -203,48 +194,29 @@ export const StepSkills = () => {
         )}
       </div>
 
-      {/* AI suggest */}
-      <Button
-        variant="flat"
-        color="secondary"
-        size="sm"
-        className="mt-4"
-        startContent={<Sparkles size={14} />}
-        isLoading={isStreaming}
-        onPress={handleAISuggest}
-      >
+      <FilkaButton variant="soft" size="sm" className="mt-4" loading={isStreaming} startContent={<Sparkles size={14} />} onClick={handleAISuggest}>
         Подобрать с ИИ
-      </Button>
+      </FilkaButton>
 
       {suggestedSkills.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {suggestedSkills
             .filter((s) => !selectedSkillSet.has(s.toLowerCase()))
             .map((skill) => (
-              <Chip
-                key={skill}
-                variant="bordered"
-                className="cursor-pointer border-purple-500/30 hover:bg-purple-500/10"
-                onClick={() => addSkill(skill)}
-              >
-                + {skill}
-              </Chip>
+              <button key={skill} type="button" onClick={() => addSkill(skill)}>
+                <FilkaChip className="cursor-pointer border border-[rgba(52,211,153,0.25)] hover:bg-[rgba(52,211,153,0.1)]">+ {skill}</FilkaChip>
+              </button>
             ))}
         </div>
       )}
 
       <div className="mt-8 flex justify-between">
-        <Button variant="light" startContent={<ArrowLeft size={16} />} onPress={prevStep}>
+        <FilkaButton variant="ghost" startContent={<ArrowLeft size={16} />} onClick={prevStep}>
           Назад
-        </Button>
-        <Button
-          color="secondary"
-          endContent={<ArrowRight size={16} />}
-          isDisabled={freelancerData.skills.length === 0}
-          onPress={nextStep}
-        >
+        </FilkaButton>
+        <FilkaButton variant="primary" endContent={<ArrowRight size={16} />} disabled={freelancerData.skills.length === 0} onClick={nextStep}>
           Далее
-        </Button>
+        </FilkaButton>
       </div>
     </motion.div>
   );

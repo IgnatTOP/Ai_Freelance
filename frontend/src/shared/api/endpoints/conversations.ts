@@ -326,24 +326,4 @@ export const conversationsApi = {
     });
   },
 
-  async findOrCreate(otherUserId: string): Promise<Conversation> {
-    const currentUserId = useSessionStore.getState().userId;
-    const raw = await apiClient.request<BackendConversation>(`/conversations`, {
-      method: "POST",
-      body: JSON.stringify({ participant_id: otherUserId }),
-    });
-
-    const mapped: Conversation = {
-      id: raw.id,
-      client_id: raw.client_id,
-      freelancer_id: raw.freelancer_id,
-      created_at: raw.created_at,
-    };
-    if (raw.order_id) mapped.order_id = raw.order_id;
-    if (raw.order_title) mapped.order_title = raw.order_title;
-    if (raw.other_user) mapped.other_user = raw.other_user;
-    if (raw.last_message) mapped.last_message = mapMessage(raw.last_message, currentUserId);
-    if (typeof raw.unread_count === "number") mapped.unread_count = raw.unread_count;
-    return mapped;
-  },
 };

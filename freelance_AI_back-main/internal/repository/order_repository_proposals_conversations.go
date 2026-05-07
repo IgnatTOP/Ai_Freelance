@@ -104,7 +104,7 @@ func (r *OrderRepository) CreateConversation(ctx context.Context, conv *models.C
 	query := `
 		INSERT INTO conversations (order_id, client_id, freelancer_id)
 		VALUES ($1, $2, $3)
-		RETURNING id, created_at
+		RETURNING id, created_at, updated_at
 	`
 
 	return r.db.QueryRowxContext(
@@ -113,7 +113,7 @@ func (r *OrderRepository) CreateConversation(ctx context.Context, conv *models.C
 		conv.OrderID,
 		conv.ClientID,
 		conv.FreelancerID,
-	).Scan(&conv.ID, &conv.CreatedAt)
+	).Scan(&conv.ID, &conv.CreatedAt, &conv.UpdatedAt)
 }
 
 // GetConversationByParticipants возвращает чат между клиентом и исполнителем.
@@ -122,7 +122,9 @@ func (r *OrderRepository) GetConversationByParticipants(ctx context.Context, ord
 	err := r.db.GetContext(
 		ctx,
 		&conv,
-		`SELECT * FROM conversations WHERE order_id = $1 AND client_id = $2 AND freelancer_id = $3`,
+		`SELECT id, order_id, client_id, freelancer_id, created_at, updated_at
+		 FROM conversations
+		 WHERE order_id = $1 AND client_id = $2 AND freelancer_id = $3`,
 		orderID,
 		clientID,
 		freelancerID,
@@ -139,7 +141,11 @@ func (r *OrderRepository) GetConversationByParticipants(ctx context.Context, ord
 // GetConversationByID возвращает чат по ID.
 func (r *OrderRepository) GetConversationByID(ctx context.Context, id uuid.UUID) (*models.Conversation, error) {
 	var conv models.Conversation
-	if err := r.db.GetContext(ctx, &conv, `SELECT * FROM conversations WHERE id = $1`, id); err != nil {
+	if err := r.db.GetContext(ctx, &conv, `
+		SELECT id, order_id, client_id, freelancer_id, created_at, updated_at
+		FROM conversations
+		WHERE id = $1
+	`, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrConversationNotFound
 		}
@@ -152,13 +158,13 @@ func (r *OrderRepository) GetConversationByID(ctx context.Context, id uuid.UUID)
 // Возвращает только чаты, где есть accepted proposal (т.е. активные чаты).
 func (r *OrderRepository) ListMyConversations(ctx context.Context, userID uuid.UUID) ([]models.Conversation, error) {
 	query := `
-		SELECT DISTINCT c.*
+		SELECT DISTINCT c.id, c.order_id, c.client_id, c.freelancer_id, c.created_at, c.updated_at
 		FROM conversations c
 		INNER JOIN proposals p ON c.order_id = p.order_id 
 			AND c.freelancer_id = p.freelancer_id
 			AND p.status = 'accepted'
 		WHERE (c.client_id = $1 OR c.freelancer_id = $1)
-		ORDER BY c.created_at DESC
+		ORDER BY c.updated_at DESC
 	`
 	var conversations []models.Conversation
 	if err := r.db.SelectContext(ctx, &conversations, query, userID); err != nil {

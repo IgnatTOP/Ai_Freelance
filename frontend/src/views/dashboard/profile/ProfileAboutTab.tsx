@@ -1,84 +1,74 @@
 "use client";
 
-import { Chip, Button } from "@heroui/react";
 import { User, Code2, PenLine } from "lucide-react";
 import type { Profile } from "@/shared/api/endpoints/profile";
+import { FilkaButton, FilkaChip } from "@/shared/ui/filka/FilkaPrimitives";
 
 type Props = {
-    profile: Profile | null;
-    role: string | null;
-    isEditing: boolean;
-    onStartEdit: () => void;
+  profile: Profile | null;
+  role: string | null;
+  isEditing: boolean;
+  onStartEdit: () => void;
 };
 
 export const ProfileAboutTab = ({ profile, role, isEditing, onStartEdit }: Props) => {
-    return (
-        <div className="mt-4 space-y-6">
-            {/* Bio */}
-            <div className="glass-card rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
-                            <User size={18} />
-                        </div>
-                        <h3 className="text-lg font-semibold text-white">О себе</h3>
-                    </div>
-                </div>
-                {profile?.bio ? (
-                    <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
-                ) : (
-                    <div className="py-6 text-center border border-dashed border-zinc-800 rounded-xl">
-                        <PenLine size={24} className="mx-auto mb-2 text-zinc-600" />
-                        <p className="text-sm text-zinc-500">Напишите пару слов о себе, чтобы выделиться</p>
-                        {!isEditing && (
-                            <Button size="sm" variant="flat" className="mt-3 bg-purple-500/10 text-purple-400" onPress={onStartEdit}>
-                                Добавить описание
-                            </Button>
-                        )}
-                    </div>
-                )}
+  return (
+    <div className="mt-4 space-y-6">
+      <div className="glass-card rounded-2xl p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="rounded-lg bg-[rgba(52,211,153,0.12)] p-2 text-[var(--mint-300)]">
+              <User size={18} />
             </div>
-
-            {/* Skills (freelancer) */}
-            {role === "freelancer" && (
-                <div className="glass-card rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                                <Code2 size={18} />
-                            </div>
-                            <h3 className="text-lg font-semibold text-white">Навыки и технологии</h3>
-                        </div>
-                    </div>
-                    {profile?.skills && profile.skills.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                            {profile.skills.map((s) => (
-                                <Chip
-                                    key={s}
-                                    size="sm"
-                                    variant="flat"
-                                    classNames={{
-                                        base: "bg-purple-500/10 border border-purple-500/20",
-                                        content: "text-purple-300 text-xs font-medium",
-                                    }}
-                                >
-                                    {s}
-                                </Chip>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="py-6 text-center border border-dashed border-zinc-800 rounded-xl">
-                            <Code2 size={24} className="mx-auto mb-2 text-zinc-600" />
-                            <p className="text-sm text-zinc-500">Добавьте навыки, чтобы заказчики находили вас быстрее</p>
-                            {!isEditing && (
-                                <Button size="sm" variant="flat" className="mt-3 bg-purple-500/10 text-purple-400" onPress={onStartEdit}>
-                                    Указать навыки
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
+            <h3 className="text-lg font-semibold text-[var(--fg-0)]">О себе</h3>
+          </div>
         </div>
-    );
+        {profile?.bio ? (
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--fg-1)]">{profile.bio}</p>
+        ) : (
+          <div className="rounded-xl border border-dashed border-[var(--line)] py-6 text-center">
+            <PenLine size={24} className="mx-auto mb-2 text-[var(--fg-3)]" />
+            <p className="text-sm text-[var(--fg-2)]">Напишите пару слов о себе, чтобы выделиться</p>
+            {!isEditing && (
+              <FilkaButton size="sm" variant="soft" className="mt-3" onClick={onStartEdit}>
+                Добавить описание
+              </FilkaButton>
+            )}
+          </div>
+        )}
+      </div>
+
+      {role === "freelancer" && (
+        <div className="glass-card rounded-2xl p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-[rgba(125,211,252,0.1)] p-2 text-[var(--info)]">
+                <Code2 size={18} />
+              </div>
+              <h3 className="text-lg font-semibold text-[var(--fg-0)]">Навыки и технологии</h3>
+            </div>
+          </div>
+          {profile?.skills && profile.skills.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {profile.skills.map((s) => (
+                <FilkaChip key={s} className="text-xs font-medium">
+                  {s}
+                </FilkaChip>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-[var(--line)] py-6 text-center">
+              <Code2 size={24} className="mx-auto mb-2 text-[var(--fg-3)]" />
+              <p className="text-sm text-[var(--fg-2)]">Добавьте навыки, чтобы заказчики находили вас быстрее</p>
+              {!isEditing && (
+                <FilkaButton size="sm" variant="soft" className="mt-3" onClick={onStartEdit}>
+                  Указать навыки
+                </FilkaButton>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };

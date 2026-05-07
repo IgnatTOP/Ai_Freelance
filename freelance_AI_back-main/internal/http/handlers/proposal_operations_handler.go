@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -290,7 +291,11 @@ func (h *ProposalOperationsHandler) UpdateProposalStatus(c *gin.Context) {
 		case errors.Is(err, repository.ErrOrderNotFound):
 			common.RespondNotFound(c, "заказ не найден")
 		default:
-			common.RespondBadRequest(c, err.Error())
+			message := err.Error()
+			if strings.Contains(message, "repository:") || strings.Contains(message, "sql:") {
+				message = "не удалось изменить статус отклика. Обновите страницу и повторите действие"
+			}
+			common.RespondBadRequest(c, message)
 		}
 		return
 	}

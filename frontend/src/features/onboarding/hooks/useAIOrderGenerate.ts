@@ -8,6 +8,7 @@ type GeneratedOrder = {
   description: string;
   category_id: string;
   skills: string[];
+  budget_min: number;
   budget_max: number;
   deadline: string;
 };
@@ -53,7 +54,9 @@ export const useAIOrderGenerate = () => {
       typeof raw.description === "string" && raw.description.trim() ? raw.description.trim() : freeText.trim();
     const skills = Array.isArray(raw.skills) ? raw.skills.filter((s): s is string => typeof s === "string" && s.trim().length > 0) : [];
 
+    const budgetMinRaw = typeof raw.budget_min === "number" ? raw.budget_min : Number(raw.budget_min);
     const budgetMaxRaw = typeof raw.budget_max === "number" ? raw.budget_max : Number(raw.budget_max);
+    const budgetMin = Number.isFinite(budgetMinRaw) && budgetMinRaw > 0 ? Math.round(budgetMinRaw) : 40000;
     const budgetMax = Number.isFinite(budgetMaxRaw) && budgetMaxRaw > 0 ? Math.round(budgetMaxRaw) : 50000;
 
     return {
@@ -61,6 +64,7 @@ export const useAIOrderGenerate = () => {
       description,
       category_id: typeof raw.category_id === "string" ? raw.category_id : "",
       skills,
+      budget_min: Math.min(budgetMin, budgetMax),
       budget_max: budgetMax,
       deadline: toDateFromDays(raw.deadline_days),
     };
@@ -93,7 +97,17 @@ export const useAIOrderGenerate = () => {
             if (jsonRaw) {
               const parsed = JSON.parse(jsonRaw) as Record<string, unknown>;
               setResult(normalizeGeneratedOrder(parsed, freeText));
+              return;
             }
+            setResult(
+              normalizeGeneratedOrder(
+                {
+                  title,
+                  description: freeText,
+                },
+                freeText
+              )
+            );
           } catch {
             // Fallback to minimum viable generated order when AI response isn't valid JSON.
             setResult(

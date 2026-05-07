@@ -14,6 +14,7 @@ type Conversation struct {
 	ClientID     uuid.UUID  `db:"client_id" json:"client_id"`
 	FreelancerID uuid.UUID  `db:"freelancer_id" json:"freelancer_id"`
 	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time  `db:"updated_at" json:"updated_at"`
 }
 
 // Message описывает сообщение в чате.

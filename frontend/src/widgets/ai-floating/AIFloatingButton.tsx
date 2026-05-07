@@ -1,38 +1,25 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { useAIFloatingStore } from "./store";
+import { IconSpark } from "@/shared/ui/filka";
 
 export const AIFloatingButton = () => {
-    const { isOpen, hasPulse, toggle } = useAIFloatingStore();
-
+    const { isOpen, toggle } = useAIFloatingStore();
+    if (isOpen) return null;
     return (
-        <AnimatePresence>
-            {!isOpen && (
-                <motion.button
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                    onClick={toggle}
-                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg shadow-purple-900/30 transition-all hover:shadow-xl hover:shadow-purple-800/40 hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
-                    style={{ backgroundColor: "#7B2FFF" }}
-                    aria-label="Открыть AI ассистент"
-                >
-                    <Sparkles size={24} className="text-white" />
-
-                    {/* Pulse ring */}
-                    {hasPulse && (
-                        <motion.span
-                            className="absolute inset-0 rounded-full border-2 border-purple-400"
-                            initial={{ scale: 1, opacity: 0.6 }}
-                            animate={{ scale: 1.8, opacity: 0 }}
-                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
-                        />
-                    )}
-                </motion.button>
-            )}
-        </AnimatePresence>
+        <button
+            type="button"
+            onClick={toggle}
+            className="ai-breathe fixed bottom-20 right-4 z-40 grid h-14 w-14 place-items-center rounded-full transition-transform hover:scale-105 lg:bottom-6 lg:right-6"
+            style={{
+                background: "linear-gradient(135deg, #B6D9FC 0%, #1a0e4a 100%)",
+                color: "#05060f",
+                boxShadow: "var(--shadow-glow), var(--shadow-md)",
+                border: "1px solid rgba(186,215,247,0.32)",
+            }}
+            aria-label="Открыть AI-ассистента"
+        >
+            <IconSpark size={22} />
+        </button>
     );
 };

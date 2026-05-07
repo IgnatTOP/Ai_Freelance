@@ -8,7 +8,8 @@ export const RegisterPage = () => (
     <AuthEntryGuard>
         <AuthLayout
             title="Создать аккаунт"
-            subtitle="Присоединяйтесь к платформе нового поколения"
+            subtitle="Подключитесь к платформе и настройте роль в один шаг"
+            mode="register"
         >
             <RegisterForm />
         </AuthLayout>

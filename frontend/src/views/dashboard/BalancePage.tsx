@@ -1,142 +1,318 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardBody, Button, Divider, useDisclosure } from "@heroui/react";
-import { Wallet, ArrowUpRight, ArrowDownLeft, TrendingUp, DollarSign, Receipt, CreditCard } from "lucide-react";
 import { useSessionStore } from "@/shared/store/session.store";
-import { useBalance, useTransactions } from "@/features/balance-management";
-import { PageHeader } from "@/shared/ui/page-header/PageHeader";
-import { EmptyState } from "@/shared/ui/empty-state/EmptyState";
+import { useActiveEscrows, useBalance, useRefundEscrow, useReleaseEscrow, useTransactions } from "@/features/balance-management";
+import { notify } from "@/shared/notifications/notify";
 import { DepositModal } from "@/shared/ui/deposit-modal/DepositModal";
 import { WithdrawModal } from "@/shared/ui/withdraw-modal/WithdrawModal";
+import { StatusBadge } from "@/shared/ui/status-badge/StatusBadge";
+import { formatMoney } from "@/shared/lib/money";
+import {
+    FilkaButton,
+    FilkaCard,
+    FilkaChip,
+    IconArrowDown as ArrowDownLeft,
+    IconArrowUpRight as ArrowUpRight,
+    IconWallet as CircleDollarSign,
+    IconWallet as CreditCard,
+    IconFile as Receipt,
+    IconShield as Shield,
+    IconLightning as TrendingUp,
+} from "@/shared/ui/filka";
 
-// Animated counter effect
+const useDisclosure = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    return {
+        isOpen,
+        onOpen: () => setIsOpen(true),
+        onClose: () => setIsOpen(false),
+        onOpenChange: setIsOpen,
+    };
+};
+
 const AnimatedNumber = ({ value }: { value: number }) => {
     const [displayValue, setDisplayValue] = useState(0);
 
     useEffect(() => {
+        let frame = 0;
         let startTimestamp: number | null = null;
-        const duration = 1000;
+        const duration = 800;
+
         const step = (timestamp: number) => {
-            if (!startTimestamp) startTimestamp = timestamp;
+            if (startTimestamp === null) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
             setDisplayValue(Math.floor(progress * value));
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            }
+            if (progress < 1) frame = window.requestAnimationFrame(step);
         };
-        window.requestAnimationFrame(step);
+
+        frame = window.requestAnimationFrame(step);
+        return () => window.cancelAnimationFrame(frame);
     }, [value]);
 
-    return <>{displayValue.toLocaleString()}</>;
+    return <>{displayValue.toLocaleString("ru-RU")}</>;
+};
+
+const TRANSACTION_META: Record<string, { label: string; positive: boolean }> = {
+    deposit: { label: "Пополнение", positive: true },
+    withdrawal: { label: "Вывод", positive: false },
+    escrow_hold: { label: "Удержание эскроу", positive: false },
+    escrow_release: { label: "Выплата эскроу", positive: true },
+    escrow_refund: { label: "Возврат эскроу", positive: true },
 };
 
 export const BalancePage = () => {
     const role = useSessionStore((s) => s.role);
-    const { data: balance, isLoading: balLoading } = useBalance();
-    const { data: transactions, isLoading: txLoading } = useTransactions();
+    const { data: balance, isLoading: isBalanceLoading } = useBalance();
+    const { data: transactions, isLoading: isTransactionsLoading } = useTransactions();
+    const { data: activeEscrows, isLoading: isEscrowsLoading } = useActiveEscrows();
+    const releaseEscrow = useReleaseEscrow();
+    const refundEscrow = useRefundEscrow();
     const depositModal = useDisclosure();
     const withdrawModal = useDisclosure();
 
+    const metrics = [
+        {
+            label: "Доступно",
+            value: balance?.available ?? 0,
+            accent: "text-[var(--mint-300)]",
+            bg: "bg-[rgba(52,211,153,0.1)] border-[rgba(52,211,153,0.22)]",
+            icon: CircleDollarSign,
+        },
+        {
+            label: "На удержании",
+            value: balance?.pending ?? 0,
+            accent: "text-[var(--accent-sun)]",
+            bg: "bg-[rgba(245,226,122,0.08)] border-[rgba(245,226,122,0.22)]",
+            icon: Shield,
+        },
+        {
+            label: role === "client" ? "Потрачено" : "Заработано",
+            value: role === "client" ? balance?.total_spent ?? 0 : balance?.total_earned ?? 0,
+            accent: "text-[var(--info)]",
+            bg: "bg-[rgba(125,211,252,0.08)] border-[rgba(125,211,252,0.2)]",
+            icon: TrendingUp,
+        },
+        {
+            label: role === "client" ? "Оборот аккаунта" : "Всего выплат",
+            value: role === "client" ? balance?.total_spent ?? 0 : balance?.total_earned ?? 0,
+            accent: "text-[var(--fg-0)]",
+            bg: "bg-[rgba(255,255,255,0.03)] border-[var(--line)]",
+            icon: CreditCard,
+        },
+    ];
+
+    const recentTransactions = transactions ?? [];
+
     return (
-        <div className="space-y-8 animate-fade-in-up">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <PageHeader
-                    title="Баланс"
-                    description={role === "client" ? "Управление средствами и escrow" : "Ваши доходы и выплаты"}
-                />
-                <div className="flex gap-3 shrink-0 mb-4 sm:mb-0">
+        <div className="space-y-6 animate-fade-in-up">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <div className="t-eyebrow mb-2">КОШЕЛЁК · ДВИЖЕНИЕ СРЕДСТВ</div>
+                    <h1 className="mb-2 text-[30px] font-bold tracking-[-0.03em] text-[var(--fg-0)]">Баланс и эскроу</h1>
+                    <p className="max-w-[640px] text-[14px] leading-[1.55] text-[var(--fg-2)]">
+                        {role === "client"
+                            ? "Пополняйте счёт, резервируйте средства в безопасной сделке и контролируйте все списания по заказам."
+                            : "Следите за доступным балансом, удержаниями и выплатами после завершения этапов работы."}
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
                     {role === "client" ? (
-                        <>
-                            <Button className="bg-purple-600 hover:bg-purple-500 text-white font-medium px-6 shadow-lg shadow-purple-500/20" startContent={<ArrowDownLeft size={18} />} radius="full" onPress={depositModal.onOpen}>
-                                Пополнить счет
-                            </Button>
-                        </>
+                        <FilkaButton startContent={<ArrowDownLeft size={16} />} onClick={depositModal.onOpen}>
+                            Пополнить счёт
+                        </FilkaButton>
                     ) : (
-                        <Button className="bg-purple-600 hover:bg-purple-500 text-white font-medium px-6 shadow-lg shadow-purple-500/20" startContent={<ArrowUpRight size={18} />} radius="full" onPress={withdrawModal.onOpen}>
+                        <FilkaButton startContent={<ArrowUpRight size={16} />} onClick={withdrawModal.onOpen}>
                             Вывести средства
-                        </Button>
+                        </FilkaButton>
                     )}
                 </div>
             </div>
 
-            {/* Balance cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                    { label: "Доступно", value: balance?.available ?? 0, icon: <Wallet size={20} />, accent: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-                    { label: "На удержании", value: balance?.pending ?? 0, icon: <DollarSign size={20} />, accent: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-                    { label: role === "client" ? "Потрачено в этом мес." : "Заработано в этом мес.", value: role === "client" ? (balance?.total_spent ?? 0) : (balance?.total_earned ?? 0), icon: <TrendingUp size={20} />, accent: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-                    { label: role === "client" ? "Всего потрачено" : "Всего заработано", value: role === "client" ? (balance?.total_spent ?? 0) : (balance?.total_earned ?? 0), icon: <CreditCard size={20} />, accent: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-                ].map((s, i) => (
-                    <div key={i} className={`glass-card rounded-2xl p-5 border border-white/[0.04] hover:border-white/10 transition-colors ${balLoading ? "animate-pulse" : "animate-fade-in-up"}`} style={{ animationDelay: `${i * 100}ms` }}>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className={`w-10 h-10 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center ${s.accent}`}>
-                                {s.icon}
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {metrics.map((metric) => {
+                    const Icon = metric.icon;
+                    return (
+                        <FilkaCard key={metric.label} className="rounded-[14px] bg-[var(--bg-2)] p-4">
+                            <div className="mb-3 flex items-center gap-3">
+                                <div className={`grid h-10 w-10 place-items-center rounded-[11px] border ${metric.bg} ${metric.accent}`}>
+                                    <Icon size={18} />
+                                </div>
+                                <span className="text-[13px] text-[var(--fg-2)]">{metric.label}</span>
                             </div>
-                            <span className="text-sm text-zinc-400 font-medium">{s.label}</span>
-                        </div>
-                        <p className={`text-3xl font-bold tracking-tight ${s.accent}`}>
-                            ₽<AnimatedNumber value={s.value} />
-                        </p>
-                    </div>
-                ))}
+                            <div className={`text-[30px] font-bold tracking-[-0.025em] ${metric.accent}`}>
+                                <span className="mr-1">₽</span>
+                                {isBalanceLoading ? "—" : <AnimatedNumber value={metric.value} />}
+                            </div>
+                        </FilkaCard>
+                    );
+                })}
             </div>
 
-            {/* Transactions */}
-            <div className="glass-card rounded-2xl p-6 md:p-8 min-h-[400px]">
-                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                    <Receipt size={20} className="text-purple-400" /> История транзакций
-                </h3>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+                <FilkaCard className="rounded-[14px] bg-[var(--bg-1)] p-5">
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="grid h-10 w-10 place-items-center rounded-[11px] border border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.08)] text-[var(--mint-300)]">
+                            <Receipt size={18} />
+                        </div>
+                        <div>
+                            <div className="text-[17px] font-semibold text-[var(--fg-0)]">История транзакций</div>
+                            <div className="t-caption">все пополнения, удержания и выплаты</div>
+                        </div>
+                    </div>
 
-                {txLoading ? (
-                    <div className="space-y-4">
-                        {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="flex gap-4 p-4 rounded-xl bg-zinc-900/40 border border-white/[0.02] animate-pulse">
-                                <div className="w-12 h-12 rounded-xl bg-zinc-800" />
-                                <div className="flex-1 py-1">
-                                    <div className="h-4 bg-zinc-800 rounded w-1/3 mb-2" />
-                                    <div className="h-3 bg-zinc-800 rounded w-1/4" />
+                    {isTransactionsLoading ? (
+                        <div className="space-y-3">
+                            {Array.from({ length: 4 }).map((_, index) => (
+                                <div key={index} className="rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] p-4">
+                                    <div className="mb-2 h-4 w-1/3 animate-pulse rounded bg-[var(--bg-3)]" />
+                                    <div className="h-3 w-1/2 animate-pulse rounded bg-[var(--bg-3)]" />
                                 </div>
-                                <div className="w-24 h-6 bg-zinc-800 rounded" />
-                            </div>
-                        ))}
-                    </div>
-                ) : !transactions?.length ? (
-                    <div className="pt-8">
-                        <EmptyState
-                            icon={<Receipt size={32} />}
-                            title="Транзакций пока нет"
-                            description="Здесь будет отображаться вся финансовая история: пополнения, удержания и выплаты."
-                        />
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {transactions.map((tx, i) => {
-                            const isPositive = tx.type === "deposit" || tx.type === "earning";
-                            return (
-                                <div key={tx.id} className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900/30 border border-white/[0.04] hover:border-purple-500/20 hover:bg-zinc-900/80 transition-all duration-200">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isPositive ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"
-                                        }`}>
-                                        {isPositive ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-base font-medium text-zinc-200 truncate">{tx.description}</p>
-                                        <div className="flex items-center gap-2 text-sm text-zinc-500 mt-1">
-                                            <span>{new Date(tx.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}</span>
-                                            <span>•</span>
-                                            <span className="capitalize">{tx.type}</span>
+                            ))}
+                        </div>
+                    ) : recentTransactions.length > 0 ? (
+                        <div className="space-y-3">
+                            {recentTransactions.map((transaction) => {
+                                const meta = TRANSACTION_META[transaction.type] ?? { label: transaction.type, positive: transaction.amount >= 0 };
+                                const isPositive = meta.positive;
+                                return (
+                                    <div
+                                        key={transaction.id}
+                                        className="flex items-center gap-4 rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3 transition-colors hover:border-[rgba(52,211,153,0.22)]"
+                                    >
+                                        <div className={`grid h-11 w-11 place-items-center rounded-[11px] border ${isPositive
+                                            ? "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.1)] text-[var(--mint-300)]"
+                                            : "border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.08)] text-[#fca5a5]"
+                                            }`}>
+                                            {isPositive ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-[14px] font-semibold text-[var(--fg-0)]">
+                                                {transaction.description || "Финансовая операция"}
+                                            </div>
+                                            <div className="mt-1 text-[12px] text-[var(--fg-2)]">
+                                                {new Date(transaction.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })} · {meta.label}
+                                            </div>
+                                        </div>
+                                        <div className={`text-right text-[16px] font-bold ${isPositive ? "text-[var(--mint-300)]" : "text-[var(--fg-0)]"}`}>
+                                            {isPositive ? "+" : "−"}{formatMoney(Math.abs(transaction.amount))}
                                         </div>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <span className={`text-lg font-bold tabular-nums ${isPositive ? "text-emerald-400" : "text-zinc-200"}`}>
-                                            {isPositive ? "+" : "−"}₽{Math.abs(tx.amount).toLocaleString()}
-                                        </span>
-                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="rounded-[12px] border border-dashed border-[var(--line)] bg-[var(--bg-2)] px-5 py-10 text-center">
+                            <div className="text-[15px] font-semibold text-[var(--fg-0)]">Транзакций пока нет</div>
+                            <div className="mt-2 text-[13px] text-[var(--fg-2)]">История начнёт заполняться после первого пополнения, удержания или выплаты.</div>
+                        </div>
+                    )}
+                </FilkaCard>
+
+                <div className="space-y-4">
+                    <FilkaCard className="rounded-[14px] border-[rgba(52,211,153,0.22)] bg-[linear-gradient(135deg,rgba(52,211,153,0.12),transparent_60%),var(--bg-1)] p-5">
+                        <div className="mb-3 flex items-center gap-3">
+                            <Shield size={18} className="text-[var(--mint-300)]" />
+                            <div className="t-caption text-[var(--mint-300)]">ESCROW · АКТИВЕН</div>
+                        </div>
+                        <div className="text-[30px] font-bold tracking-[-0.03em] text-[var(--fg-0)]">
+                            {formatMoney((role === "client" ? balance?.pending : balance?.available) ?? 0)}
+                        </div>
+                        <div className="mt-1 text-[13px] text-[var(--fg-2)]">
+                            {role === "client"
+                                ? "Эта сумма уже зарезервирована по активным сделкам и защищает обе стороны."
+                                : "Средства становятся доступными после подтверждения этапа или полного завершения заказа."}
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <FilkaChip>безопасная сделка</FilkaChip>
+                            <FilkaChip tone="muted">арбитраж включён</FilkaChip>
+                        </div>
+                    </FilkaCard>
+
+                    <FilkaCard className="rounded-[14px] bg-[var(--bg-1)] p-5">
+                        <div className="t-eyebrow mb-3">СВОДКА · 30 ДНЕЙ</div>
+                        <div className="space-y-2">
+                            {[
+                                ["Доступно", formatMoney(balance?.available ?? 0)],
+                                ["На удержании", formatMoney(balance?.pending ?? 0)],
+                                [
+                                    role === "client" ? "Всего потрачено" : "Всего заработано",
+                                    formatMoney((role === "client" ? balance?.total_spent : balance?.total_earned) ?? 0),
+                                ],
+                            ].map(([label, value], index) => (
+                                <div key={label} className={`flex items-center justify-between py-2 text-[13px] ${index > 0 ? "border-t border-[var(--line)]" : ""}`}>
+                                    <span className="text-[var(--fg-2)]">{label}</span>
+                                    <span className="font-semibold text-[var(--fg-0)]">{value}</span>
                                 </div>
-                            );
-                        })}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    </FilkaCard>
+
+                    <FilkaCard className="rounded-[14px] bg-[var(--bg-1)] p-5">
+                        <div className="t-eyebrow mb-3">ПРАВИЛА ВЫПЛАТ</div>
+                        <div className="space-y-3 text-[13px] leading-[1.5] text-[var(--fg-2)]">
+                            <p>Средства резервируются мгновенно и остаются в эскроу до подтверждения работы.</p>
+                            <p>После приёмки этапа деньги переходят исполнителю без ручных заявок со стороны заказчика.</p>
+                            <p>Если нужен спор, арбитраж открывается прямо из карточки заказа и использует всю историю переписки.</p>
+                        </div>
+                    </FilkaCard>
+
+                    <FilkaCard className="rounded-[14px] bg-[var(--bg-1)] p-5">
+                        <div className="t-eyebrow mb-3">АКТИВНЫЕ ЭСКРОУ</div>
+                        {isEscrowsLoading ? (
+                            <div className="text-[13px] text-[var(--fg-3)]">Загружаем сделки…</div>
+                        ) : (activeEscrows ?? []).length > 0 ? (
+                            <div className="space-y-3">
+                                {(activeEscrows ?? []).map((escrow) => (
+                                    <div key={escrow.order_id} className="rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] p-3">
+                                        <div className="mb-2 flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="t-mono truncate text-[11px] text-[var(--fg-3)]">#{escrow.order_id.slice(0, 8).toUpperCase()}</div>
+                                                <div className="text-[15px] font-bold text-[var(--fg-0)]">{formatMoney(escrow.amount)}</div>
+                                            </div>
+                                            <StatusBadge status={escrow.status} />
+                                        </div>
+                                        {role === "client" ? (
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <FilkaButton
+                                                    size="sm"
+                                                    loading={releaseEscrow.isPending}
+                                                    onClick={() => {
+                                                        releaseEscrow.mutate(escrow.order_id, {
+                                                            onSuccess: () => notify.success({ title: "Эскроу выплачен", type: "balance" }),
+                                                            onError: (error) => notify.error({ title: "Не удалось выплатить", message: error instanceof Error ? error.message : "Попробуйте позже" }),
+                                                        });
+                                                    }}
+                                                >
+                                                    Освободить
+                                                </FilkaButton>
+                                                <FilkaButton
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    loading={refundEscrow.isPending}
+                                                    onClick={() => {
+                                                        if (typeof window !== "undefined" && !window.confirm("Вернуть средства из эскроу?")) return;
+                                                        refundEscrow.mutate(escrow.order_id, {
+                                                            onSuccess: () => notify.success({ title: "Эскроу возвращён", type: "balance" }),
+                                                            onError: (error) => notify.error({ title: "Не удалось вернуть", message: error instanceof Error ? error.message : "Попробуйте позже" }),
+                                                        });
+                                                    }}
+                                                >
+                                                    Возврат
+                                                </FilkaButton>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-[13px] leading-[1.5] text-[var(--fg-3)]">
+                                Сейчас нет активных удержаний. После принятия отклика сделка появится здесь.
+                            </div>
+                        )}
+                    </FilkaCard>
+                </div>
             </div>
 
             <DepositModal isOpen={depositModal.isOpen} onClose={depositModal.onClose} />

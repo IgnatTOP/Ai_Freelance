@@ -1,4 +1,4 @@
-import { apiClient } from "../client";
+import { ApiError, apiClient } from "../client";
 
 export interface Balance {
   available: number;
@@ -9,6 +9,7 @@ export interface Balance {
 
 export interface Transaction {
   id: string;
+  order_id?: string;
   type: string;
   amount: number;
   description: string;
@@ -49,6 +50,7 @@ type BackendBalance = {
 
 type BackendTransaction = {
   id: string;
+  order_id?: string | null;
   type: string;
   amount: number;
   description?: string | null;
@@ -75,9 +77,10 @@ export const paymentsApi = {
   },
 
   async getTransactions(): Promise<Transaction[]> {
-    const response = await apiClient.requestPaginated<BackendTransaction>("/payments/transactions");
+    const response = await apiClient.requestPaginated<BackendTransaction>("/payments/transactions?limit=100&offset=0");
     return response.data.map((item) => ({
       id: item.id,
+      ...(item.order_id ? { order_id: item.order_id } : {}),
       type: item.type,
       amount: item.amount,
       description: item.description ?? "",
@@ -94,14 +97,41 @@ export const paymentsApi = {
     return mapBalance(raw);
   },
 
-  async getEscrow(orderId: string): Promise<EscrowStatus> {
-    return apiClient.request<EscrowStatus>(`/payments/escrow/${orderId}`);
+  async getEscrow(orderId: string): Promise<EscrowStatus | null> {
+    try {
+      return await apiClient.request<EscrowStatus>(`/payments/escrow/${orderId}`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   },
 
   async releaseEscrow(orderId: string): Promise<EscrowStatus> {
     return apiClient.request<EscrowStatus>(`/payments/escrow/${orderId}/release`, {
       method: "POST",
     });
+  },
+
+  async refundEscrow(orderId: string): Promise<EscrowStatus> {
+    return apiClient.request<EscrowStatus>(`/payments/escrow/${orderId}/refund`, {
+      method: "POST",
+    });
+  },
+
+  async getActiveEscrows(): Promise<EscrowStatus[]> {
+    const transactions = await paymentsApi.getTransactions();
+    const orderIds = [
+      ...new Set(
+        transactions
+          .filter((transaction) => transaction.type === "escrow_hold" && transaction.order_id)
+          .map((transaction) => transaction.order_id as string),
+      ),
+    ];
+
+    const escrows = await Promise.all(orderIds.map((orderId) => paymentsApi.getEscrow(orderId)));
+    return escrows.filter((escrow): escrow is EscrowStatus => escrow?.status === "held");
   },
 
   async withdraw(input: WithdrawInput): Promise<void> {

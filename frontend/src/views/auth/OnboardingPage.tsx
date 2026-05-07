@@ -8,6 +8,7 @@ import { useSessionHydrated } from "@/shared/store/use-session-hydrated";
 import { useOnboardingStore } from "@/features/onboarding/model";
 import { profileApi } from "@/shared/api/endpoints/profile";
 import { type OnboardingState } from "@/shared/api/endpoints/onboarding";
+import { notify } from "@/shared/notifications/notify";
 import { OnboardingShell } from "./onboarding/OnboardingShell";
 import { StepTransition } from "./onboarding/StepTransition";
 import { WelcomeScreen } from "./onboarding/WelcomeScreen";
@@ -101,8 +102,11 @@ export const OnboardingPage = () => {
       window.localStorage.removeItem(STORAGE_KEY);
       reset();
       router.replace((redirectTo ?? "/dashboard") as never);
-    } catch {
-      // Let the user retry
+    } catch (error) {
+      notify.error({
+        title: "Не удалось завершить онбординг",
+        message: error instanceof Error ? error.message : "Проверьте поля и попробуйте ещё раз.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -128,8 +132,11 @@ export const OnboardingPage = () => {
       window.localStorage.removeItem(STORAGE_KEY);
       reset();
       router.replace("/dashboard" as never);
-    } catch {
-      // Let the user retry
+    } catch (error) {
+      notify.error({
+        title: "Не удалось завершить онбординг",
+        message: error instanceof Error ? error.message : "Проверьте поля и попробуйте ещё раз.",
+      });
     } finally {
       setIsSaving(false);
     }

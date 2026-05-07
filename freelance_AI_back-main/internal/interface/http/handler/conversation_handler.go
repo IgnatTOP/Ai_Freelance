@@ -183,7 +183,17 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		content = " "
 	}
 
-	msg, conv, err := h.sendMessageUC.ExecuteWithConversation(c.Request.Context(), conversationID, userID, content)
+	attachmentIDs := make([]uuid.UUID, 0, len(req.AttachmentIDs))
+	for _, rawID := range req.AttachmentIDs {
+		mediaID, err := uuid.Parse(rawID)
+		if err != nil {
+			response.BadRequest(c, "некорректный ID вложения")
+			return
+		}
+		attachmentIDs = append(attachmentIDs, mediaID)
+	}
+
+	msg, conv, err := h.sendMessageUC.ExecuteWithConversation(c.Request.Context(), conversationID, userID, content, attachmentIDs)
 	if err != nil {
 		response.Error(c, err)
 		return

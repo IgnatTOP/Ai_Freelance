@@ -1,13 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Button, Chip, Input } from "@heroui/react";
 import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { useOnboardingStore } from "@/features/onboarding/model";
+import { FilkaButton, FilkaField, FilkaInput, FilkaChip } from "@/shared/ui/filka/FilkaPrimitives";
 
 export const StepContacts = () => {
-  const { freelancerData, updateFreelancer, nextStep, prevStep } =
-    useOnboardingStore();
+  const { freelancerData, updateFreelancer, nextStep, prevStep } = useOnboardingStore();
 
   return (
     <motion.div
@@ -16,36 +15,32 @@ export const StepContacts = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
     >
-      <h2 className="mb-1 text-2xl font-bold text-zinc-100">Контакты</h2>
-      <p className="mb-6 text-sm text-zinc-500">Email для связи с заказчиками</p>
+      <h2 className="mb-1 text-2xl font-bold text-[var(--fg-0)]">Контакты</h2>
+      <p className="mb-6 text-sm text-[var(--fg-3)]">Email для связи с заказчиками</p>
 
-      <Input
-        label="Email"
-        type="email"
-        placeholder="mail@example.com"
-        value={freelancerData.email}
-        onValueChange={(v) => updateFreelancer({ email: v })}
-        variant="bordered"
-        classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
-      />
+      <FilkaField label="Email">
+        <FilkaInput
+          type="email"
+          placeholder="mail@example.com"
+          value={freelancerData.email}
+          onChange={(e) => updateFreelancer({ email: e.target.value })}
+        />
+      </FilkaField>
 
       <div className="mt-4">
-        <Chip
-          color="success"
-          variant="flat"
-          startContent={<CheckCircle size={14} />}
-        >
+        <FilkaChip className="gap-1.5">
+          <CheckCircle size={14} className="text-[var(--ok)]" />
           Телефон подтверждён
-        </Chip>
+        </FilkaChip>
       </div>
 
       <div className="mt-8 flex justify-between">
-        <Button variant="light" startContent={<ArrowLeft size={16} />} onPress={prevStep}>
+        <FilkaButton variant="ghost" startContent={<ArrowLeft size={16} />} onClick={prevStep}>
           Назад
-        </Button>
-        <Button color="secondary" endContent={<ArrowRight size={16} />} onPress={nextStep}>
+        </FilkaButton>
+        <FilkaButton variant="primary" endContent={<ArrowRight size={16} />} onClick={nextStep}>
           Далее
-        </Button>
+        </FilkaButton>
       </div>
     </motion.div>
   );

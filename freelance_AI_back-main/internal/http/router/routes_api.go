@@ -28,6 +28,7 @@ func registerAuthRoutes(api *gin.RouterGroup, d routeDeps) {
 		authGroup.POST("/register-phone", d.newUserHandler.RegisterPhone)
 		authGroup.POST("/login-phone", d.newUserHandler.LoginPhone)
 		authGroup.POST("/verify-phone", d.newUserHandler.VerifyPhone)
+		authGroup.POST("/resend-code", d.newUserHandler.ResendPhoneCode)
 	}
 
 	protectedAuth := api.Group("/auth")
