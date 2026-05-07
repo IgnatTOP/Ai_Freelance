@@ -16,8 +16,8 @@ export const FeatureCard = ({ icon, title, description, number }: FeatureCardPro
             <span
                 className="grid h-12 w-12 place-items-center rounded-[var(--r-md)] transition-all group-hover:scale-110"
                 style={{
-                    background: "rgba(52,211,153,0.1)",
-                    border: "1px solid rgba(52,211,153,0.22)",
+                    background: "rgba(102,58,243,0.1)",
+                    border: "1px solid rgba(102,58,243,0.22)",
                     color: "var(--mint-300)",
                 }}
             >

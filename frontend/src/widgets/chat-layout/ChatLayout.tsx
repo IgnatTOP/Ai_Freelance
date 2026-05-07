@@ -737,7 +737,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   <button
                     type="button"
                     onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })}
-                    className="sticky bottom-3 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border border-[rgba(102,58,243,0.22)] bg-[rgba(12,24,18,0.82)] text-[var(--mint-200)] shadow-[var(--shadow-md)]"
+                    className="sticky bottom-3 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border border-[rgba(102,58,243,0.22)] bg-[rgba(10,11,20,0.82)] text-[var(--mint-200)] shadow-[var(--shadow-md)]"
                   >
                     <IconArrowDown size={16} />
                   </button>

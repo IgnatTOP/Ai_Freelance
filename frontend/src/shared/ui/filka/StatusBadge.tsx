@@ -17,7 +17,7 @@ const toneClass: Record<StatusTone, string> = {
 
 const toneStyle: Partial<Record<StatusTone, React.CSSProperties>> = {
   info: { background: "rgba(125,211,252,0.12)", borderColor: "rgba(125,211,252,0.22)", color: "var(--info)" },
-  success: { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.22)", color: "var(--mint-300)" },
+  success: { background: "rgba(102,58,243,0.12)", borderColor: "rgba(102,58,243,0.22)", color: "var(--mint-300)" },
 };
 
 interface FilkaStatusBadgeProps {

@@ -21,7 +21,7 @@ export const StepWelcomeTemplate = ({ onFinish, isFinishing }: Props) => {
       transition={{ delay: 0.1 }}
     >
       <div className="mb-2 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.1)] text-[var(--mint-300)]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(102,58,243,0.22)] bg-[rgba(102,58,243,0.1)] text-[var(--mint-300)]">
           <MessageSquareHeart size={20} />
         </div>
         <h2 className="text-2xl font-bold text-[var(--fg-0)]">Шаблон отклика</h2>

@@ -93,8 +93,8 @@ export const StatCard = ({ value, label, icon }: StatCardProps) => {
             <span
                 className="grid h-11 w-11 place-items-center rounded-[var(--r-md)]"
                 style={{
-                    background: "rgba(52,211,153,0.1)",
-                    border: "1px solid rgba(52,211,153,0.22)",
+                    background: "rgba(102,58,243,0.1)",
+                    border: "1px solid rgba(102,58,243,0.22)",
                     color: "var(--mint-300)",
                 }}
             >

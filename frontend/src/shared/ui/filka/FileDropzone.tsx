@@ -60,18 +60,18 @@ export const FilkaFileDropzone = ({
       onDrop={handleDrop}
       className={cn(
         "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--r-lg)] border-2 border-dashed px-6 py-8 text-center transition-all",
-        drag && "border-[var(--mint-400)] bg-[rgba(52,211,153,0.06)]",
+        drag && "border-[var(--mint-400)] bg-[rgba(102,58,243,0.06)]",
         disabled && "cursor-not-allowed opacity-50",
         className,
       )}
       style={{
         borderColor: drag ? "var(--mint-400)" : "var(--line-2)",
-        background: drag ? "rgba(52,211,153,0.06)" : "var(--bg-1)",
+        background: drag ? "rgba(102,58,243,0.06)" : "var(--bg-1)",
       }}
     >
       <span
         className="grid h-10 w-10 place-items-center rounded-full"
-        style={{ background: "rgba(52,211,153,0.1)", color: "var(--mint-300)" }}
+        style={{ background: "rgba(102,58,243,0.1)", color: "var(--mint-300)" }}
       >
         <IconUpload size={18} />
       </span>

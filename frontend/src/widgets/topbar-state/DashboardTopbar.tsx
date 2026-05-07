@@ -145,7 +145,7 @@ export const DashboardTopbar = () => {
                 className="sticky top-0 z-30 flex items-center gap-2 border-b px-4 sm:px-6"
                 style={{
                     height: 60,
-                    background: "rgba(7, 17, 12, 0.86)",
+                    background: "rgba(5,6,15,0.86)",
                     backdropFilter: "blur(20px)",
                     WebkitBackdropFilter: "blur(20px)",
                     borderColor: "var(--line)",
@@ -211,8 +211,8 @@ export const DashboardTopbar = () => {
                         href="/dashboard/ai"
                         className="hidden h-9 items-center gap-2 rounded-[var(--r-md)] border px-3 text-sm font-medium md:flex"
                         style={{
-                            background: "linear-gradient(135deg, rgba(52,211,153,0.15), rgba(16,185,129,0.08))",
-                            borderColor: "rgba(52,211,153,0.28)",
+                            background: "linear-gradient(135deg, rgba(102,58,243,0.15), rgba(79,43,199,0.08))",
+                            borderColor: "rgba(102,58,243,0.28)",
                             color: "var(--mint-200)",
                         }}
                     >
@@ -224,7 +224,7 @@ export const DashboardTopbar = () => {
                         href="/dashboard/balance"
                         className="hidden h-9 items-center gap-2 rounded-[var(--r-md)] border px-3 sm:flex"
                         style={{
-                            background: "rgba(167,243,208,0.06)",
+                            background: "rgba(186,215,247,0.06)",
                             borderColor: "var(--line)",
                         }}
                     >

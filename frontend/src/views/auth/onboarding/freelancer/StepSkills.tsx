@@ -135,7 +135,7 @@ export const StepSkills = () => {
               <span className="text-[var(--mint-200)]">{skill}</span>
               <button
                 type="button"
-                className="rounded p-0.5 text-[var(--mint-300)] hover:bg-[rgba(52,211,153,0.12)]"
+                className="rounded p-0.5 text-[var(--mint-300)] hover:bg-[rgba(102,58,243,0.12)]"
                 aria-label={`Удалить ${skill}`}
                 onClick={() => removeSkill(skill)}
               >
@@ -185,7 +185,7 @@ export const StepSkills = () => {
                 key={skill}
                 type="button"
                 onClick={() => addSkill(skill)}
-                className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-[var(--fg-1)] hover:bg-[rgba(52,211,153,0.1)] hover:text-[var(--mint-200)]"
+                className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-[var(--fg-1)] hover:bg-[rgba(102,58,243,0.1)] hover:text-[var(--mint-200)]"
               >
                 {skill}
               </button>
@@ -204,7 +204,7 @@ export const StepSkills = () => {
             .filter((s) => !selectedSkillSet.has(s.toLowerCase()))
             .map((skill) => (
               <button key={skill} type="button" onClick={() => addSkill(skill)}>
-                <FilkaChip className="cursor-pointer border border-[rgba(52,211,153,0.25)] hover:bg-[rgba(52,211,153,0.1)]">+ {skill}</FilkaChip>
+                <FilkaChip className="cursor-pointer border border-[rgba(102,58,243,0.25)] hover:bg-[rgba(102,58,243,0.1)]">+ {skill}</FilkaChip>
               </button>
             ))}
         </div>

@@ -35,7 +35,7 @@ const SectionHeader = ({ title, description, icon }: { title: string; descriptio
     <div className="mb-5">
         <div className="mb-2 flex items-center gap-3">
             {icon ? (
-                <div className="grid h-9 w-9 place-items-center rounded-[11px] border border-[rgba(52,211,153,0.18)] bg-[rgba(52,211,153,0.08)] text-[var(--mint-300)]">
+                <div className="grid h-9 w-9 place-items-center rounded-[11px] border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] text-[var(--mint-300)]">
                     {icon}
                 </div>
             ) : null}
@@ -302,7 +302,7 @@ const AITab = () => {
 
     return (
         <div className="space-y-4">
-            <FilkaCard className="rounded-[14px] border-[rgba(52,211,153,0.25)] bg-[linear-gradient(135deg,rgba(52,211,153,0.10),transparent_60%),var(--bg-1)] p-6">
+            <FilkaCard className="rounded-[14px] border-[rgba(102,58,243,0.25)] bg-[linear-gradient(135deg,rgba(102,58,243,0.10),transparent_60%),var(--bg-1)] p-6">
                 <SectionHeader
                     title="AI-помощник"
                     description="Что Filka может делать без ручного подтверждения и как глубоко использовать ваш контекст."

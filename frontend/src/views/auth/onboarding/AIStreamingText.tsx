@@ -10,7 +10,7 @@ type Props = {
 
 export const AIStreamingText = ({ text, isStreaming, className = "" }: Props) => (
   <div
-    className={`relative rounded-xl border border-[rgba(52,211,153,0.2)] bg-[rgba(52,211,153,0.06)] p-4 text-sm leading-relaxed text-[var(--fg-1)] ${className}`}
+    className={`relative rounded-xl border border-[rgba(102,58,243,0.2)] bg-[rgba(102,58,243,0.06)] p-4 text-sm leading-relaxed text-[var(--fg-1)] ${className}`}
   >
     <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       {text}

@@ -17,7 +17,7 @@ export const ProfileAboutTab = ({ profile, role, isEditing, onStartEdit }: Props
       <div className="glass-card rounded-2xl p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-[rgba(52,211,153,0.12)] p-2 text-[var(--mint-300)]">
+            <div className="rounded-lg bg-[rgba(102,58,243,0.12)] p-2 text-[var(--mint-300)]">
               <User size={18} />
             </div>
             <h3 className="text-lg font-semibold text-[var(--fg-0)]">О себе</h3>

@@ -61,7 +61,7 @@ export const FilkaAvatarUploader = ({
         {(hover || loading) && !disabled ? (
           <span
             className="absolute inset-0 grid place-items-center text-white"
-            style={{ background: "rgba(7,17,12,0.55)" }}
+            style={{ background: "rgba(5,6,15,0.55)" }}
           >
             {loading ? <FilkaSpinner size={20} /> : <IconUpload size={Math.round(size * 0.22)} />}
           </span>

@@ -27,9 +27,9 @@ const TYPE_ICONS: Record<string, ReactNode> = {
 };
 
 const TYPE_COLORS: Record<string, { backgroundColor: string; color: string }> = {
-    order: { backgroundColor: "rgba(52,211,153,0.12)", color: "var(--mint-300)" },
+    order: { backgroundColor: "rgba(102,58,243,0.12)", color: "var(--mint-300)" },
     proposal: { backgroundColor: "rgba(125,211,252,0.12)", color: "var(--info)" },
-    message: { backgroundColor: "rgba(110,231,183,0.12)", color: "var(--mint-200)" },
+    message: { backgroundColor: "rgba(186,215,247,0.12)", color: "var(--mint-200)" },
     payment: { backgroundColor: "rgba(245,226,122,0.12)", color: "var(--accent-sun)" },
     system: { backgroundColor: "rgba(255,179,138,0.12)", color: "var(--warn)" },
 };
@@ -303,9 +303,9 @@ export const NotificationsPage = () => {
             </div>
 
             <aside className="space-y-4">
-                <FilkaCard className="rounded-[14px] border-[rgba(52,211,153,0.22)] bg-[linear-gradient(135deg,rgba(52,211,153,0.10),transparent_65%),var(--bg-1)] p-5">
+                <FilkaCard className="rounded-[14px] border-[rgba(102,58,243,0.22)] bg-[linear-gradient(135deg,rgba(102,58,243,0.10),transparent_65%),var(--bg-1)] p-5">
                     <div className="mb-3 flex items-center gap-3">
-                        <div className="grid h-8 w-8 place-items-center rounded-full bg-[rgba(52,211,153,0.12)] text-[var(--mint-300)]">
+                        <div className="grid h-8 w-8 place-items-center rounded-full bg-[rgba(102,58,243,0.12)] text-[var(--mint-300)]">
                             <Bell size={14} />
                         </div>
                         <div className="t-mono text-[11px] text-[var(--mint-300)]">AI-ДАЙДЖЕСТ</div>

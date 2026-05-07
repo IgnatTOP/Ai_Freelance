@@ -162,9 +162,9 @@ export const AIAssistantPage = () => {
             className="relative overflow-hidden rounded-[20px] border p-5"
             style={{
               background:
-                "radial-gradient(ellipse 65% 85% at 85% 15%, rgba(52,211,153,0.18), transparent 65%)," +
-                "linear-gradient(180deg, rgba(52,211,153,0.10), rgba(16,185,129,0.03)), var(--bg-1)",
-              borderColor: "rgba(52,211,153,0.22)",
+                "radial-gradient(ellipse 65% 85% at 85% 15%, rgba(102,58,243,0.18), transparent 65%)," +
+                "linear-gradient(180deg, rgba(102,58,243,0.10), rgba(79,43,199,0.03)), var(--bg-1)",
+              borderColor: "rgba(102,58,243,0.22)",
             }}
           >
             <div className="mb-4 flex items-center gap-3">
@@ -198,7 +198,7 @@ export const AIAssistantPage = () => {
                   key={suggestion}
                   type="button"
                   onClick={() => void handleSend(suggestion)}
-                  className="inline-flex items-center gap-1 rounded-full border border-[rgba(52,211,153,0.18)] bg-[rgba(52,211,153,0.08)] px-3 py-2 text-[12px] text-[var(--mint-200)]"
+                  className="inline-flex items-center gap-1 rounded-full border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] px-3 py-2 text-[12px] text-[var(--mint-200)]"
                 >
                   <Sparkles size={10} />
                   {suggestion}
@@ -240,7 +240,7 @@ export const AIAssistantPage = () => {
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
-                <div className="grid h-16 w-16 place-items-center rounded-[20px] border border-[rgba(52,211,153,0.18)] bg-[rgba(52,211,153,0.08)] text-[var(--mint-300)]">
+                <div className="grid h-16 w-16 place-items-center rounded-[20px] border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] text-[var(--mint-300)]">
                   <Sparkles size={28} />
                 </div>
                 <div>
@@ -255,7 +255,7 @@ export const AIAssistantPage = () => {
                       key={suggestion}
                       type="button"
                       onClick={() => void handleSend(suggestion)}
-                      className="rounded-full border border-[var(--line)] bg-[var(--bg-2)] px-4 py-2 text-[13px] text-[var(--fg-1)] transition-colors hover:border-[rgba(52,211,153,0.22)] hover:bg-[rgba(52,211,153,0.08)] hover:text-[var(--mint-200)]"
+                      className="rounded-full border border-[var(--line)] bg-[var(--bg-2)] px-4 py-2 text-[13px] text-[var(--fg-1)] transition-colors hover:border-[rgba(102,58,243,0.22)] hover:bg-[rgba(102,58,243,0.08)] hover:text-[var(--mint-200)]"
                     >
                       {suggestion}
                     </button>
@@ -267,7 +267,7 @@ export const AIAssistantPage = () => {
                 {messages.map((message, index) => (
                   <div key={`${message.timestamp}-${index}`} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                     {message.role === "assistant" ? (
-                      <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-[rgba(52,211,153,0.18)] bg-[rgba(52,211,153,0.08)] text-[var(--mint-300)]">
+                      <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] text-[var(--mint-300)]">
                         <Bot size={16} />
                       </div>
                     ) : null}
@@ -275,7 +275,7 @@ export const AIAssistantPage = () => {
                       <div
                         className={`rounded-[16px] border px-4 py-3 text-[14px] leading-[1.6] ${
                           message.role === "user"
-                            ? "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.14)] text-[var(--fg-0)]"
+                            ? "border-[rgba(102,58,243,0.22)] bg-[rgba(102,58,243,0.14)] text-[var(--fg-0)]"
                             : "border-[var(--line)] bg-[var(--bg-2)] text-[var(--fg-1)]"
                         }`}
                       >
@@ -295,7 +295,7 @@ export const AIAssistantPage = () => {
 
                 {isStreaming && messages[messages.length - 1]?.role !== "assistant" ? (
                   <div className="flex gap-3">
-                    <div className="grid h-9 w-9 place-items-center rounded-[10px] border border-[rgba(52,211,153,0.18)] bg-[rgba(52,211,153,0.08)] text-[var(--mint-300)]">
+                    <div className="grid h-9 w-9 place-items-center rounded-[10px] border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] text-[var(--mint-300)]">
                       <Bot size={16} />
                     </div>
                     <div className="rounded-[14px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3">

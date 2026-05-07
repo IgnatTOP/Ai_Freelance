@@ -161,7 +161,7 @@ export const FilkaSkeleton = ({ width = "100%", height = 12, rounded = 6, classN
       width,
       height,
       borderRadius: rounded,
-      background: "rgba(167,243,208,0.06)",
+      background: "rgba(186,215,247,0.06)",
       ...style,
     }}
     aria-hidden="true"

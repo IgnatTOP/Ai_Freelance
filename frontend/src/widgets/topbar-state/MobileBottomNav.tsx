@@ -52,7 +52,7 @@ export const MobileBottomNav = () => {
       <div
         className="grid grid-cols-5 gap-1 rounded-[var(--r-xl)] border px-2 py-2 backdrop-blur-2xl"
         style={{
-          background: "rgba(12, 24, 18, 0.86)",
+          background: "rgba(10,11,20,0.86)",
           borderColor: "var(--line-2)",
           boxShadow: "var(--shadow-md)",
         }}
@@ -67,7 +67,7 @@ export const MobileBottomNav = () => {
               className="relative flex flex-col items-center justify-center rounded-[var(--r-md)] py-1.5 text-[10px] transition-colors"
               style={{
                 color: isActive ? "var(--fg-0)" : "var(--fg-2)",
-                background: isActive ? "rgba(167,243,208,0.1)" : "transparent",
+                background: isActive ? "rgba(186,215,247,0.1)" : "transparent",
               }}
             >
               <span className="relative">

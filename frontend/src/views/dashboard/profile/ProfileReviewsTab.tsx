@@ -52,7 +52,7 @@ export const ProfileReviewsTab = ({ reviews }: Props) => {
           <div key={review.id}>
             <div className="py-4">
               <div className="mb-2 flex items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[rgba(52,211,153,0.2)] bg-[rgba(52,211,153,0.1)] text-[11px] font-bold text-[var(--mint-300)]">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[rgba(102,58,243,0.2)] bg-[rgba(102,58,243,0.1)] text-[11px] font-bold text-[var(--mint-300)]">
                   {initialsFrom(review.reviewer_name)}
                 </div>
                 <div className="flex-1">

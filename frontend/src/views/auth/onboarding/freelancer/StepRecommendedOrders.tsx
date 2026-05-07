@@ -37,11 +37,11 @@ export const StepRecommendedOrders = ({ onFinish, isFinishing }: Props) => {
       <div className="grid gap-3 sm:grid-cols-2">
         {isLoading ? (
           <>
-            <div className="rounded-xl border border-[rgba(52,211,153,0.2)] bg-[linear-gradient(135deg,rgba(52,211,153,0.1),rgba(16,30,22,0.6))] p-4 sm:col-span-2">
+            <div className="rounded-xl border border-[rgba(102,58,243,0.2)] bg-[linear-gradient(135deg,rgba(102,58,243,0.1),rgba(20,21,42,0.6))] p-4 sm:col-span-2">
               <div className="flex items-center gap-4">
                 <div className="relative h-14 w-14 shrink-0">
-                  <div className="absolute inset-0 animate-ping rounded-full border border-[rgba(52,211,153,0.35)]" />
-                  <div className="absolute inset-1 animate-pulse rounded-full border border-[rgba(52,211,153,0.4)]" />
+                  <div className="absolute inset-0 animate-ping rounded-full border border-[rgba(102,58,243,0.35)]" />
+                  <div className="absolute inset-1 animate-pulse rounded-full border border-[rgba(102,58,243,0.4)]" />
                   <div className="absolute inset-0 flex items-center justify-center text-[var(--mint-300)]">
                     <Search size={20} className="animate-pulse" />
                   </div>
@@ -68,7 +68,7 @@ export const StepRecommendedOrders = ({ onFinish, isFinishing }: Props) => {
                 <div className="mb-3 h-4 w-2/3 rounded bg-[var(--bg-3)] shimmer" />
                 <div className="mb-2 h-3 w-full rounded bg-[var(--bg-3)] shimmer" />
                 <div className="mb-2 h-3 w-4/5 rounded bg-[var(--bg-3)] shimmer" />
-                <div className="h-6 w-24 rounded-full bg-[rgba(52,211,153,0.12)]" />
+                <div className="h-6 w-24 rounded-full bg-[rgba(102,58,243,0.12)]" />
               </motion.div>
             ))}
           </>

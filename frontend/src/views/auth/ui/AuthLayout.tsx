@@ -50,7 +50,7 @@ export const AuthLayout = ({ children, title, subtitle, mode = "login" }: AuthLa
                         <FilkaCard glass className="max-w-[260px] p-4">
                             <div
                                 className="mb-2 grid h-9 w-9 place-items-center rounded-[10px]"
-                                style={{ background: "rgba(52,211,153,0.12)", color: "var(--mint-300)" }}
+                                style={{ background: "rgba(102,58,243,0.12)", color: "var(--mint-300)" }}
                             >
                                 <IconShield size={16} />
                             </div>
@@ -141,7 +141,7 @@ export const AuthLayout = ({ children, title, subtitle, mode = "login" }: AuthLa
                         <FilkaCard glass className="mt-8 flex items-start gap-3 border-dashed p-4">
                             <div
                                 className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px]"
-                                style={{ background: "rgba(52,211,153,0.12)", color: "var(--mint-300)" }}
+                                style={{ background: "rgba(102,58,243,0.12)", color: "var(--mint-300)" }}
                             >
                                 <IconSpark size={16} />
                             </div>

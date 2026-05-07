@@ -35,7 +35,7 @@ export const FilkaProgressBar = ({
         style={{
           height,
           borderRadius: 999,
-          background: "rgba(167,243,208,0.08)",
+          background: "rgba(186,215,247,0.08)",
         }}
         role="progressbar"
         aria-valuenow={value}

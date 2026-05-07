@@ -23,7 +23,7 @@ export const ProgressStepper = ({ steps, currentStep }: Props) => (
                 isCompleted
                   ? "border-[var(--mint-500)] bg-[var(--mint-500)] text-[#062219]"
                   : isActive
-                    ? "border-[var(--mint-400)] bg-[rgba(52,211,153,0.15)] text-[var(--mint-200)]"
+                    ? "border-[var(--mint-400)] bg-[rgba(102,58,243,0.15)] text-[var(--mint-200)]"
                     : "border-[var(--line)] bg-[var(--bg-2)] text-[var(--fg-3)]"
               }`}
               animate={isActive ? { scale: 1.15 } : { scale: 1 }}

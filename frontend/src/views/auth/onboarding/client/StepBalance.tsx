@@ -62,7 +62,7 @@ export const StepBalance = ({ onFinish, isFinishing }: Props) => {
 
       <FilkaCard className="mb-6 border border-[var(--line)] bg-[var(--bg-1)]/80 p-4">
         <div className="flex flex-row items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(52,211,153,0.12)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(102,58,243,0.12)]">
             <Wallet size={24} className="text-[var(--mint-300)]" />
           </div>
           <div>

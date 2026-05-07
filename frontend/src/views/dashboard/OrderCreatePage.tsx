@@ -384,10 +384,10 @@ export const OrderCreatePage = () => {
                                 <div
                                     className="rounded-[12px] px-3 py-2 text-[13px] leading-relaxed"
                                     style={{
-                                        background: msg.role === "user" ? "rgba(52,211,153,0.14)" : "var(--bg-3)",
+                                        background: msg.role === "user" ? "rgba(102,58,243,0.14)" : "var(--bg-3)",
                                         border:
                                             msg.role === "user"
-                                                ? "1px solid rgba(52,211,153,0.22)"
+                                                ? "1px solid rgba(102,58,243,0.22)"
                                                 : "1px solid var(--line)",
                                         borderTopLeftRadius: msg.role !== "user" ? 4 : undefined,
                                         borderTopRightRadius: msg.role === "user" ? 4 : undefined,

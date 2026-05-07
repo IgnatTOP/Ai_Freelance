@@ -74,8 +74,8 @@ export const FilkaTagInput = ({
             key={`${tag}-${i}`}
             className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs"
             style={{
-              background: "rgba(52,211,153,0.1)",
-              borderColor: "rgba(52,211,153,0.22)",
+              background: "rgba(102,58,243,0.1)",
+              borderColor: "rgba(102,58,243,0.22)",
               color: "var(--mint-300)",
             }}
           >
@@ -84,7 +84,7 @@ export const FilkaTagInput = ({
               <button
                 type="button"
                 onClick={() => removeTag(i)}
-                className="grid h-4 w-4 place-items-center rounded-full hover:bg-[rgba(52,211,153,0.18)]"
+                className="grid h-4 w-4 place-items-center rounded-full hover:bg-[rgba(102,58,243,0.18)]"
                 aria-label={`Удалить ${tag}`}
               >
                 <IconClose size={10} />

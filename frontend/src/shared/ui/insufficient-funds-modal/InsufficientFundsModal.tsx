@@ -91,8 +91,8 @@ export const InsufficientFundsModal = ({
                     <div
                         className="grid h-16 w-16 place-items-center rounded-full"
                         style={{
-                            background: "rgba(52,211,153,0.18)",
-                            border: "1px solid rgba(52,211,153,0.32)",
+                            background: "rgba(102,58,243,0.18)",
+                            border: "1px solid rgba(102,58,243,0.32)",
                             color: "var(--mint-300)",
                         }}
                     >
@@ -110,8 +110,8 @@ export const InsufficientFundsModal = ({
                             <span
                                 className="grid h-10 w-10 place-items-center rounded-[var(--r-md)]"
                                 style={{
-                                    background: "rgba(52,211,153,0.1)",
-                                    border: "1px solid rgba(52,211,153,0.22)",
+                                    background: "rgba(102,58,243,0.1)",
+                                    border: "1px solid rgba(102,58,243,0.22)",
                                     color: "var(--mint-300)",
                                 }}
                             >

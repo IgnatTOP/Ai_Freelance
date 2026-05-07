@@ -399,8 +399,8 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                         glow
                         className="relative overflow-hidden p-5"
                         style={{
-                            background: "linear-gradient(135deg, rgba(52,211,153,0.10), rgba(16,185,129,0.04))",
-                            borderColor: "rgba(52,211,153,0.32)",
+                            background: "linear-gradient(135deg, rgba(102,58,243,0.10), rgba(79,43,199,0.04))",
+                            borderColor: "rgba(102,58,243,0.32)",
                         }}
                     >
                         <div className="absolute -right-8 -top-8 opacity-40">
@@ -463,10 +463,10 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                             className="flex flex-col gap-3 rounded-[var(--r-lg)] border p-4 sm:flex-row"
                                             style={{
                                                 background: isBest
-                                                    ? "rgba(52,211,153,0.06)"
+                                                    ? "rgba(102,58,243,0.06)"
                                                     : "var(--bg-1)",
                                                 borderColor: isBest
-                                                    ? "rgba(52,211,153,0.32)"
+                                                    ? "rgba(102,58,243,0.32)"
                                                     : "var(--line)",
                                             }}
                                         >

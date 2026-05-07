@@ -89,7 +89,7 @@ export const FilkaOTPInput = ({
             onPaste={handlePaste}
             className={cn(
               "h-13 w-12 rounded-[var(--r-md)] border bg-[var(--bg-1)] text-center text-[22px] font-semibold tabular-nums outline-none transition-all",
-              "focus:border-[var(--mint-400)] focus:shadow-[0_0_0_3px_rgba(52,211,153,0.18)]",
+              "focus:border-[var(--mint-400)] focus:shadow-[0_0_0_3px_rgba(102,58,243,0.18)]",
               filled && "border-[var(--mint-400)]",
               hasError && "border-[var(--err)] focus:border-[var(--err)] focus:shadow-[0_0_0_3px_rgba(248,113,113,0.18)]",
               disabled && "cursor-not-allowed opacity-50",

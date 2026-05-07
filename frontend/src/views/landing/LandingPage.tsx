@@ -238,7 +238,7 @@ export const LandingPage = () => {
             <div className="relative z-10 mx-auto max-w-[1440px]">
                 <div className="px-5 pt-5 sm:px-8 lg:hidden">
                     <div
-                        className="flex items-center justify-between rounded-full border bg-[rgba(12,24,18,0.55)] px-4 py-3 backdrop-blur-xl"
+                        className="flex items-center justify-between rounded-full border bg-[rgba(10,11,20,0.55)] px-4 py-3 backdrop-blur-xl"
                         style={{ borderColor: "rgba(186,215,247,0.14)" }}
                     >
                         <Link href="/" className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export const LandingPage = () => {
                     <nav
                         className="flex items-center gap-1 overflow-x-auto rounded-full border px-2 py-2"
                         style={{
-                            background: "rgba(12, 24, 18, 0.55)",
+                            background: "rgba(10,11,20,0.55)",
                             backdropFilter: "blur(28px) saturate(1.6)",
                             WebkitBackdropFilter: "blur(28px) saturate(1.6)",
                             borderColor: "rgba(186,215,247,0.14)",

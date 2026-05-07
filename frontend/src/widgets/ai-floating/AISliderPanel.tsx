@@ -167,13 +167,13 @@ export const AISliderPanel = () => {
         <>
             <div
                 className="fixed inset-0 z-[60] lg:hidden"
-                style={{ background: "rgba(7,17,12,0.6)", backdropFilter: "blur(4px)" }}
+                style={{ background: "rgba(5,6,15,0.6)", backdropFilter: "blur(4px)" }}
                 onClick={close}
                 role="presentation"
             />
             <aside
                 className="fixed right-0 top-0 z-[61] flex h-full w-[400px] max-w-[92vw] flex-col border-l shadow-[var(--shadow-lg)]"
-                style={{ background: "rgba(12, 24, 18, 0.95)", borderColor: "var(--line-2)", backdropFilter: "blur(20px)" }}
+                style={{ background: "rgba(10,11,20,0.95)", borderColor: "var(--line-2)", backdropFilter: "blur(20px)" }}
                 role="dialog"
                 aria-label="AI-ассистент"
             >
@@ -222,8 +222,8 @@ export const AISliderPanel = () => {
                             <div
                                 className="grid h-12 w-12 place-items-center rounded-[var(--r-md)]"
                                 style={{
-                                    background: "rgba(52,211,153,0.1)",
-                                    border: "1px solid rgba(52,211,153,0.22)",
+                                    background: "rgba(102,58,243,0.1)",
+                                    border: "1px solid rgba(102,58,243,0.22)",
                                     color: "var(--mint-300)",
                                 }}
                             >
@@ -264,8 +264,8 @@ export const AISliderPanel = () => {
                                     className="rounded-[12px] px-3 py-2 text-[13px] leading-relaxed"
                                     style={{
                                         background:
-                                            msg.role === "user" ? "rgba(52,211,153,0.14)" : "var(--bg-3)",
-                                        border: `1px solid ${msg.role === "user" ? "rgba(52,211,153,0.22)" : "var(--line)"}`,
+                                            msg.role === "user" ? "rgba(102,58,243,0.14)" : "var(--bg-3)",
+                                        border: `1px solid ${msg.role === "user" ? "rgba(102,58,243,0.22)" : "var(--line)"}`,
                                         color: "var(--fg-0)",
                                         borderTopLeftRadius: msg.role === "assistant" ? 4 : undefined,
                                         borderTopRightRadius: msg.role === "user" ? 4 : undefined,

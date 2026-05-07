@@ -158,8 +158,8 @@ export const OverviewPage = () => {
                                 <span
                                     className="grid h-9 w-9 place-items-center rounded-[10px]"
                                     style={{
-                                        background: "rgba(52,211,153,0.1)",
-                                        border: "1px solid rgba(52,211,153,0.22)",
+                                        background: "rgba(102,58,243,0.1)",
+                                        border: "1px solid rgba(102,58,243,0.22)",
                                         color: "var(--mint-300)",
                                     }}
                                 >
@@ -295,8 +295,8 @@ export const OverviewPage = () => {
                             <div
                                 className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-[14px]"
                                 style={{
-                                    background: "rgba(52,211,153,0.1)",
-                                    border: "1px solid rgba(52,211,153,0.18)",
+                                    background: "rgba(102,58,243,0.1)",
+                                    border: "1px solid rgba(102,58,243,0.18)",
                                     color: "var(--mint-300)",
                                 }}
                             >
@@ -328,8 +328,8 @@ export const OverviewPage = () => {
                         className="relative overflow-hidden p-5"
                         glow
                         style={{
-                            background: "linear-gradient(180deg,rgba(52,211,153,0.12),rgba(16,185,129,0.02))",
-                            borderColor: "rgba(52,211,153,0.22)",
+                            background: "linear-gradient(180deg,rgba(102,58,243,0.12),rgba(79,43,199,0.02))",
+                            borderColor: "rgba(102,58,243,0.22)",
                         }}
                     >
                         <div className="absolute -right-12 -top-10 opacity-50">

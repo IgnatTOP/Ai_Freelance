@@ -88,7 +88,7 @@ export const FilkaModal = ({
     <div
       className="fixed inset-0 z-[90] flex items-center justify-center p-4"
       style={{
-        background: "rgba(7, 17, 12, 0.7)",
+        background: "rgba(5,6,15,0.7)",
         backdropFilter: "blur(8px)",
         animation: "fade-in 200ms var(--ease-out) both",
       }}

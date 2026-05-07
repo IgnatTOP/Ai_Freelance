@@ -76,7 +76,7 @@ export const BalancePage = () => {
             label: "Доступно",
             value: balance?.available ?? 0,
             accent: "text-[var(--mint-300)]",
-            bg: "bg-[rgba(52,211,153,0.1)] border-[rgba(52,211,153,0.22)]",
+            bg: "bg-[rgba(102,58,243,0.1)] border-[rgba(102,58,243,0.22)]",
             icon: CircleDollarSign,
         },
         {
@@ -153,7 +153,7 @@ export const BalancePage = () => {
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <FilkaCard className="rounded-[14px] bg-[var(--bg-1)] p-5">
                     <div className="mb-4 flex items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-[11px] border border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.08)] text-[var(--mint-300)]">
+                        <div className="grid h-10 w-10 place-items-center rounded-[11px] border border-[rgba(102,58,243,0.22)] bg-[rgba(102,58,243,0.08)] text-[var(--mint-300)]">
                             <Receipt size={18} />
                         </div>
                         <div>
@@ -179,10 +179,10 @@ export const BalancePage = () => {
                                 return (
                                     <div
                                         key={transaction.id}
-                                        className="flex items-center gap-4 rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3 transition-colors hover:border-[rgba(52,211,153,0.22)]"
+                                        className="flex items-center gap-4 rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3 transition-colors hover:border-[rgba(102,58,243,0.22)]"
                                     >
                                         <div className={`grid h-11 w-11 place-items-center rounded-[11px] border ${isPositive
-                                            ? "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.1)] text-[var(--mint-300)]"
+                                            ? "border-[rgba(102,58,243,0.22)] bg-[rgba(102,58,243,0.1)] text-[var(--mint-300)]"
                                             : "border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.08)] text-[#fca5a5]"
                                             }`}>
                                             {isPositive ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
@@ -211,7 +211,7 @@ export const BalancePage = () => {
                 </FilkaCard>
 
                 <div className="space-y-4">
-                    <FilkaCard className="rounded-[14px] border-[rgba(52,211,153,0.22)] bg-[linear-gradient(135deg,rgba(52,211,153,0.12),transparent_60%),var(--bg-1)] p-5">
+                    <FilkaCard className="rounded-[14px] border-[rgba(102,58,243,0.22)] bg-[linear-gradient(135deg,rgba(102,58,243,0.12),transparent_60%),var(--bg-1)] p-5">
                         <div className="mb-3 flex items-center gap-3">
                             <Shield size={18} className="text-[var(--mint-300)]" />
                             <div className="t-caption text-[var(--mint-300)]">ESCROW · АКТИВЕН</div>

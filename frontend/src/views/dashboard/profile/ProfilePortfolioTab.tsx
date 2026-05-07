@@ -41,7 +41,7 @@ export const ProfilePortfolioTab = ({ portfolio, onStartEdit }: Props) => {
           <FilkaCard
             key={item.id}
             glass
-            className="p-4 transition-colors hover:border-[rgba(52,211,153,0.22)]"
+            className="p-4 transition-colors hover:border-[rgba(102,58,243,0.22)]"
           >
             <h4 className="mb-1 text-sm font-medium text-[var(--fg-0)]">{item.title}</h4>
             <p className="mb-3 line-clamp-2 text-xs text-[var(--fg-2)]">{item.description}</p>
