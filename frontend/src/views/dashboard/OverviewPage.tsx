@@ -192,11 +192,11 @@ export const OverviewPage = () => {
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <div className="space-y-4">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                        <div className="flex items-center gap-3">
-                            <h2 className="t-h3 m-0">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                            <h2 className="t-h3 m-0 whitespace-nowrap">
                                 {role === "freelancer" ? "Подходящие заказы" : "Мои активные заказы"}
                             </h2>
-                            <FilkaChip>
+                            <FilkaChip className="shrink-0 whitespace-nowrap">
                                 {role === "freelancer"
                                     ? `AI отфильтровал из ${marketTotal || 0}`
                                     : `${spotlightOrdersAll.length} в фокусе`}
