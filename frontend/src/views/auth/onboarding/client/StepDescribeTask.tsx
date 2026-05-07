@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Button, Textarea, Chip } from "@heroui/react";
 import { ArrowRight, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { useOnboardingStore } from "@/features/onboarding/model";
 import { useAIOrderGenerate } from "@/features/onboarding/hooks/useAIOrderGenerate";
+import { FilkaButton, FilkaChip, FilkaField, FilkaTextarea } from "@/shared/ui/filka/FilkaPrimitives";
 
 export const StepDescribeTask = () => {
   const { clientData, updateClient, nextStep } = useOnboardingStore();
@@ -14,7 +14,6 @@ export const StepDescribeTask = () => {
     await generate(clientData.freeText);
   };
 
-  // When result is parsed, fill clientData and advance
   const handleAccept = () => {
     if (result) {
       updateClient({
@@ -36,79 +35,57 @@ export const StepDescribeTask = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
     >
-      <h2 className="mb-1 text-2xl font-bold text-zinc-100">
-        Что нужно сделать?
-      </h2>
-      <p className="mb-6 text-sm text-zinc-500">
-        Опишите задачу в свободной форме — ИИ оформит заказ
-      </p>
+      <h2 className="mb-1 text-2xl font-bold text-[var(--fg-0)]">Что нужно сделать?</h2>
+      <p className="mb-6 text-sm text-[var(--fg-3)]">Опишите задачу в свободной форме — ИИ оформит заказ</p>
 
-      <Textarea
-        label="Описание задачи"
-        placeholder="Например: нужен лендинг для стоматологической клиники, 5 экранов, адаптивный..."
-        value={clientData.freeText}
-        onValueChange={(v) => updateClient({ freeText: v })}
-        variant="bordered"
-        minRows={5}
-        classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
-      />
+      <FilkaField label="Описание задачи">
+        <FilkaTextarea
+          placeholder="Например: нужен лендинг для стоматологической клиники, 5 экранов, адаптивный..."
+          value={clientData.freeText}
+          onChange={(e) => updateClient({ freeText: e.target.value })}
+          className="min-h-[120px]"
+        />
+      </FilkaField>
 
-      <div className="mt-4 flex gap-2">
-        <Button
-          color="secondary"
+      <div className="mt-4 flex flex-wrap gap-2">
+        <FilkaButton
+          variant="soft"
+          loading={isStreaming}
+          disabled={!clientData.freeText.trim()}
           startContent={<Sparkles size={14} />}
-          isLoading={isStreaming}
-          isDisabled={!clientData.freeText.trim()}
-          onPress={handleGenerate}
+          onClick={handleGenerate}
         >
           Создать заказ с ИИ
-        </Button>
+        </FilkaButton>
         {result && !isStreaming && (
-          <Button
-            color="secondary"
-            variant="flat"
-            endContent={<ArrowRight size={14} />}
-            onPress={handleAccept}
-          >
+          <FilkaButton variant="ghost" endContent={<ArrowRight size={14} />} onClick={handleAccept}>
             Далее к проверке
-          </Button>
+          </FilkaButton>
         )}
       </div>
 
       {(streamText || isStreaming || result) && (
-        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/70 p-4">
+        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--bg-1)]/80 p-4">
           {isStreaming ? (
-            <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <Loader2 size={14} className="animate-spin text-purple-400" />
+            <div className="flex items-center gap-2 text-sm text-[var(--fg-2)]">
+              <Loader2 size={14} className="animate-spin text-[var(--mint-400)]" />
               ИИ анализирует задачу и подготавливает поля формы...
             </div>
           ) : result ? (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-emerald-400">
+              <div className="flex items-center gap-2 text-sm text-[var(--mint-300)]">
                 <CheckCircle2 size={14} />
                 Черновик заказа готов. На следующем шаге форма уже заполнена.
               </div>
-              <p className="text-sm font-medium text-zinc-200">{result.title}</p>
+              <p className="text-sm font-medium text-[var(--fg-0)]">{result.title}</p>
               <div className="flex flex-wrap gap-2">
                 {result.skills.slice(0, 5).map((skill) => (
-                  <Chip
-                    key={skill}
-                    size="sm"
-                    variant="flat"
-                    classNames={{
-                      base: "bg-purple-500/10 border border-purple-500/20",
-                      content: "text-purple-300",
-                    }}
-                  >
-                    {skill}
-                  </Chip>
+                  <FilkaChip key={skill}>{skill}</FilkaChip>
                 ))}
               </div>
             </div>
           ) : (
-            <p className="text-sm text-zinc-500">
-              ИИ не вернул структурированный ответ. Попробуйте перегенерировать.
-            </p>
+            <p className="text-sm text-[var(--fg-3)]">ИИ не вернул структурированный ответ. Попробуйте перегенерировать.</p>
           )}
         </div>
       )}

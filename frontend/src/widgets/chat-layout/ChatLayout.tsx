@@ -1,22 +1,35 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Avatar, Button, Chip, Input, ScrollShadow } from "@heroui/react";
-import { ArrowDown, ArrowLeft, Check, CheckCheck, ImagePlus, Reply, Search, Send, Smile, Sparkles, UserCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  IconArrowDown,
+  IconArrowLeft,
+  IconCheck,
+  IconFile,
+  IconLock,
+  IconPaperclip,
+  IconSearch,
+  IconSend,
+  IconShield,
+  IconSpark,
+} from "@/shared/ui/filka";
 import { useMyConversations, useConversationMessages } from "@/features/conversation-list";
 import { useSendMessage } from "@/features/chat-compose";
 import { useAddReaction, useRemoveReaction } from "@/features/chat-reactions";
 import { createTypingPublisher } from "@/features/chat-typing";
 import { markConversationRead } from "@/features/chat-read";
-import { useSessionStore } from "@/shared/store/session.store";
-import { wsManager } from "@/shared/ws/manager";
-import { mediaApi } from "@/shared/api/endpoints/media";
-import { env } from "@/shared/config/env";
-import { apiClient } from "@/shared/api/client";
 import { useOrderDetail } from "@/features/order-management";
 import { useMyProposals } from "@/features/proposal-management";
-import { useRouter } from "next/navigation";
-import type { Message, MessageAttachment } from "@/shared/api/endpoints/conversations";
+import { mediaApi } from "@/shared/api/endpoints/media";
+import { apiClient } from "@/shared/api/client";
+import { env } from "@/shared/config/env";
+import { cn } from "@/shared/lib/cn";
+import { notify } from "@/shared/notifications/notify";
+import { useSessionStore } from "@/shared/store/session.store";
+import { FilkaButton, FilkaCard, FilkaChip, FilkaInput } from "@/shared/ui/filka/FilkaPrimitives";
+import { wsManager } from "@/shared/ws/manager";
+import type { Conversation, Message, MessageAttachment } from "@/shared/api/endpoints/conversations";
 
 interface ChatLayoutProps {
   readonly initialConversationId?: string;
@@ -25,26 +38,40 @@ interface ChatLayoutProps {
 const QUICK_REACTIONS = ["👍", "🔥", "✅", "👏", "🤝", "🙂"] as const;
 
 const formatDateLabel = (dateStr: string): string => {
-  const d = new Date(dateStr);
+  const date = new Date(dateStr);
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  if (d.toDateString() === today.toDateString()) return "Сегодня";
-  if (d.toDateString() === yesterday.toDateString()) return "Вчера";
-  return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  if (date.toDateString() === today.toDateString()) return "Сегодня";
+  if (date.toDateString() === yesterday.toDateString()) return "Вчера";
+  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 };
 
 const formatTime = (dateStr: string): string =>
   new Date(dateStr).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
 
+const formatCurrency = (value?: number): string =>
+  typeof value === "number" ? `${value.toLocaleString("ru-RU")} ₽` : "—";
+
+const formatFileSize = (value?: number): string => {
+  if (!value || value <= 0) return "";
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const getInitials = (name?: string): string => {
+  if (!name) return "FL";
+  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
+  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "FL";
+};
+
 const toMediaUrl = (filePath?: string): string | null => {
   if (!filePath) return null;
   if (filePath.startsWith("http")) return filePath;
-  // Static files are served at /media/ (not /api/media/photos/)
   const apiOrigin = new URL(env.API_URL).origin;
   if (filePath.startsWith("/")) return `${apiOrigin}${filePath}`;
-  // Relative paths (e.g. "uuid/file.webp") → /media/uuid/file.webp
   return `${apiOrigin}/media/${filePath}`;
 };
 
@@ -61,6 +88,57 @@ const getAttachmentFilePath = (attachment: MessageAttachment): string | undefine
 const getAttachmentFileType = (attachment: MessageAttachment): string | undefined =>
   attachment.media?.file_type ?? attachment.file_type;
 
+const getOrderBadge = (conversation?: Conversation): string | null => {
+  if (!conversation?.order_id) return null;
+  return `#${conversation.order_id.slice(0, 8).toUpperCase()}`;
+};
+
+const AvatarBadge = ({
+  name,
+  photoUrl,
+  size = "md",
+  isActive = false,
+}: {
+  readonly name?: string | undefined;
+  readonly photoUrl?: string | undefined;
+  readonly size?: "sm" | "md" | "lg";
+  readonly isActive?: boolean;
+}) => {
+  const resolvedUrl = toMediaUrl(photoUrl);
+  const sizeClass = size === "sm" ? "h-9 w-9 rounded-[10px] text-[12px]" : size === "lg" ? "h-12 w-12 rounded-[14px] text-[14px]" : "h-10 w-10 rounded-[12px] text-[13px]";
+
+  return (
+    <div className="relative shrink-0">
+      <div
+        className={cn(
+          "grid place-items-center overflow-hidden bg-[linear-gradient(135deg,#B6D9FC,#1a0e4a)] font-bold text-[#05060f]",
+          sizeClass,
+        )}
+      >
+        {resolvedUrl ? (
+          <img src={resolvedUrl} alt={name ?? "avatar"} className="h-full w-full object-cover" />
+        ) : (
+          getInitials(name)
+        )}
+      </div>
+      {isActive ? (
+        <span className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full border-2 border-[var(--bg-1)] bg-[var(--ok)] text-[#05060f]">
+          <IconCheck size={9} />
+        </span>
+      ) : null}
+    </div>
+  );
+};
+
+const statusLabelMap: Record<string, string> = {
+  draft: "Черновик",
+  open: "Открыт",
+  in_progress: "В работе",
+  completed: "Завершён",
+  dispute: "Спор",
+  cancelled: "Отменён",
+};
+
 export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const [selectedId, setSelectedId] = useState(initialConversationId ?? "");
   const [conversationSearch, setConversationSearch] = useState("");
@@ -75,13 +153,15 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const [showAISuggestions, setShowAISuggestions] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSuggestLoading, setIsAiSuggestLoading] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingStopTimer = useRef<number | null>(null);
   const aiSuggestTimer = useRef<number | null>(null);
-  const userId = useSessionStore((s) => s.userId);
-  const role = useSessionStore((s) => s.role);
+
+  const userId = useSessionStore((state) => state.userId);
+  const role = useSessionStore((state) => state.role);
   const router = useRouter();
 
   const { data: conversations } = useMyConversations();
@@ -95,7 +175,6 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const selectedConversation = conversations?.find((conversation) => conversation.id === selectedId);
   const { data: relatedOrder } = useOrderDetail(selectedConversation?.order_id ?? "");
 
-  // Build a lookup: conversationKey (orderId:freelancerId) -> proposal status
   const proposalStatusMap = useMemo(() => {
     const map = new Map<string, string>();
     if (!allProposalsData?.items) return map;
@@ -104,14 +183,35 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
     }
     return map;
   }, [allProposalsData]);
+
   const typingPublisher = useMemo(
     () => (selectedId ? createTypingPublisher(selectedId) : null),
-    [selectedId]
+    [selectedId],
   );
 
   useEffect(() => {
+    if (!selectedId && conversations?.length) {
+      setSelectedId(conversations[0]!.id);
+    }
+  }, [conversations, selectedId]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+  }, [messages.length, selectedId]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      setShowScrollBtn(distanceToBottom > 160);
+    };
+
+    handleScroll();
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [selectedId, messages.length]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -129,14 +229,17 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
         const payload = event.data as { conversation_id?: string; message_id?: string; user_id?: string };
         if (payload.conversation_id !== selectedId) return;
         if (!payload.message_id || !payload.user_id || payload.user_id === userId) return;
-        setReadByPeerMessageIds((prev) => new Set(prev).add(payload.message_id as string));
+        const messageId = payload.message_id;
+        setReadByPeerMessageIds((prev) => new Set(prev).add(messageId));
         return;
       }
+
       if (event.type !== "chat.typing.updated") return;
       const payload = event.data as { conversation_id?: string; typing_users?: string[] };
       if (payload.conversation_id !== selectedId) return;
       setTypingUsers((payload.typing_users ?? []).filter((id) => id !== userId));
     });
+
     return unsubscribe;
   }, [selectedId, userId]);
 
@@ -154,9 +257,9 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
       const promptSource = messageText.trim();
       const contextTail = messages
         .slice(-6)
-        .map((msg) => {
-          const authorLabel = msg.author_id === userId ? "Я" : (selectedConversation?.other_user?.display_name ?? "Собеседник");
-          return `${authorLabel}: ${msg.content}`;
+        .map((message) => {
+          const authorLabel = message.author_id === userId ? "Я" : (selectedConversation?.other_user?.display_name ?? "Собеседник");
+          return `${authorLabel}: ${message.content}`;
         })
         .filter(Boolean)
         .join("\n");
@@ -167,11 +270,9 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
       const roleLabel = role === "client" ? "заказчик" : "исполнитель";
 
       const baseInstruction = `${orderContext}Ты помогаешь ${roleLabel === "заказчик" ? "заказчику" : "исполнителю"} на фриланс-платформе. Сгенерируй 3 коротких, уместных варианта ответа в чате (каждый на отдельной строке, без нумерации и маркеров). Варианты должны быть конкретными и связанными с контекстом диалога.`;
-
-      const prompt =
-        promptSource.length > 0
-          ? `${baseInstruction}\n\nИстория диалога:\n${contextTail}\n\nЧерновик пользователя: ${promptSource}`
-          : `${baseInstruction}\n\nИстория диалога:\n${contextTail}`;
+      const prompt = promptSource.length > 0
+        ? `${baseInstruction}\n\nИстория диалога:\n${contextTail}\n\nЧерновик пользователя: ${promptSource}`
+        : `${baseInstruction}\n\nИстория диалога:\n${contextTail}`;
 
       setIsAiSuggestLoading(true);
       try {
@@ -185,14 +286,15 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
           .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim())
           .filter(Boolean)
           .slice(0, 3);
+
         setAiSuggestions(
           variants.length > 0
             ? variants
             : [
-              "Согласен, давайте уточним детали по срокам и этапам.",
-              "Спасибо за информацию, подготовлю решение и вернусь с планом.",
-              "Предлагаю созвониться на 15 минут, чтобы зафиксировать требования.",
-            ]
+              "Согласен, давайте уточним сроки и этапы.",
+              "Спасибо, подготовлю план и вернусь с деталями.",
+              "Предлагаю зафиксировать этап и перейти к старту.",
+            ],
         );
       } catch {
         setAiSuggestions([]);
@@ -202,12 +304,14 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
     }, 700);
 
     return () => {
-      if (aiSuggestTimer.current) window.clearTimeout(aiSuggestTimer.current);
+      if (aiSuggestTimer.current) {
+        window.clearTimeout(aiSuggestTimer.current);
+      }
     };
-  }, [messageText, messages, selectedId, showAISuggestions]);
+  }, [messageText, messages, role, selectedConversation, selectedId, showAISuggestions, userId]);
 
   const groupedMessages = useMemo(() => {
-    const groups: Array<{ date: string; items: typeof messages }> = [];
+    const groups: Array<{ date: string; items: Message[] }> = [];
     let currentDate = "";
     for (const message of messages) {
       const dateLabel = formatDateLabel(message.created_at);
@@ -229,13 +333,13 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   const filteredConversations = useMemo(() => {
     const list = conversations ?? [];
-    const q = conversationSearch.trim().toLowerCase();
-    if (!q) return list;
+    const query = conversationSearch.trim().toLowerCase();
+    if (!query) return list;
     return list.filter((conversation) => {
       const participant = conversation.other_user?.display_name?.toLowerCase() ?? "";
       const orderTitle = conversation.order_title?.toLowerCase() ?? "";
       const preview = conversation.last_message?.content?.toLowerCase() ?? "";
-      return participant.includes(q) || orderTitle.includes(q) || preview.includes(q);
+      return participant.includes(query) || orderTitle.includes(query) || preview.includes(query);
     });
   }, [conversationSearch, conversations]);
 
@@ -253,6 +357,27 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
     return urls;
   }, [messages]);
 
+  const acceptedProposal = useMemo(
+    () => (allProposalsData?.items ?? []).find(
+      (proposal) => proposal.order_id === selectedConversation?.order_id && proposal.status === "accepted",
+    ),
+    [allProposalsData, selectedConversation?.order_id],
+  );
+
+  const executorConversation = useMemo(
+    () => acceptedProposal
+      ? (conversations ?? []).find(
+        (conversation) => conversation.order_id === selectedConversation?.order_id && conversation.freelancer_id === acceptedProposal.freelancer_id,
+      )
+      : undefined,
+    [acceptedProposal, conversations, selectedConversation?.order_id],
+  );
+
+  const executorName = acceptedProposal?.freelancer_name
+    ?? executorConversation?.other_user?.display_name
+    ?? "Исполнитель";
+  const executorPhotoUrl = executorConversation?.other_user?.photo_url;
+
   const handleSelectConversation = (conversationId: string) => {
     setSelectedId(conversationId);
     setShowList(false);
@@ -263,11 +388,14 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const handleSend = () => {
     if (!selectedId) return;
     if (!messageText.trim() && uploadedMedia.length === 0) return;
+
     const payload: { content: string; parent_message_id?: string; attachment_ids?: string[] } = {
       content: messageText.trim(),
     };
+
     if (replyToMessage?.id) payload.parent_message_id = replyToMessage.id;
     if (uploadedMedia.length > 0) payload.attachment_ids = uploadedMedia.map((item) => item.id);
+
     sendMessage.mutate(payload);
     setMessageText("");
     setReplyToMessage(null);
@@ -279,7 +407,9 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
     setMessageText(value);
     if (!typingPublisher || !selectedId) return;
     typingPublisher.setTyping(value.trim().length > 0);
-    if (typingStopTimer.current) window.clearTimeout(typingStopTimer.current);
+    if (typingStopTimer.current) {
+      window.clearTimeout(typingStopTimer.current);
+    }
     typingStopTimer.current = window.setTimeout(() => typingPublisher.setTyping(false), 3000);
   };
 
@@ -290,508 +420,656 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
       const files = Array.from(fileList).slice(0, 5);
       const uploaded = await Promise.all(files.map((file) => mediaApi.uploadPhoto(file)));
       setUploadedMedia((prev) => [...prev, ...uploaded]);
+      notify.success({ title: "Файл загружен", message: uploaded.length > 1 ? `Файлов: ${uploaded.length}` : "Можно отправлять сообщение." });
+    } catch (error) {
+      notify.error({
+        title: "Не удалось загрузить файл",
+        message: error instanceof Error ? error.message : "Проверьте формат и размер файла.",
+      });
     } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden flex h-[calc(100vh-8rem)]">
-      <div className={`w-full md:w-80 border-r border-white/[0.06] flex flex-col ${!showList && selectedId ? "hidden md:flex" : "flex"}`}>
-        <div className="p-4 border-b border-white/[0.06] space-y-3">
-          <h3 className="text-lg font-semibold text-white">Сообщения</h3>
-          <Input
-            placeholder="Поиск чатов..."
-            value={conversationSearch}
-            onValueChange={setConversationSearch}
-            size="sm"
-            variant="bordered"
-            startContent={<Search size={14} className="text-zinc-500" />}
-            classNames={{
-              inputWrapper: "bg-zinc-900/50 border-zinc-800 hover:border-purple-500/30 h-9",
-              input: "text-zinc-300 text-sm placeholder:text-zinc-600"
-            }}
-          />
-        </div>
-        <ScrollShadow className="flex-1 overflow-y-auto scrollbar-styled">
-          {filteredConversations.map((conversation) => {
-            const convKey = conversation.order_id ? `${conversation.order_id}:${conversation.freelancer_id}` : "";
-            const proposalStatus = convKey ? proposalStatusMap.get(convKey) : undefined;
-            const isAccepted = proposalStatus === "accepted";
-            const isRejected = proposalStatus === "rejected";
+    <div className="overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--bg-1)] shadow-[var(--shadow-xl)]">
+      <div className="grid h-[calc(100vh-11.25rem)] min-h-[720px] grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+        <section
+          className={cn(
+            "border-r border-[var(--line)] bg-[var(--bg-1)]",
+            !showList && selectedConversation ? "hidden lg:flex" : "flex",
+            "flex-col",
+          )}
+        >
+          <div className="border-b border-[var(--line)] p-4">
+            <div className="mb-3 text-[15px] font-bold tracking-[-0.01em] text-[var(--fg-0)]">Диалоги</div>
+            <div className="relative">
+              <IconSearch size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-3)]" />
+              <FilkaInput
+                placeholder="Поиск"
+                value={conversationSearch}
+                onChange={(event) => setConversationSearch(event.target.value)}
+                className="h-[36px] pl-9 text-[13px]"
+              />
+            </div>
+          </div>
 
-            return (
-              <button
-                key={conversation.id}
-                type="button"
-                onClick={() => handleSelectConversation(conversation.id)}
-                className={`w-full text-left p-4 hover:bg-white/[0.04] transition-colors border-b border-white/[0.03] ${selectedId === conversation.id
-                  ? "bg-purple-600/10 border-l-2 border-l-purple-500"
-                  : isAccepted
-                    ? "border-l-2 border-l-emerald-500/60"
-                    : ""
-                  } ${isRejected ? "opacity-50" : ""}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar
-                      size="sm"
-                      showFallback
-                      {...(toMediaUrl(conversation.other_user?.photo_url ?? undefined)
-                        ? { src: toMediaUrl(conversation.other_user?.photo_url ?? undefined) ?? "" }
-                        : {})}
-                      {...(conversation.other_user?.display_name ? { name: conversation.other_user.display_name } : {})}
-                      classNames={{
-                        base: isAccepted
-                          ? "ring-2 ring-emerald-500/60 bg-emerald-600/20"
-                          : isRejected
-                            ? "bg-zinc-700/30"
-                            : "bg-purple-600/20",
-                        icon: isAccepted ? "text-emerald-400" : isRejected ? "text-zinc-600" : "text-purple-400"
-                      }}
-                    />
-                    {isAccepted && (
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
-                        <UserCheck size={8} className="text-white" />
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className={`text-sm font-medium truncate ${isRejected ? "text-zinc-500" : "text-zinc-200"}`}>
-                        {conversation.other_user?.display_name ?? conversation.order_title ?? "Диалог"}
-                      </p>
-                      {isAccepted && (
-                        <Chip size="sm" variant="flat" className="h-4 text-[9px] px-1.5 bg-emerald-500/15 text-emerald-400 shrink-0">
-                          Исполнитель
-                        </Chip>
-                      )}
-                      {isRejected && (
-                        <Chip size="sm" variant="flat" className="h-4 text-[9px] px-1.5 bg-zinc-700/40 text-zinc-500 shrink-0">
-                          Отклонён
-                        </Chip>
-                      )}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {filteredConversations.map((conversation) => {
+              const conversationKey = conversation.order_id ? `${conversation.order_id}:${conversation.freelancer_id}` : "";
+              const proposalStatus = conversationKey ? proposalStatusMap.get(conversationKey) : undefined;
+              const isAccepted = proposalStatus === "accepted";
+              const isRejected = proposalStatus === "rejected";
+              const isActive = selectedId === conversation.id;
+
+              return (
+                <button
+                  key={conversation.id}
+                  type="button"
+                  onClick={() => handleSelectConversation(conversation.id)}
+                  className={cn(
+                    "flex w-full gap-3 border-b border-[var(--line)] px-4 py-3 text-left transition-colors",
+                    isActive ? "bg-[var(--bg-3)]" : "hover:bg-[rgba(255,255,255,0.02)]",
+                    isRejected && "opacity-55",
+                  )}
+                  style={{ borderLeft: isActive ? "2px solid var(--mint-400)" : "2px solid transparent" }}
+                >
+                  <AvatarBadge
+                    name={conversation.other_user?.display_name ?? conversation.order_title ?? "Диалог"}
+                    photoUrl={conversation.other_user?.photo_url}
+                    isActive={isAccepted}
+                  />
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[13.5px] font-semibold text-[var(--fg-0)]">
+                          {conversation.other_user?.display_name ?? conversation.order_title ?? "Диалог"}
+                        </div>
+                        {getOrderBadge(conversation) ? (
+                          <div className="t-mono mt-0.5 text-[10px] text-[var(--mint-400)]">{getOrderBadge(conversation)}</div>
+                        ) : null}
+                      </div>
+                      <div className="text-[10.5px] text-[var(--fg-3)]">
+                        {conversation.last_message ? formatTime(conversation.last_message.created_at) : ""}
+                      </div>
                     </div>
-                    <p className={`text-xs truncate ${isRejected ? "text-zinc-600" : "text-zinc-500"}`}>
+
+                    <div className="mt-1 truncate text-[12.5px] text-[var(--fg-2)]">
                       {conversation.last_message
                         ? (conversation.last_message.content || (conversation.last_message.attachments?.length ? "📎 Вложение" : "Сообщение"))
                         : "Нет сообщений"}
-                    </p>
+                    </div>
+
+                    {isAccepted ? (
+                      <div className="mt-2">
+                        <FilkaChip className="text-[10px]">Исполнитель подтверждён</FilkaChip>
+                      </div>
+                    ) : null}
                   </div>
-                  {(conversation.unread_count ?? 0) > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center shrink-0">
+
+                  {(conversation.unread_count ?? 0) > 0 ? (
+                    <div className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--mint-400)] px-1.5 text-[11px] font-bold text-[#05060f]">
                       {conversation.unread_count}
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-          {!filteredConversations.length && (
-            <div className="p-4 text-xs text-zinc-500">Диалоги не найдены</div>
-          )}
-        </ScrollShadow>
-      </div>
+                    </div>
+                  ) : null}
+                </button>
+              );
+            })}
 
-      <div className={`flex-1 flex flex-col ${showList && !selectedId ? "hidden md:flex" : "flex"}`}>
-        {selectedConversation ? (
-          <>
-            <div className="p-4 border-b border-white/[0.06] flex items-center gap-3">
-              <Button isIconOnly variant="light" size="sm" className="md:hidden text-zinc-400" onPress={() => setShowList(true)}>
-                <ArrowLeft size={18} />
-              </Button>
-              <div className="relative">
-                <Avatar
-                  size="sm"
-                  showFallback
-                  {...(toMediaUrl(selectedConversation.other_user?.photo_url ?? undefined)
-                    ? { src: toMediaUrl(selectedConversation.other_user?.photo_url ?? undefined) ?? "" }
-                    : {})}
-                  {...(selectedConversation.other_user?.display_name
-                    ? { name: selectedConversation.other_user.display_name }
-                    : {})}
-                  classNames={{ base: "bg-purple-600/20", icon: "text-purple-400" }}
+            {!filteredConversations.length ? (
+              <div className="px-4 py-6 text-[12px] text-[var(--fg-3)]">Диалоги не найдены</div>
+            ) : null}
+          </div>
+        </section>
+
+        <section className={cn("min-w-0 flex-col bg-[var(--bg-0)]", showList && !selectedConversation ? "hidden lg:flex" : "flex")}>
+          {selectedConversation ? (
+            <>
+              <div className="flex items-center gap-3 border-b border-[var(--line)] px-4 py-3 sm:px-5">
+                <button
+                  type="button"
+                  onClick={() => setShowList(true)}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line)] bg-[var(--bg-1)] text-[var(--fg-1)] lg:hidden"
+                >
+                  <IconArrowLeft size={16} />
+                </button>
+
+                <AvatarBadge
+                  name={selectedConversation.other_user?.display_name ?? "Собеседник"}
+                  photoUrl={selectedConversation.other_user?.photo_url}
                 />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-zinc-200">{selectedConversation.other_user?.display_name ?? "Собеседник"}</p>
-                <p className="text-[10px] text-zinc-500">{selectedConversation.order_title ?? relatedOrder?.title ?? "Без привязки к заказу"}</p>
-              </div>
-            </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-styled relative" ref={scrollContainerRef}>
-              {groupedMessages.map((group) => (
-                <div key={group.date}>
-                  <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-white/[0.04]" />
-                    <span className="text-[10px] font-medium text-zinc-600 uppercase tracking-wider shrink-0">{group.date}</span>
-                    <div className="flex-1 h-px bg-white/[0.04]" />
+                <div className="min-w-0">
+                  <div className="truncate text-[15px] font-bold tracking-[-0.01em]">
+                    {selectedConversation.other_user?.display_name ?? "Собеседник"}
                   </div>
-                  <div className="space-y-3">
-                    {group.items.map((message) => {
-                      const isOwn = message.author_id === userId;
-                      const mediaItems = message.attachments ?? [];
-                      return (
-                        <div key={message.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-                          <div
-                            className={`max-w-[78%] rounded-2xl px-4 py-2.5 ${isOwn
-                              ? "bg-purple-600/20 border border-purple-500/20 text-zinc-200"
-                              : "bg-zinc-800/50 border border-zinc-700/30 text-zinc-300"
-                              }`}
-                          >
-                            {message.parent_message ? (
-                              <div className="mb-2 rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-xs text-zinc-400">
-                                Ответ на: {message.parent_message.content.slice(0, 80)}
-                              </div>
-                            ) : null}
-                            {message.content ? (
-                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                            ) : mediaItems.length === 0 ? (
-                              <p className="text-sm text-zinc-400 italic">Пустое сообщение</p>
-                            ) : null}
-                            {mediaItems.length > 0 ? (
-                              <div className="mt-2 grid grid-cols-2 gap-2">
-                                {mediaItems.map((attachment) => {
-                                  const url = toMediaUrl(getAttachmentFilePath(attachment));
-                                  const isImage = getAttachmentFileType(attachment)?.startsWith("image/");
-                                  if (!url) return null;
-                                  return isImage ? (
-                                    <img
-                                      key={attachment.id}
-                                      src={url}
-                                      alt="attachment"
-                                      loading="lazy"
-                                      decoding="async"
-                                      className="rounded-lg border border-white/10"
-                                    />
-                                  ) : (
-                                    <a key={attachment.id} href={url} target="_blank" className="text-xs underline text-zinc-300" rel="noreferrer">
-                                      Файл
-                                    </a>
-                                  );
-                                })}
-                              </div>
-                            ) : null}
+                  <div className="t-caption mt-0.5 flex items-center gap-1.5">
+                    <span className="dot-live h-[6px] w-[6px]" />
+                    {typingUsers.length > 0 ? "печатает…" : "онлайн"}
+                  </div>
+                </div>
 
-                            <div className="mt-2 flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-1">
+                <div className="ml-auto">
+                  {getOrderBadge(selectedConversation) ? (
+                    <div className="rounded-[8px] border border-[var(--line)] px-2 py-1">
+                      <div className="t-mono text-[10.5px] text-[var(--fg-2)]">{getOrderBadge(selectedConversation)}</div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div ref={scrollContainerRef} className="relative min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7">
+                <div className="flex flex-col gap-3">
+                  {relatedOrder ? (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/dashboard/orders/${relatedOrder.id}`)}
+                      className="mx-auto inline-flex items-center gap-2 rounded-full border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] px-4 py-2 text-[12px] text-[var(--mint-300)]"
+                    >
+                      <IconSpark size={12} />
+                      AI проверил контекст заказа и подсветил статус сделки
+                    </button>
+                  ) : null}
+
+                  {groupedMessages.map((group) => (
+                    <div key={group.date} className="space-y-3">
+                      <div className="my-1 text-center">
+                        <span className="t-caption rounded-full bg-[var(--bg-0)] px-3 py-1 text-[var(--fg-3)]">
+                          {group.date}
+                        </span>
+                      </div>
+
+                      {group.items.map((message) => {
+                        const isOwn = message.author_id === userId;
+                        const mediaItems = message.attachments ?? [];
+                        const reactionCounts = new Map<string, number>();
+                        for (const reaction of message.reactions ?? []) {
+                          reactionCounts.set(reaction.emoji, (reactionCounts.get(reaction.emoji) ?? 0) + 1);
+                        }
+
+                        return (
+                          <div key={message.id} className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
+                            <div className={cn("max-w-[540px]", isOwn ? "items-end" : "items-start")}>
+                              <div
+                                className={cn(
+                                  "rounded-[14px] border px-4 py-3",
+                                  isOwn
+                                    ? "border-[rgba(102,58,243,0.22)] bg-[rgba(102,58,243,0.14)] text-[var(--fg-0)]"
+                                    : "border-[var(--line)] bg-[var(--bg-2)] text-[var(--fg-0)]",
+                                )}
+                                style={{ borderTopRightRadius: isOwn ? 4 : 14, borderTopLeftRadius: isOwn ? 14 : 4 }}
+                              >
+                                {message.parent_message ? (
+                                  <div className="mb-2 rounded-[10px] border border-[var(--line)] bg-[rgba(0,0,0,0.12)] px-3 py-2 text-[12px] text-[var(--fg-2)]">
+                                    Ответ на: {message.parent_message.content.slice(0, 80)}
+                                  </div>
+                                ) : null}
+
+                                {message.content ? (
+                                  <p className="whitespace-pre-wrap text-[14px] leading-[1.55]">{message.content}</p>
+                                ) : mediaItems.length === 0 ? (
+                                  <p className="text-[14px] italic text-[var(--fg-3)]">Пустое сообщение</p>
+                                ) : null}
+
+                                {mediaItems.length > 0 ? (
+                                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                    {mediaItems.map((attachment) => {
+                                      const url = toMediaUrl(getAttachmentFilePath(attachment));
+                                      const isImage = getAttachmentFileType(attachment)?.startsWith("image/");
+
+                                      if (!url) return null;
+
+                                      return isImage ? (
+                                        <img
+                                          key={attachment.id}
+                                          src={url}
+                                          alt="attachment"
+                                          loading="lazy"
+                                          decoding="async"
+                                          className="rounded-[12px] border border-[var(--line)] object-cover"
+                                        />
+                                      ) : (
+                                        <a
+                                          key={attachment.id}
+                                          href={url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="flex items-center gap-3 rounded-[12px] border border-[var(--line)] bg-[rgba(255,255,255,0.03)] px-3 py-3 text-left"
+                                        >
+                                          <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[var(--bg-3)] text-[var(--mint-300)]">
+                                            <IconFile size={16} />
+                                          </div>
+                                          <div className="min-w-0">
+                                            <div className="truncate text-[13px] font-medium text-[var(--fg-0)]">Файл</div>
+                                            <div className="text-[11px] text-[var(--fg-3)]">
+                                              {(getAttachmentFileType(attachment) ?? "file").split("/").pop()?.toUpperCase() ?? "FILE"}
+                                            </div>
+                                          </div>
+                                        </a>
+                                      );
+                                    })}
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              <div className={cn("mt-1.5 flex flex-wrap items-center gap-2", isOwn ? "justify-end" : "justify-start")}>
+                                {reactionCounts.size > 0 ? (
+                                  [...reactionCounts.entries()].map(([emoji, count]) => (
+                                    <button
+                                      key={`${message.id}:count:${emoji}`}
+                                      type="button"
+                                      onClick={() => removeReaction.mutate(message.id)}
+                                      className="rounded-full border border-[var(--line)] bg-[var(--bg-2)] px-2 py-1 text-[11px] text-[var(--fg-1)]"
+                                    >
+                                      {emoji} {count}
+                                    </button>
+                                  ))
+                                ) : null}
+
                                 {QUICK_REACTIONS.map((emoji) => {
                                   const reacted = (message.reactions ?? []).some(
-                                    (reaction) => reaction.emoji === emoji && reaction.user_id === userId
+                                    (reaction) => reaction.emoji === emoji && reaction.user_id === userId,
                                   );
+
                                   return (
                                     <button
                                       key={`${message.id}:${emoji}`}
                                       type="button"
-                                      onClick={() =>
+                                      onClick={() => (
                                         reacted
                                           ? removeReaction.mutate(message.id)
                                           : addReaction.mutate({ messageId: message.id, emoji })
-                                      }
-                                      className={`text-xs rounded px-1.5 py-0.5 ${reacted ? "bg-violet-500/30" : "bg-white/5 hover:bg-white/10"
-                                        }`}
+                                      )}
+                                      className={cn(
+                                        "rounded-full px-2 py-1 text-[11px] transition-colors",
+                                        reacted
+                                          ? "border border-[rgba(102,58,243,0.22)] bg-[rgba(102,58,243,0.14)]"
+                                          : "border border-[var(--line)] bg-[var(--bg-2)] hover:bg-[var(--bg-3)]",
+                                      )}
                                       aria-label={`Reaction ${emoji}`}
                                     >
                                       {emoji}
                                     </button>
                                   );
                                 })}
+
                                 <button
                                   type="button"
                                   onClick={() => setReplyToMessage({ id: message.id, content: message.content })}
-                                  className="text-zinc-500 hover:text-zinc-300"
+                                  className="text-[var(--fg-3)] transition-colors hover:text-[var(--fg-1)]"
                                 >
-                                  <Reply size={12} />
+                                  <IconArrowLeft size={13} />
                                 </button>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <p className="text-[10px] text-zinc-600">{formatTime(message.created_at)}</p>
-                                {isOwn ? (
-                                  readByPeerMessageIds.has(message.id) ? (
-                                    <CheckCheck size={12} className="text-emerald-400" />
-                                  ) : (
-                                    <Check size={12} className="text-zinc-500" />
-                                  )
-                                ) : null}
+
+                                <div className="ml-1 flex items-center gap-1 text-[11px] text-[var(--fg-3)]">
+                                  <span>{formatTime(message.created_at)}</span>
+                                  {isOwn ? (
+                                    readByPeerMessageIds.has(message.id) ? (
+                                      <IconCheck size={12} className="text-[var(--mint-300)]" />
+                                    ) : (
+                                      <IconCheck size={12} />
+                                    )
+                                  ) : null}
+                                </div>
                               </div>
                             </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+
+                  {typingUsers.length > 0 ? (
+                    <div className="flex justify-start">
+                      <div className="flex w-[52px] items-center justify-center gap-1 rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3">
+                        <span className="typing-dot" />
+                        <span className="typing-dot" />
+                        <span className="typing-dot" />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {showScrollBtn ? (
+                  <button
+                    type="button"
+                    onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })}
+                    className="sticky bottom-3 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border border-[rgba(102,58,243,0.22)] bg-[rgba(10,11,20,0.82)] text-[var(--mint-200)] shadow-[var(--shadow-md)]"
+                  >
+                    <IconArrowDown size={16} />
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="border-t border-[var(--line)] px-4 py-4 sm:px-5">
+                {isLockedByFirstResponseRule ? (
+                  <div className="mb-3 rounded-[12px] border border-[rgba(245,158,11,0.22)] bg-[rgba(245,158,11,0.08)] px-4 py-3 text-[12px] text-[#fcd34d]">
+                    Ожидаем ответа заказчика. Новые сообщения временно недоступны.
+                  </div>
+                ) : null}
+
+                {replyToMessage ? (
+                  <div className="mb-3 flex items-center justify-between gap-3 rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3 text-[12px] text-[var(--fg-2)]">
+                    <span className="truncate">Ответ на: {replyToMessage.content.slice(0, 100)}</span>
+                    <button type="button" className="text-[var(--fg-3)] hover:text-[var(--fg-1)]" onClick={() => setReplyToMessage(null)}>
+                      ×
+                    </button>
+                  </div>
+                ) : null}
+
+                {uploadedMedia.length > 0 ? (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {uploadedMedia.map((item) => {
+                      const isImage = item.file_type?.startsWith("image/");
+                      const url = toMediaUrl(item.file_path);
+
+                      return (
+                        <div key={item.id} className="group relative">
+                          {isImage && url ? (
+                            <img src={url} alt="preview" className="h-16 w-16 rounded-[12px] border border-[var(--line)] object-cover" />
+                          ) : (
+                            <div className="flex h-16 w-16 items-center justify-center rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-1 text-center text-[10px] text-[var(--fg-2)]">
+                              {item.file_type?.split("/").pop()?.toUpperCase() ?? "FILE"}
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setUploadedMedia((prev) => prev.filter((media) => media.id !== item.id))}
+                            className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--err)] text-[11px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                          >
+                            ×
+                          </button>
                         </div>
                       );
                     })}
                   </div>
-                </div>
-              ))}
-              {typingUsers.length > 0 ? (
-                <div className="flex justify-start">
-                  <div className="rounded-2xl px-3 py-2 border border-white/10 bg-zinc-800/40 text-xs text-zinc-400">
-                    {selectedConversation.other_user?.display_name ?? "Собеседник"} печатает...
-                  </div>
-                </div>
-              ) : null}
-              <div ref={messagesEndRef} />
-              {showScrollBtn ? (
-                <button
-                  type="button"
-                  onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })}
-                  className="sticky bottom-2 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-lg"
-                >
-                  <ArrowDown size={16} />
-                </button>
-              ) : null}
-            </div>
+                ) : null}
 
-            <div className="p-4 border-t border-white/[0.06] space-y-2">
-              {isLockedByFirstResponseRule ? (
-                <p className="text-xs text-amber-300 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
-                  Ожидаем ответа заказчика. Отправка новых сообщений временно недоступна.
-                </p>
-              ) : null}
-
-              {replyToMessage ? (
-                <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-zinc-400 flex items-center justify-between">
-                  <span>Ответ на: {replyToMessage.content.slice(0, 100)}</span>
-                  <button type="button" className="text-zinc-500 hover:text-zinc-300" onClick={() => setReplyToMessage(null)}>
-                    ×
-                  </button>
-                </div>
-              ) : null}
-
-              {uploadedMedia.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {uploadedMedia.map((item) => {
-                    const isImage = item.file_type?.startsWith("image/");
-                    const url = toMediaUrl(item.file_path);
-                    return (
-                      <div key={item.id} className="relative group">
-                        {isImage && url ? (
-                          <img
-                            src={url}
-                            alt="preview"
-                            className="w-16 h-16 rounded-lg object-cover border border-white/10"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                            <span className="text-[10px] text-zinc-400 text-center px-1 break-all">
-                              {item.file_type?.split("/").pop()?.toUpperCase() ?? "FILE"}
-                            </span>
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setUploadedMedia((prev) => prev.filter((m) => m.id !== item.id))}
-                          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-
-              {showAISuggestions && (
-                <div className="rounded-xl border border-white/[0.08] bg-zinc-900/40 p-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-                      <Sparkles size={12} className="text-purple-400" />
-                      AI-подсказки
-                    </div>
+                <div className="rounded-[16px] border border-[var(--line-2)] bg-[var(--bg-1)] p-2">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      className="text-[11px] text-zinc-500 hover:text-zinc-300"
-                      onClick={() => setShowAISuggestions(false)}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="grid h-9 w-9 place-items-center rounded-[12px] text-[var(--fg-2)] transition-colors hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
+                      disabled={isUploading || isLockedByFirstResponseRule}
                     >
-                      Свернуть
+                      <IconPaperclip size={17} />
                     </button>
+
+                    <textarea
+                      placeholder={`Напишите ${selectedConversation.other_user?.display_name ?? "собеседнику"}…`}
+                      value={messageText}
+                      onChange={(event) => handleInputChange(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      disabled={isLockedByFirstResponseRule}
+                      rows={1}
+                      className="min-h-10 flex-1 resize-none border-none bg-transparent px-0 py-2 text-[14px] text-[var(--fg-0)] outline-none placeholder:text-[var(--fg-3)]"
+                    />
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                      onChange={(event) => {
+                        void handleUpload(event.target.files);
+                        event.target.value = "";
+                      }}
+                      disabled={isUploading || isLockedByFirstResponseRule}
+                    />
+
+                    <button
+                      type="button"
+                      className="grid h-9 w-9 place-items-center rounded-[12px] text-[var(--fg-2)] transition-colors hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
+                      disabled
+                    >
+                      <IconSpark size={16} />
+                    </button>
+
+                    <FilkaButton
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 px-0"
+                      onClick={() => setShowAISuggestions((value) => !value)}
+                    >
+                      <IconSpark size={16} />
+                    </FilkaButton>
+
+                    <FilkaButton
+                      size="sm"
+                      className="h-9 w-9 px-0"
+                      loading={sendMessage.isPending}
+                      onClick={handleSend}
+                      disabled={isLockedByFirstResponseRule || (!messageText.trim() && uploadedMedia.length === 0)}
+                    >
+                      {!sendMessage.isPending ? <IconSend size={16} /> : null}
+                    </FilkaButton>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                </div>
+
+                {showAISuggestions ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {(isAiSuggestLoading ? [] : aiSuggestions).map((suggestion) => (
                       <button
                         key={suggestion}
                         type="button"
                         onClick={() => setMessageText(suggestion)}
-                        className="text-xs rounded-full px-3 py-1.5 border border-purple-500/25 bg-purple-500/10 text-purple-200 hover:bg-purple-500/15"
+                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] px-3 py-1.5 text-[11px] text-[var(--mint-200)]"
                       >
+                        <IconSpark size={10} />
                         {suggestion}
                       </button>
                     ))}
-                    {isAiSuggestLoading && <span className="text-xs text-zinc-500">Генерируем подсказки...</span>}
+                    {isAiSuggestLoading ? (
+                      <div className="text-[12px] text-[var(--fg-3)]">Генерируем подсказки…</div>
+                    ) : null}
                   </div>
-                </div>
-              )}
-              {!showAISuggestions && (
-                <button
-                  type="button"
-                  onClick={() => setShowAISuggestions(true)}
-                  className="text-xs text-purple-300 hover:text-purple-200 inline-flex items-center gap-1"
-                >
-                  <Sparkles size={12} /> Показать AI-подсказки
-                </button>
-              )}
-
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Введите сообщение..."
-                  value={messageText}
-                  onValueChange={handleInputChange}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  isDisabled={isLockedByFirstResponseRule}
-                  variant="bordered"
-                  classNames={{
-                    inputWrapper: "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40",
-                    input: "text-zinc-200 placeholder:text-zinc-600"
-                  }}
-                  className="flex-1"
-                />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  multiple
-                  accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
-                  onChange={(event) => {
-                    void handleUpload(event.target.files);
-                    event.target.value = "";
-                  }}
-                  disabled={isUploading || isLockedByFirstResponseRule}
-                />
-                <Button
-                  isIconOnly
-                  variant="flat"
-                  isLoading={isUploading}
-                  isDisabled={isLockedByFirstResponseRule}
-                  onPress={() => fileInputRef.current?.click()}
-                >
-                  <ImagePlus size={16} />
-                </Button>
-                <Button isIconOnly variant="flat" isDisabled>
-                  <Smile size={16} />
-                </Button>
-                <Button
-                  isIconOnly
-                  onPress={handleSend}
-                  isLoading={sendMessage.isPending}
-                  className="bg-purple-600 text-white hover:bg-purple-500"
-                  isDisabled={isLockedByFirstResponseRule || (!messageText.trim() && uploadedMedia.length === 0)}
-                  aria-label="Отправить"
-                >
-                  <Send size={18} />
-                </Button>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+              <div className="mb-2 text-[16px] font-semibold text-[var(--fg-1)]">Выберите диалог</div>
+              <div className="max-w-[280px] text-[13px] leading-[1.6] text-[var(--fg-3)]">
+                Список слева показывает все активные сделки и личные сообщения.
               </div>
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center px-6">
-            <p className="text-base font-medium text-zinc-400 mb-1">Выберите чат</p>
-            <p className="text-sm text-zinc-600 text-center max-w-xs">
-              Выберите диалог из списка слева, чтобы начать общение
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </section>
 
-      {selectedConversation && (
-        <aside className="hidden xl:flex xl:w-80 border-l border-white/[0.06] p-4 flex-col gap-4">
-          <div className="rounded-xl border border-white/[0.08] bg-zinc-900/30 p-4">
-            <h4 className="text-sm font-semibold text-zinc-100 mb-2">Данные заказа</h4>
-            <p className="text-sm text-zinc-300">{relatedOrder?.title ?? selectedConversation.order_title ?? "Без привязки к заказу"}</p>
-            {relatedOrder && (
-              <div className="mt-3 space-y-1.5 text-xs text-zinc-400">
-                <p>Статус: <span className="text-zinc-200">{relatedOrder.status}</span></p>
-                <p>Бюджет: <span className="text-zinc-200">₽{relatedOrder.budget_min.toLocaleString()} – ₽{relatedOrder.budget_max.toLocaleString()}</span></p>
-                {relatedOrder.deadline && <p>Дедлайн: <span className="text-zinc-200">{new Date(relatedOrder.deadline).toLocaleDateString("ru-RU")}</span></p>}
+        {selectedConversation ? (
+          <aside className="hidden overflow-y-auto border-l border-[var(--line)] bg-[var(--bg-1)] p-4 2xl:flex 2xl:flex-col 2xl:gap-4">
+            <div>
+              <div className="t-eyebrow mb-2">ЗАКАЗ</div>
+              <div className="text-[15px] font-bold leading-[1.35] tracking-[-0.01em]">
+                {relatedOrder?.title ?? selectedConversation.order_title ?? "Без привязки к заказу"}
               </div>
-            )}
-            {role === "client" && selectedConversation.order_id && (() => {
-              const orderId = selectedConversation.order_id;
-              const isExecutorAssigned = relatedOrder && ["in_progress", "completed", "dispute"].includes(relatedOrder.status);
+              {getOrderBadge(selectedConversation) ? (
+                <div className="t-mono mt-2 text-[11px] text-[var(--mint-400)]">{getOrderBadge(selectedConversation)}</div>
+              ) : null}
+            </div>
 
-              if (!isExecutorAssigned) {
-                return (
-                  <Button
-                    size="sm"
-                    className="mt-3 bg-purple-600 text-white hover:bg-purple-500"
-                    onPress={() => router.push(`/dashboard/orders/${orderId}`)}
-                  >
-                    Выбрать исполнителя
-                  </Button>
-                );
-              }
+            <FilkaCard className="relative overflow-hidden p-5" glow>
+              <div
+                className="pointer-events-none absolute inset-auto right-[-32px] top-[-18px] h-[120px] w-[120px] rounded-full border border-[rgba(102,58,243,0.18)] opacity-60"
+              />
+              <div className="pointer-events-none absolute right-4 top-5 grid h-[62px] w-[62px] place-items-center rounded-full bg-[rgba(102,58,243,0.10)] text-[var(--mint-300)]">
+                <IconLock size={22} />
+              </div>
+              <div className="mb-3 flex items-center gap-2">
+                <IconShield size={16} className="text-[var(--mint-300)]" />
+                <div className="t-caption text-[var(--mint-300)]">ESCROW · АКТИВЕН</div>
+              </div>
+              <div className="text-[30px] font-bold tracking-[-0.02em]">
+                {formatCurrency(role === "client" ? relatedOrder?.budget_max : relatedOrder?.budget_min)}
+              </div>
+              <div className="mt-1 text-[12px] text-[var(--fg-2)]">
+                {role === "client" ? "зарезервировано для сделки" : "объём сделки по заказу"}
+              </div>
 
-              // Find the accepted proposal's freelancer_id for this order
-              const acceptedProposal = (allProposalsData?.items ?? []).find(
-                (p) => p.order_id === orderId && p.status === "accepted"
-              );
-              // Find that freelancer's conversation to get their display info
-              const executorConversation = acceptedProposal
-                ? (conversations ?? []).find(
-                  (c) => c.order_id === orderId && c.freelancer_id === acceptedProposal.freelancer_id
-                )
-                : undefined;
-              const executorName = acceptedProposal?.freelancer_name
-                ?? executorConversation?.other_user?.display_name
-                ?? "Исполнитель";
-              const executorPhotoUrl = executorConversation?.other_user?.photo_url;
+              <div className="mt-5 flex gap-2">
+                <FilkaButton
+                  size="sm"
+                  className="flex-1"
+                  startContent={<IconCheck size={13} />}
+                  onClick={() => selectedConversation.order_id ? router.push(`/dashboard/orders/${selectedConversation.order_id}`) : undefined}
+                >
+                  К заказу
+                </FilkaButton>
+                <FilkaButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/dashboard/notifications")}
+                >
+                  Спор
+                </FilkaButton>
+              </div>
+            </FilkaCard>
 
-              return (
-                <div className="mt-3 rounded-lg border border-white/[0.08] bg-zinc-800/40 p-2.5">
-                  <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">Исполнитель</p>
-                  <div className="flex items-center gap-2.5">
-                    <Avatar
-                      size="sm"
-                      showFallback
-                      {...(toMediaUrl(executorPhotoUrl ?? undefined)
-                        ? { src: toMediaUrl(executorPhotoUrl ?? undefined) ?? "" }
-                        : {})}
-                      name={executorName}
-                      classNames={{ base: "bg-emerald-600/20 shrink-0", icon: "text-emerald-400" }}
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-zinc-200 truncate">
-                        {executorName}
-                      </p>
-                    </div>
+            {relatedOrder ? (
+              <FilkaCard className="p-4">
+                <div className="t-eyebrow mb-3">СТАТУС СДЕЛКИ</div>
+                <div className="grid gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[var(--fg-3)]">Статус</span>
+                    <FilkaChip>{statusLabelMap[relatedOrder.status] ?? relatedOrder.status}</FilkaChip>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className="mt-2 w-full text-zinc-300 bg-zinc-700/40 hover:bg-zinc-700/60"
-                    onPress={() => router.push(`/dashboard/orders/${orderId}`)}
-                  >
-                    Перейти к заказу
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[var(--fg-3)]">Бюджет</span>
+                    <span className="text-[13px] font-semibold">{formatCurrency(relatedOrder.budget_min)} - {formatCurrency(relatedOrder.budget_max)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[var(--fg-3)]">Дедлайн</span>
+                    <span className="text-[13px] font-semibold">
+                      {relatedOrder.deadline ? new Date(relatedOrder.deadline).toLocaleDateString("ru-RU") : "—"}
+                    </span>
+                  </div>
                 </div>
-              );
-            })()}
-          </div>
+              </FilkaCard>
+            ) : null}
 
-          <div className="rounded-xl border border-white/[0.08] bg-zinc-900/30 p-4">
-            <h4 className="text-sm font-semibold text-zinc-100 mb-2">Медиа из переписки</h4>
-            {!galleryItems.length ? (
-              <p className="text-xs text-zinc-500">Файлы пока не загружены</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {galleryItems.slice(0, 12).map((url) => (
-                  <img
-                    key={url}
-                    src={url}
-                    alt="chat-media"
-                    loading="lazy"
-                    decoding="async"
-                    className="rounded-lg border border-white/10"
-                  />
-                ))}
+            {role === "client" && selectedConversation.order_id ? (
+              <FilkaCard className="p-4">
+                <div className="t-eyebrow mb-3">ИСПОЛНИТЕЛЬ</div>
+                {acceptedProposal ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <AvatarBadge name={executorName} photoUrl={executorPhotoUrl} />
+                      <div className="min-w-0">
+                        <div className="truncate text-[14px] font-semibold">{executorName}</div>
+                        <div className="text-[12px] text-[var(--fg-3)]">подтверждён для заказа</div>
+                      </div>
+                    </div>
+                    <FilkaButton
+                      variant="ghost"
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={() => router.push(`/dashboard/orders/${selectedConversation.order_id}`)}
+                    >
+                      Перейти к заказу
+                    </FilkaButton>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[12.5px] leading-[1.55] text-[var(--fg-2)]">
+                      Исполнитель ещё не закреплён. Выберите лучший отклик прямо в карточке заказа.
+                    </div>
+                    <FilkaButton
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={() => router.push(`/dashboard/orders/${selectedConversation.order_id}`)}
+                    >
+                      Выбрать исполнителя
+                    </FilkaButton>
+                  </>
+                )}
+              </FilkaCard>
+            ) : null}
+
+            <FilkaCard className="p-4">
+              <div className="t-eyebrow mb-3">ФАЙЛЫ И МЕДИА</div>
+              {galleryItems.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {galleryItems.slice(0, 8).map((url) => (
+                    <img
+                      key={url}
+                      src={url}
+                      alt="chat-media"
+                      loading="lazy"
+                      decoding="async"
+                      className="rounded-[12px] border border-[var(--line)] object-cover"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(messages.flatMap((message) => message.attachments ?? []).slice(0, 4)).map((attachment) => {
+                    const fileType = getAttachmentFileType(attachment) ?? "file";
+                    const filePath = getAttachmentFilePath(attachment);
+                    const url = toMediaUrl(filePath);
+
+                    return url ? (
+                      <a
+                        key={attachment.id}
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 border-t border-[var(--line)] py-2 first:border-t-0"
+                      >
+                        <div className="grid h-8 w-8 place-items-center rounded-[8px] bg-[var(--bg-3)] text-[var(--mint-300)]">
+                          <IconFile size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-[13px] font-medium">Вложение</div>
+                          <div className="text-[11px] text-[var(--fg-3)]">
+                            {fileType.split("/").pop()?.toUpperCase() ?? "FILE"} {formatFileSize(attachment.file_size)}
+                          </div>
+                        </div>
+                      </a>
+                    ) : null;
+                  })}
+                  {messages.flatMap((message) => message.attachments ?? []).length === 0 ? (
+                    <div className="text-[12px] text-[var(--fg-3)]">Файлы пока не загружены</div>
+                  ) : null}
+                </div>
+              )}
+            </FilkaCard>
+
+            <FilkaCard className="p-4">
+              <div className="t-eyebrow mb-3">БЫСТРЫЕ ДЕЙСТВИЯ</div>
+              <div className="grid gap-2">
+                <FilkaButton
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start"
+                  startContent={<IconSpark size={13} />}
+                  onClick={() => setMessageText("Отправляю обновлённое ТЗ и предлагаю зафиксировать следующий этап.")}
+                >
+                  Отправить ТЗ
+                </FilkaButton>
+                <FilkaButton
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start"
+                  startContent={<IconPaperclip size={13} />}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Загрузить файл
+                </FilkaButton>
               </div>
-            )}
-          </div>
-        </aside>
-      )}
+            </FilkaCard>
+          </aside>
+        ) : null}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 "use client";
 
-import { Chip } from "@heroui/react";
+import { cn } from "@/shared/lib/cn";
+import { FilkaChip } from "@/shared/ui/filka";
 
 interface SectionHeadingProps {
     readonly badge?: string;
@@ -9,37 +10,23 @@ interface SectionHeadingProps {
     readonly align?: "left" | "center";
 }
 
-export const SectionHeading = ({
-    badge,
-    title,
-    subtitle,
-    align = "center",
-}: SectionHeadingProps) => {
-    const textAlign = align === "center" ? "text-center" : "text-left";
-    const mx = align === "center" ? "mx-auto" : "";
-
+export const SectionHeading = ({ badge, title, subtitle, align = "center" }: SectionHeadingProps) => {
+    const alignClass = align === "center" ? "text-center mx-auto" : "text-left";
     return (
-        <div className={`mb-14 md:mb-20 ${textAlign}`}>
-            {badge && (
-                <Chip
-                    variant="flat"
-                    size="sm"
-                    classNames={{
-                        base: "mb-5 bg-purple-500/10 border border-purple-500/20",
-                        content: "text-purple-400 font-semibold text-xs tracking-widest uppercase",
-                    }}
-                >
-                    {badge}
-                </Chip>
-            )}
-            <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-5 ${mx} max-w-3xl text-zinc-100`}>
-                {title}
-            </h2>
-            {subtitle && (
-                <p className={`text-zinc-500 text-base md:text-lg max-w-2xl ${mx} leading-relaxed`}>
+        <div className={cn("mb-12 md:mb-16", align === "center" ? "text-center" : "text-left")}>
+            {badge ? (
+                <div className={cn("mb-4 inline-flex", align === "center" && "justify-center")}>
+                    <FilkaChip>
+                        <span className="t-eyebrow">{badge}</span>
+                    </FilkaChip>
+                </div>
+            ) : null}
+            <h2 className={cn("t-h2 mb-4 max-w-3xl", alignClass)}>{title}</h2>
+            {subtitle ? (
+                <p className={cn("t-body max-w-2xl", alignClass)} style={{ color: "var(--fg-2)" }}>
                     {subtitle}
                 </p>
-            )}
+            ) : null}
         </div>
     );
 };

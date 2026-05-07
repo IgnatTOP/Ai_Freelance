@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Button } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
+import { FilkaButton } from "@/shared/ui/filka/FilkaPrimitives";
 
 type Props = {
   role: "client" | "freelancer";
@@ -17,7 +17,6 @@ export const WelcomeScreen = ({ role, onStart }: Props) => {
 
   return (
     <div className="flex flex-col items-center text-center">
-      {/* Logo icon scale-in */}
       <motion.svg
         width={64}
         height={64}
@@ -29,9 +28,9 @@ export const WelcomeScreen = ({ role, onStart }: Props) => {
       >
         <defs>
           <linearGradient id="welcome-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="oklch(0.75 0.25 280)" />
-            <stop offset="50%" stopColor="oklch(0.7 0.2 230)" />
-            <stop offset="100%" stopColor="oklch(0.75 0.18 320)" />
+            <stop offset="0%" stopColor="#b6d9fc" />
+            <stop offset="50%" stopColor="#663af3" />
+            <stop offset="100%" stopColor="#4f2bc7" />
           </linearGradient>
         </defs>
         <circle cx="16" cy="16" r="14" stroke="url(#welcome-grad)" strokeWidth="2.5" fill="none" />
@@ -43,19 +42,17 @@ export const WelcomeScreen = ({ role, onStart }: Props) => {
         />
       </motion.svg>
 
-      {/* Title */}
       <motion.h1
         className="mt-6 text-4xl font-bold gradient-text sm:text-5xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6 }}
       >
-        НейроБиржа
+        Филка
       </motion.h1>
 
-      {/* Subtitle */}
       <motion.p
-        className="mt-4 max-w-md text-lg text-zinc-400"
+        className="mt-4 max-w-md text-lg text-[var(--fg-2)]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.6 }}
@@ -63,22 +60,15 @@ export const WelcomeScreen = ({ role, onStart }: Props) => {
         {subtitle}
       </motion.p>
 
-      {/* CTA */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8, duration: 0.5 }}
         className="mt-10"
       >
-        <Button
-          color="secondary"
-          size="lg"
-          endContent={<ArrowRight size={18} />}
-          onPress={onStart}
-          className="px-8 text-base font-semibold"
-        >
+        <FilkaButton size="lg" className="px-8 text-base font-semibold" endContent={<ArrowRight size={18} />} onClick={onStart}>
           Начать
-        </Button>
+        </FilkaButton>
       </motion.div>
     </div>
   );

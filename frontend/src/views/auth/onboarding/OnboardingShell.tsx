@@ -7,9 +7,10 @@ import { FloatingDecorations } from "./FloatingDecorations";
 type Props = {
   stepper?: ReactNode;
   children: ReactNode;
+  wide?: boolean;
 };
 
-export const OnboardingShell = ({ stepper, children }: Props) => {
+export const OnboardingShell = ({ stepper, children, wide = false }: Props) => {
   const contentRef = useRef<HTMLDivElement | null>(null);
 
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
@@ -61,7 +62,7 @@ export const OnboardingShell = ({ stepper, children }: Props) => {
         onKeyDown={handleKeyDown}
         className="relative z-10 flex flex-1 items-center justify-center px-4 py-8"
       >
-        <div className="w-full max-w-xl">{children}</div>
+        <div className={`w-full ${wide ? "max-w-5xl" : "max-w-xl"}`}>{children}</div>
       </div>
     </section>
   );

@@ -42,6 +42,8 @@ type Message struct {
 	IsEdited       bool      `db:"is_edited"`
 	CreatedAt      time.Time `db:"created_at"`
 	UpdatedAt      time.Time `db:"updated_at"`
+	Attachments    []MessageAttachment
+	Reactions      []*MessageReaction
 }
 
 func NewMessage(conversationID, senderID uuid.UUID, content string) (*Message, error) {
@@ -71,6 +73,16 @@ func (m *Message) Update(content string) error {
 
 func (m *Message) IsOwnedBy(userID uuid.UUID) bool {
 	return m.SenderID == userID
+}
+
+type MessageAttachment struct {
+	ID        uuid.UUID
+	MessageID uuid.UUID
+	MediaID   uuid.UUID
+	FilePath  string
+	FileType  string
+	FileSize  int64
+	CreatedAt time.Time
 }
 
 type MessageReaction struct {

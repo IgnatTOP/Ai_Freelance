@@ -15,6 +15,47 @@ export enum ProposalStatus {
   Rejected = "rejected"
 }
 
+export enum UserRole {
+  Client = "client",
+  Freelancer = "freelancer",
+  Admin = "admin"
+}
+
+export enum ExperienceLevel {
+  Junior = "junior",
+  Middle = "middle",
+  Senior = "senior"
+}
+
+export enum TransactionType {
+  Deposit = "deposit",
+  Withdrawal = "withdrawal",
+  EscrowHold = "escrow_hold",
+  EscrowRelease = "escrow_release",
+  EscrowRefund = "escrow_refund"
+}
+
+export enum TransactionStatus {
+  Pending = "pending",
+  Completed = "completed",
+  Failed = "failed",
+  Cancelled = "cancelled"
+}
+
+export enum EscrowStatus {
+  Held = "held",
+  Released = "released",
+  Refunded = "refunded",
+  Disputed = "disputed"
+}
+
+export enum MessageAuthorType {
+  Client = "client",
+  Freelancer = "freelancer",
+  System = "system",
+  Assistant = "assistant"
+}
+
 export enum NotificationType {
   ChatMessage = "chat.message",
   ProposalCreated = "proposal.created",

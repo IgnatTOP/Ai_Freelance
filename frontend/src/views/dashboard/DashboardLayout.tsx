@@ -8,10 +8,17 @@ import { authTokenStorage } from "@/shared/api/client";
 import { DashboardTopbar, MobileBottomNav, RealtimeStatusBar, ToastCenter } from "@/widgets/topbar-state";
 import { AIFloatingButton, AISliderPanel } from "@/widgets/ai-floating";
 import { useOnboardingState } from "@/features/onboarding";
+import { FilkaSpinner } from "@/shared/ui/filka";
 
 interface DashboardLayoutProps {
     readonly children: ReactNode;
 }
+
+const FullScreenLoader = () => (
+    <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg-0)" }}>
+        <FilkaSpinner size={32} />
+    </div>
+);
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const router = useRouter();
@@ -49,36 +56,16 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         setOnboardingCompleted(true);
     }, [hydrated, sessionHydrated, onboardingLoading, onboardingState, router, setOnboardingCompleted]);
 
-    if (!hydrated || !sessionHydrated) {
-        return (
-            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (!authTokenStorage.get()) {
-        return (
-            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (onboardingLoading) {
-        return (
-            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
+    if (!hydrated || !sessionHydrated || !authTokenStorage.get() || onboardingLoading) {
+        return <FullScreenLoader />;
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] section-grid">
+        <div className="min-h-screen text-[var(--fg-0)]" style={{ background: "var(--bg-0)" }}>
             <DashboardTopbar />
             <RealtimeStatusBar />
-            <main className="pt-24 pb-24 lg:pb-12 px-4 sm:px-6 max-w-[1400px] mx-auto animate-fade-in-up">
-                <div className="max-w-[1400px]">{children}</div>
+            <main className="mx-auto w-full max-w-[1320px] px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-12">
+                <div className="animate-fade-in-up">{children}</div>
             </main>
             <MobileBottomNav />
             <ToastCenter />

@@ -188,6 +188,22 @@ export const proposalsApi = {
     };
   },
 
+  async getMyProposal(orderId: string): Promise<Proposal | null> {
+    try {
+      const response = await apiClient.request<BackendProposal | { proposal?: BackendProposal | null }>(
+        `/orders/${orderId}/my-proposal`,
+      );
+      if (response && typeof response === "object" && "proposal" in response) {
+        const proposal = response.proposal;
+        return proposal ? normalizeProposal(proposal) : null;
+      }
+      const proposal = response as BackendProposal;
+      return proposal ? normalizeProposal(proposal) : null;
+    } catch {
+      return null;
+    }
+  },
+
   async getIncomingForClient(): Promise<PaginatedProposals> {
     const myOrders = await ordersApi.getMyOrders({ page: 1, limit: 5000 });
     if (myOrders.items.length === 0) {

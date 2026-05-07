@@ -1,5 +1,7 @@
 import { OrderDetailPage } from "@/views/dashboard/OrderDetailPage";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
     params: Promise<{ id: string }>;
 };

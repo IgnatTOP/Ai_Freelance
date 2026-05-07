@@ -20,6 +20,13 @@ export const useEscrowStatus = (orderId: string) =>
     queryKey: ["escrow", orderId],
     queryFn: () => paymentsApi.getEscrow(orderId),
     enabled: !!orderId,
+    retry: false,
+  });
+
+export const useActiveEscrows = () =>
+  useQuery({
+    queryKey: ["escrow", "active"],
+    queryFn: () => paymentsApi.getActiveEscrows(),
   });
 
 export const useReleaseEscrow = () => {
@@ -29,6 +36,19 @@ export const useReleaseEscrow = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["balance"] });
       void queryClient.invalidateQueries({ queryKey: ["escrow"] });
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+  });
+};
+
+export const useRefundEscrow = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => paymentsApi.refundEscrow(orderId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["balance"] });
+      void queryClient.invalidateQueries({ queryKey: ["escrow"] });
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
   });
 };

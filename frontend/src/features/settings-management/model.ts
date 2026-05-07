@@ -52,7 +52,7 @@ export const useSessions = () =>
 
       return rows.map((item) => ({
         id: item.id,
-        device: item.user_agent ?? "Unknown device",
+        device: item.user_agent ?? "Неизвестное устройство",
         ip: item.ip_address ?? "—",
         last_active: item.created_at ?? item.expires_at ?? new Date().toISOString(),
       }));

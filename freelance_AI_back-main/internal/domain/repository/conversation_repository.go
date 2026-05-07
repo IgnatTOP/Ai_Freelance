@@ -22,6 +22,8 @@ type MessageRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*entity.Message, error)
 	FindByConversationID(ctx context.Context, conversationID uuid.UUID, limit, offset int) ([]*entity.Message, error)
 	GetLastMessage(ctx context.Context, conversationID uuid.UUID) (*entity.Message, error)
+	AddAttachments(ctx context.Context, messageID uuid.UUID, mediaIDs []uuid.UUID) error
+	GetAttachments(ctx context.Context, messageID uuid.UUID) ([]entity.MessageAttachment, error)
 
 	AddReaction(ctx context.Context, reaction *entity.MessageReaction) error
 	RemoveReaction(ctx context.Context, messageID, userID uuid.UUID) error

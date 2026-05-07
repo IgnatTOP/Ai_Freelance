@@ -103,6 +103,27 @@ func (m *mockMessageRepository) GetLastMessage(ctx context.Context, conversation
 	return nil, nil
 }
 
+func (m *mockMessageRepository) AddAttachments(ctx context.Context, messageID uuid.UUID, mediaIDs []uuid.UUID) error {
+	if msg, ok := m.messages[messageID]; ok {
+		msg.Attachments = make([]entity.MessageAttachment, 0, len(mediaIDs))
+		for _, mediaID := range mediaIDs {
+			msg.Attachments = append(msg.Attachments, entity.MessageAttachment{
+				ID:        uuid.New(),
+				MessageID: messageID,
+				MediaID:   mediaID,
+			})
+		}
+	}
+	return nil
+}
+
+func (m *mockMessageRepository) GetAttachments(ctx context.Context, messageID uuid.UUID) ([]entity.MessageAttachment, error) {
+	if msg, ok := m.messages[messageID]; ok {
+		return msg.Attachments, nil
+	}
+	return nil, nil
+}
+
 func (m *mockMessageRepository) AddReaction(ctx context.Context, reaction *entity.MessageReaction) error {
 	return nil
 }

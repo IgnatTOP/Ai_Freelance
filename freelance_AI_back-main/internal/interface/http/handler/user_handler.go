@@ -202,6 +202,31 @@ func (h *UserHandler) VerifyPhone(c *gin.Context) {
 	httpresp.Success(c, gin.H{"verified": true})
 }
 
+// ResendPhoneCode keeps the phone-first dev flow usable while the clean auth
+// stack accepts any six-digit code in non-production environments.
+func (h *UserHandler) ResendPhoneCode(c *gin.Context) {
+	var req struct {
+		Phone string `json:"phone" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpresp.BadRequest(c, err.Error())
+		return
+	}
+
+	phone := normalizePhone(req.Phone)
+	if len(phone) < 10 {
+		httpresp.BadRequest(c, "invalid phone")
+		return
+	}
+
+	if !h.devPhoneVerifyBypass {
+		httpresp.BadRequest(c, "phone verification provider is not configured in clean auth flow yet")
+		return
+	}
+
+	httpresp.Success(c, gin.H{"sent": true})
+}
+
 // Register handles user registration.
 func (h *UserHandler) Register(c *gin.Context) {
 	var input user.RegisterUserInput

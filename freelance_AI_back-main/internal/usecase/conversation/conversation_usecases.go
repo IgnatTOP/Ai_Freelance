@@ -104,7 +104,7 @@ func (uc *SendMessageUseCase) Execute(ctx context.Context, conversationID, sende
 	return msg, nil
 }
 
-func (uc *SendMessageUseCase) ExecuteWithConversation(ctx context.Context, conversationID, senderID uuid.UUID, content string) (*entity.Message, *entity.Conversation, error) {
+func (uc *SendMessageUseCase) ExecuteWithConversation(ctx context.Context, conversationID, senderID uuid.UUID, content string, attachmentIDs []uuid.UUID) (*entity.Message, *entity.Conversation, error) {
 	conv, err := uc.convRepo.FindByID(ctx, conversationID)
 	if err != nil {
 		return nil, nil, err
@@ -124,6 +124,16 @@ func (uc *SendMessageUseCase) ExecuteWithConversation(ctx context.Context, conve
 	}
 	if err := uc.convRepo.Touch(ctx, conversationID); err != nil {
 		return nil, nil, err
+	}
+	if len(attachmentIDs) > 0 {
+		if err := uc.msgRepo.AddAttachments(ctx, msg.ID, attachmentIDs); err != nil {
+			return nil, nil, err
+		}
+		attachments, err := uc.msgRepo.GetAttachments(ctx, msg.ID)
+		if err != nil {
+			return nil, nil, err
+		}
+		msg.Attachments = attachments
 	}
 	return msg, conv, nil
 }
@@ -147,7 +157,23 @@ func (uc *ListMessagesUseCase) Execute(ctx context.Context, conversationID, user
 		return nil, apperror.ErrForbidden
 	}
 
-	return uc.msgRepo.FindByConversationID(ctx, conversationID, limit, offset)
+	messages, err := uc.msgRepo.FindByConversationID(ctx, conversationID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for _, message := range messages {
+		attachments, err := uc.msgRepo.GetAttachments(ctx, message.ID)
+		if err != nil {
+			return nil, err
+		}
+		message.Attachments = attachments
+		reactions, err := uc.msgRepo.GetReactions(ctx, message.ID)
+		if err != nil {
+			return nil, err
+		}
+		message.Reactions = reactions
+	}
+	return messages, nil
 }
 
 type UpdateMessageUseCase struct {

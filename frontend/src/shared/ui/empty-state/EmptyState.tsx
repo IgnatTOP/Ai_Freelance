@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardBody } from "@heroui/react";
 import type { ReactNode } from "react";
+import { FilkaCard } from "@/shared/ui/filka/FilkaPrimitives";
 
 interface EmptyStateProps {
   title: string;
@@ -19,19 +19,19 @@ export const EmptyState = ({
   className = "",
 }: EmptyStateProps) => {
   return (
-    <Card className={`glass-card border-zinc-800/60 w-full animate-fade-in-up transition-all ${className}`}>
-      <CardBody className="p-8 sm:p-12">
+    <FilkaCard glass className={`w-full animate-fade-in-up ${className}`}>
+      <div className="p-8 sm:p-12">
         <div className="flex flex-col items-center justify-center text-center space-y-4">
           {icon && (
-            <div className="w-16 h-16 rounded-2xl bg-zinc-800/40 border border-zinc-700/50 flex items-center justify-center text-zinc-400 mb-2">
+            <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg-3)] text-[var(--mint-300)]">
               {icon}
             </div>
           )}
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-zinc-200">
+            <h3 className="t-h3 text-[var(--fg-0)]">
               {title}
             </h3>
-            <p className="text-sm text-zinc-500 max-w-sm mx-auto leading-relaxed">
+            <p className="mx-auto max-w-sm text-sm leading-relaxed text-[var(--fg-2)]">
               {description}
             </p>
           </div>
@@ -41,7 +41,7 @@ export const EmptyState = ({
             </div>
           )}
         </div>
-      </CardBody>
-    </Card>
+      </div>
+    </FilkaCard>
   );
 };

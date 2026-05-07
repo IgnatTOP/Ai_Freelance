@@ -69,6 +69,8 @@ func (s *OrderService) UpdateProposalStatus(ctx context.Context, actorID uuid.UU
 			return nil, nil, fmt.Errorf("order service: платёжная система недоступна")
 		}
 
+		alreadyAccepted := proposal.Status == models.ProposalStatusAccepted
+
 		// Определяем сумму для резервирования
 		var escrowAmount float64
 		if proposal.ProposedAmount != nil && *proposal.ProposedAmount > 0 {
@@ -81,19 +83,30 @@ func (s *OrderService) UpdateProposalStatus(ctx context.Context, actorID uuid.UU
 			return nil, nil, fmt.Errorf("order service: не указана сумма заказа")
 		}
 
-		// Проверяем баланс заказчика
-		balance, err := s.payment.GetBalance(ctx, order.ClientID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("order service: не удалось получить баланс: %w", err)
-		}
-		if balance.Available < escrowAmount {
-			return nil, nil, fmt.Errorf("order service: недостаточно средств на балансе (доступно: %.2f, требуется: %.2f)", balance.Available, escrowAmount)
+		existingEscrow, escrowErr := s.payment.GetEscrowByOrderID(ctx, order.ID)
+		hasReusableEscrow := escrowErr == nil &&
+			existingEscrow.ClientID == order.ClientID &&
+			existingEscrow.FreelancerID == proposal.FreelancerID &&
+			existingEscrow.Status == models.EscrowStatusHeld
+		if escrowErr != nil && !errors.Is(escrowErr, repository.ErrEscrowNotFound) {
+			return nil, nil, fmt.Errorf("order service: не удалось проверить эскроу: %w", escrowErr)
 		}
 
-		// Создаём escrow (резервируем средства)
-		_, err = s.payment.CreateEscrow(ctx, order.ID, order.ClientID, proposal.FreelancerID, escrowAmount)
-		if err != nil {
-			return nil, nil, fmt.Errorf("order service: не удалось зарезервировать средства: %w", err)
+		if !alreadyAccepted && !hasReusableEscrow {
+			// Проверяем баланс заказчика
+			balance, err := s.payment.GetBalance(ctx, order.ClientID)
+			if err != nil {
+				return nil, nil, fmt.Errorf("order service: не удалось получить баланс: %w", err)
+			}
+			if balance.Available < escrowAmount {
+				return nil, nil, fmt.Errorf("order service: недостаточно средств на балансе (доступно: %.2f, требуется: %.2f)", balance.Available, escrowAmount)
+			}
+
+			// Создаём escrow (резервируем средства)
+			_, err = s.payment.CreateEscrow(ctx, order.ID, order.ClientID, proposal.FreelancerID, escrowAmount)
+			if err != nil {
+				return nil, nil, fmt.Errorf("order service: не удалось зарезервировать средства: %w", err)
+			}
 		}
 	}
 

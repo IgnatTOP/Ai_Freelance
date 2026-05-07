@@ -1,13 +1,25 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Button, Input, Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Checkbox, useDisclosure } from "@heroui/react";
-import { Eye, EyeOff, Phone, UserPlus, Briefcase, Code2, CheckCircle2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRegisterPhone } from "@/features/auth-phone";
 import { useSessionStore } from "@/shared/store/session.store";
-import { useRouter } from "next/navigation";
-import { formatRuPhoneMask, isValidPhone, normalizePhone } from "@/shared/lib/phone";
+import { isValidPhone } from "@/shared/lib/phone";
+import { cn } from "@/shared/lib/cn";
+import {
+    FilkaButton,
+    FilkaCheckbox,
+    FilkaField,
+    FilkaInput,
+    FilkaPhoneInput,
+    IconArrowRight,
+    IconBriefcase,
+    IconCircleCheck,
+    IconEye,
+    IconEyeOff,
+    IconLightning,
+} from "@/shared/ui/filka";
 
 const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
     let score = 0;
@@ -17,11 +29,11 @@ const getPasswordStrength = (password: string): { score: number; label: string; 
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    if (score <= 1) return { score: 20, label: "Слабый", color: "bg-red-500" };
-    if (score === 2) return { score: 40, label: "Средний", color: "bg-amber-500" };
-    if (score === 3) return { score: 60, label: "Хороший", color: "bg-yellow-400" };
-    if (score === 4) return { score: 80, label: "Сильный", color: "bg-emerald-400" };
-    return { score: 100, label: "Отличный", color: "bg-green-400" };
+    if (score <= 1) return { score: 20, label: "Слабый", color: "#f87171" };
+    if (score === 2) return { score: 40, label: "Средний", color: "#f59e0b" };
+    if (score === 3) return { score: 60, label: "Хороший", color: "#f5e27a" };
+    if (score === 4) return { score: 80, label: "Сильный", color: "#663af3" };
+    return { score: 100, label: "Отличный", color: "#b6d9fc" };
 };
 
 export const RegisterForm = () => {
@@ -31,7 +43,7 @@ export const RegisterForm = () => {
     const setPendingPhone = useSessionStore((s) => s.setPendingPhone);
     const setPhoneVerified = useSessionStore((s) => s.setPhoneVerified);
 
-    const [phone, setPhone] = useState("");
+    const [phoneDigits, setPhoneDigits] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [role, setRole] = useState<"client" | "freelancer">("client");
@@ -40,230 +52,203 @@ export const RegisterForm = () => {
     const [passwordTouched, setPasswordTouched] = useState(false);
     const [confirmTouched, setConfirmTouched] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
-    const { isOpen, onOpen, onOpenChange } = useDisclosure();
-    const normalizedPhone = normalizePhone(phone);
 
     const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
-    const phoneInvalid = phoneTouched && !isValidPhone(phone);
+    const phoneInvalid = phoneTouched && !isValidPhone(phoneDigits);
     const passwordInvalid = passwordTouched && password.length < 8;
     const confirmInvalid = confirmTouched && passwordMismatch;
-    const canSubmit = isValidPhone(phone) && password.length >= 8 && !passwordMismatch && acceptedTerms;
+    const canSubmit = isValidPhone(phoneDigits) && password.length >= 8 && !passwordMismatch && acceptedTerms;
     const strength = useMemo(() => getPasswordStrength(password), [password]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (passwordMismatch) return;
-        const normalizedPhone = normalizePhone(phone);
-        if (!normalizedPhone) return;
+        setPhoneTouched(true);
+        setPasswordTouched(true);
+        setConfirmTouched(true);
+        if (!canSubmit) return;
+        const fullPhone = phoneDigits.startsWith("7") ? phoneDigits : `7${phoneDigits}`;
 
         registerMutation.mutate(
-            { phone: normalizedPhone, password, role },
+            { phone: fullPhone, password, role },
             {
                 onSuccess: (data) => {
                     setSession(data.user.id, data.user.role);
-                    setPendingPhone(normalizedPhone);
+                    setPendingPhone(fullPhone);
                     setPhoneVerified(false);
                     router.push("/verify-phone" as never);
                 },
-            }
+            },
         );
     };
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {/* Role selector: 2 Glassmorphism Cards */}
-            <div className="grid grid-cols-2 gap-4">
-                <button
-                    type="button"
-                    onClick={() => setRole("client")}
-                    className={`relative p-4 rounded-2xl border text-left transition-all overflow-hidden ${role === "client"
-                        ? "bg-purple-600/15 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.15)]"
-                        : "bg-zinc-900/40 border-zinc-800/60 hover:border-zinc-700/80 hover:bg-zinc-900/80"
-                        }`}
-                >
-                    {role === "client" && (
-                        <div className="absolute top-3 right-3 text-purple-400">
-                            <CheckCircle2 size={16} className="fill-purple-500/20" />
-                        </div>
-                    )}
-                    <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center transition-colors ${role === "client" ? "bg-purple-500/20 text-purple-400" : "bg-zinc-800 text-zinc-400"
-                        }`}>
-                        <Briefcase size={20} />
-                    </div>
-                    <p className={`font-semibold mb-1 ${role === "client" ? "text-white" : "text-zinc-300"}`}>Заказчик</p>
-                    <p className="text-xs text-zinc-500 leading-relaxed">Ищу исполнителей для своих проектов</p>
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => setRole("freelancer")}
-                    className={`relative p-4 rounded-2xl border text-left transition-all overflow-hidden ${role === "freelancer"
-                        ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
-                        : "bg-zinc-900/40 border-zinc-800/60 hover:border-zinc-700/80 hover:bg-zinc-900/80"
-                        }`}
-                >
-                    {role === "freelancer" && (
-                        <div className="absolute top-3 right-3 text-emerald-400">
-                            <CheckCircle2 size={16} className="fill-emerald-500/20" />
-                        </div>
-                    )}
-                    <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center transition-colors ${role === "freelancer" ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-800 text-zinc-400"
-                        }`}>
-                        <Code2 size={20} />
-                    </div>
-                    <p className={`font-semibold mb-1 ${role === "freelancer" ? "text-white" : "text-zinc-300"}`}>Фрилансер</p>
-                    <p className="text-xs text-zinc-500 leading-relaxed">Ищу заказы и предлагаю услуги</p>
-                </button>
+        <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+                <RoleCard
+                    icon={<IconBriefcase size={19} />}
+                    title="Заказчик"
+                    description="Ищу исполнителей и публикую проекты."
+                    selected={role === "client"}
+                    onSelect={() => setRole("client")}
+                />
+                <RoleCard
+                    icon={<IconLightning size={19} />}
+                    title="Исполнитель"
+                    description="Берусь за задачи и развиваю профиль."
+                    selected={role === "freelancer"}
+                    onSelect={() => setRole("freelancer")}
+                />
             </div>
 
-            <Input
-                label="Телефон"
-                placeholder="+7 (999) 123-45-67"
-                value={phone}
-                onValueChange={(v) => setPhone(formatRuPhoneMask(v))}
-                onBlur={() => setPhoneTouched(true)}
-                startContent={<Phone size={16} className="text-zinc-500" />}
-                variant="bordered"
-                isInvalid={phoneInvalid}
-                errorMessage={phoneInvalid ? "Введите корректный номер телефона" : undefined}
-                classNames={{
-                    inputWrapper:
-                        "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
-                    label: "text-zinc-400",
-                    input: "text-zinc-200 placeholder:text-zinc-600",
-                }}
-                isRequired
-            />
-
-            <div className="space-y-2">
-                <Input
-                    label="Пароль"
-                    placeholder="Минимум 8 символов"
-                    value={password}
-                    onValueChange={setPassword}
-                    onBlur={() => setPasswordTouched(true)}
-                    type={showPassword ? "text" : "password"}
-                    variant="bordered"
-                    isInvalid={passwordInvalid}
-                    errorMessage={passwordInvalid ? "Минимум 8 символов" : undefined}
-                    endContent={
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword((v) => !v)}
-                            className="text-zinc-500 hover:text-zinc-300 transition-colors"
-                        >
-                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                    }
-                    classNames={{
-                        inputWrapper:
-                            "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
-                        label: "text-zinc-400",
-                        input: "text-zinc-200 placeholder:text-zinc-600",
-                    }}
-                    isRequired
+            <FilkaField label="Телефон" error={phoneInvalid ? "Введите корректный номер телефона" : undefined}>
+                <FilkaPhoneInput
+                    value={phoneDigits}
+                    onChange={(digits) => setPhoneDigits(digits)}
+                    hasError={phoneInvalid}
                 />
-                {password.length > 0 && (
-                    <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+            </FilkaField>
+
+            <FilkaField label="Пароль" error={passwordInvalid ? "Минимум 8 символов" : undefined}>
+                <div className="relative">
+                    <FilkaInput
+                        placeholder="Минимум 8 символов"
+                        value={password}
+                        type={showPassword ? "text" : "password"}
+                        hasError={passwordInvalid}
+                        onChange={(event) => setPassword(event.target.value)}
+                        onBlur={() => setPasswordTouched(true)}
+                        className="pr-11"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-3)] transition-colors hover:text-[var(--fg-0)]"
+                        aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                    >
+                        {showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                    </button>
+                </div>
+                {password.length > 0 ? (
+                    <div className="mt-2 flex items-center gap-3">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "var(--bg-3)" }}>
                             <div
-                                className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
-                                style={{ width: `${strength.score}%` }}
+                                className="h-full rounded-full transition-all"
+                                style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
                             />
                         </div>
-                        <span className={`text-[10px] font-medium shrink-0 ${strength.score <= 40 ? "text-red-400" : strength.score <= 60 ? "text-amber-400" : "text-emerald-400"
-                            }`}>
+                        <span className="text-[11px] font-medium" style={{ color: strength.color }}>
                             {strength.label}
                         </span>
                     </div>
-                )}
+                ) : null}
+            </FilkaField>
+
+            <FilkaField label="Подтвердите пароль" error={confirmInvalid ? "Пароли не совпадают" : undefined}>
+                <FilkaInput
+                    placeholder="Повторите пароль"
+                    value={confirmPassword}
+                    type={showPassword ? "text" : "password"}
+                    hasError={confirmInvalid}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    onBlur={() => setConfirmTouched(true)}
+                />
+            </FilkaField>
+
+            <div
+                className="rounded-[var(--r-lg)] border p-4"
+                style={{ background: "var(--bg-2)", borderColor: "var(--line)" }}
+            >
+                <FilkaCheckbox
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    label={
+                        <span>
+                            Принимаю{" "}
+                            <Link href="/" className="filka-link">
+                                условия оферты
+                            </Link>{" "}
+                            и{" "}
+                            <Link href="/" className="filka-link">
+                                политику обработки данных
+                            </Link>
+                        </span>
+                    }
+                />
             </div>
 
-            <Input
-                label="Подтвердите пароль"
-                placeholder="Повторите пароль"
-                value={confirmPassword}
-                onValueChange={setConfirmPassword}
-                onBlur={() => setConfirmTouched(true)}
-                type={showPassword ? "text" : "password"}
-                variant="bordered"
-                isInvalid={confirmInvalid}
-                errorMessage={confirmInvalid ? "Пароли не совпадают" : undefined}
-                classNames={{
-                    inputWrapper:
-                        "bg-zinc-900/50 border-zinc-700/50 hover:border-purple-500/40 group-data-[focus=true]:border-purple-500/60",
-                    label: "text-zinc-400",
-                    input: "text-zinc-200 placeholder:text-zinc-600",
-                }}
-                isRequired
-            />
-
-            <div className="rounded-xl border border-white/[0.06] bg-zinc-900/40 p-3">
-                <Checkbox
-                    isSelected={acceptedTerms}
-                    onValueChange={setAcceptedTerms}
-                    classNames={{ label: "text-sm text-zinc-300" }}
+            {registerMutation.isError && (
+                <p
+                    className="rounded-[var(--r-md)] border px-4 py-3 text-sm"
+                    style={{
+                        background: "rgba(248,113,113,0.08)",
+                        borderColor: "rgba(248,113,113,0.22)",
+                        color: "#fecaca",
+                    }}
                 >
-                    Принимаю{" "}
-                    <button type="button" onClick={onOpen} className="text-purple-400 hover:text-purple-300 underline underline-offset-4">
-                        условия оферты
-                    </button>
-                </Checkbox>
-            </div>
+                    {registerMutation.error instanceof Error
+                        ? registerMutation.error.message
+                        : "Ошибка регистрации. Возможно, этот номер уже используется."}
+                </p>
+            )}
 
-            <AnimatePresence>
-                {registerMutation.isError && (
-                    <motion.p
-                        initial={{ opacity: 0, height: 0, y: -10 }}
-                        animate={{ opacity: 1, height: "auto", y: 0 }}
-                        exit={{ opacity: 0, height: 0, y: -10 }}
-                        className="text-sm text-red-400 text-center -mt-2 overflow-hidden"
-                    >
-                        {registerMutation.error instanceof Error
-                            ? registerMutation.error.message
-                            : "Ошибка регистрации. Возможно, этот номер уже используется."}
-                    </motion.p>
-                )}
-            </AnimatePresence>
-
-            <Button
+            <FilkaButton
                 type="submit"
                 size="lg"
-                isLoading={registerMutation.isPending}
-                isDisabled={!canSubmit}
-                className="bg-purple-600 text-white font-semibold glow-sm hover:bg-purple-500 transition-all duration-300 mt-1"
-                endContent={!registerMutation.isPending && <UserPlus size={18} />}
+                loading={registerMutation.isPending}
+                disabled={!canSubmit}
+                endContent={<IconArrowRight size={18} />}
+                className="w-full"
             >
                 Создать аккаунт
-            </Button>
+            </FilkaButton>
 
-            <p className="text-sm text-zinc-500 text-center mt-2">
+            <p className="text-center text-sm" style={{ color: "var(--fg-2)" }}>
                 Уже есть аккаунт?{" "}
-                <Link
-                    href="/login"
-                    className="text-purple-400 hover:text-purple-300 text-sm"
-                >
+                <Link href="/login" className="filka-link">
                     Войти
                 </Link>
             </p>
-
-            <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" backdrop="blur" classNames={{ base: "bg-[#10102a] border border-white/10" }}>
-                <ModalContent>
-                    <ModalHeader>Публичная оферта</ModalHeader>
-                    <ModalBody>
-                        <p className="text-sm text-zinc-300 leading-relaxed">
-                            Используя платформу, вы подтверждаете согласие с правилами сервиса, политикой обработки данных,
-                            условиями безопасной сделки и регламентом разрешения споров.
-                        </p>
-                        <p className="text-sm text-zinc-400">
-                            Полный текст оферты предоставляется в юридическом разделе и обязателен для всех зарегистрированных пользователей.
-                        </p>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="flat" onPress={onOpenChange}>Закрыть</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
         </form>
     );
 };
+
+interface RoleCardProps {
+    readonly icon: React.ReactNode;
+    readonly title: string;
+    readonly description: string;
+    readonly selected: boolean;
+    readonly onSelect: () => void;
+}
+
+const RoleCard = ({ icon, title, description, selected, onSelect }: RoleCardProps) => (
+    <button
+        type="button"
+        onClick={onSelect}
+        className={cn(
+            "relative rounded-[var(--r-lg)] border p-4 text-left transition-all",
+            selected ? "shadow-[var(--shadow-glow-soft)]" : "hover:border-[var(--line-hover)]",
+        )}
+        style={{
+            background: selected ? "rgba(102,58,243,0.12)" : "var(--bg-2)",
+            borderColor: selected ? "rgba(102,58,243,0.32)" : "var(--line)",
+        }}
+        aria-pressed={selected}
+    >
+        {selected ? (
+            <IconCircleCheck size={16} className="absolute right-4 top-4 text-[var(--mint-300)]" />
+        ) : null}
+        <div
+            className="mb-3 grid h-10 w-10 place-items-center rounded-[var(--r-md)]"
+            style={{
+                background: "rgba(102,58,243,0.12)",
+                color: "var(--mint-300)",
+            }}
+        >
+            {icon}
+        </div>
+        <div className="mb-1 text-sm font-semibold">{title}</div>
+        <div className="text-xs leading-5" style={{ color: "var(--fg-2)" }}>
+            {description}
+        </div>
+    </button>
+);

@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Modal, ModalBody, ModalContent, Input, Kbd } from "@heroui/react";
-import { Search } from "lucide-react";
 import { useGlobalSearch } from "@/features/global-search";
 import { debounce } from "@/shared/lib/debounce";
+import {
+  FilkaModal,
+  FilkaModalBody,
+  IconSearch,
+} from "@/shared/ui/filka";
 
 const SCOPE_LABEL = {
   orders: "Заказы",
   users: "Исполнители",
-  chats: "Чаты"
+  chats: "Чаты",
 } as const;
 
 type CommandPaletteProps = {
@@ -30,7 +33,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: CommandPaletteProps) =>
       debounce((value: string) => {
         setQuery(value);
       }, 300),
-    []
+    [],
   );
 
   useEffect(() => () => debouncedSetQuery.cancel(), [debouncedSetQuery]);
@@ -49,13 +52,20 @@ export const CommandPalette = ({ isOpen, onOpenChange }: CommandPaletteProps) =>
     }
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setInput("");
+      setQuery("");
+    }
+  }, [isOpen]);
+
   const { data, isLoading } = useGlobalSearch(query);
   const grouped = useMemo(() => {
     const items = data ?? [];
     return {
       orders: items.filter((item) => item.scope === "orders"),
       users: items.filter((item) => item.scope === "users"),
-      chats: items.filter((item) => item.scope === "chats")
+      chats: items.filter((item) => item.scope === "chats"),
     };
   }, [data]);
 
@@ -70,91 +80,87 @@ export const CommandPalette = ({ isOpen, onOpenChange }: CommandPaletteProps) =>
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      hideCloseButton
-      size="2xl"
-      backdrop="blur"
-      classNames={{ base: "bg-[#10102a] border border-white/10" }}
-    >
-      <ModalContent>
-        <ModalBody className="p-0">
-          <div className="border-b border-white/10 p-3">
-            <Input
-              autoFocus
-              value={input}
-              onValueChange={(value) => {
-                setInput(value);
-                debouncedSetQuery(value);
-              }}
-              placeholder="Поиск по заказам, исполнителям и чатам..."
-              startContent={<Search size={16} className="text-zinc-500" />}
-              endContent={<Kbd keys={["enter"]}>Open</Kbd>}
-              classNames={{
-                inputWrapper: "bg-zinc-900/60 border border-zinc-700/60",
-                input: "text-zinc-200 placeholder:text-zinc-500"
-              }}
-            />
-          </div>
-          <div className="max-h-[60vh] overflow-y-auto p-3 scrollbar-styled">
-            {isLoading ? (
-              <p className="text-sm text-zinc-400">Ищем...</p>
-            ) : query.trim().length < 2 ? (
-              history.length === 0 ? (
-                <p className="text-sm text-zinc-500">Введите минимум 2 символа</p>
-              ) : (
-                <div>
-                  <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Недавние запросы</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {history.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        className="rounded-full border border-zinc-700/70 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-300 hover:border-violet-500/40 hover:bg-violet-500/10"
-                        onClick={() => {
-                          setInput(item);
-                          setQuery(item);
-                        }}
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
+    <FilkaModal open={isOpen} onClose={() => onOpenChange(false)} size="lg" hideCloseButton>
+      <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: "var(--line)" }}>
+        <IconSearch size={16} className="text-[var(--fg-2)]" />
+        <input
+          autoFocus
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+            debouncedSetQuery(e.target.value);
+          }}
+          placeholder="Поиск по заказам, исполнителям и чатам…"
+          className="h-10 flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--fg-3)]"
+        />
+        <span className="t-mono shrink-0 rounded border px-1.5 py-0.5 text-[10px]" style={{ borderColor: "var(--line-2)", color: "var(--fg-3)" }}>
+          ESC
+        </span>
+      </div>
+      <FilkaModalBody className="max-h-[60vh] overflow-y-auto p-3 f-scroll">
+        {isLoading ? (
+          <p className="text-sm" style={{ color: "var(--fg-2)" }}>
+            Ищем…
+          </p>
+        ) : query.trim().length < 2 ? (
+          history.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--fg-3)" }}>
+              Введите минимум 2 символа
+            </p>
+          ) : (
+            <div>
+              <p className="t-eyebrow px-2 py-1">Недавние запросы</p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {history.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className="filka-chip filka-chip-muted cursor-pointer"
+                    onClick={() => {
+                      setInput(item);
+                      setQuery(item);
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        ) : (data?.length ?? 0) === 0 ? (
+          <p className="text-sm" style={{ color: "var(--fg-3)" }}>
+            Ничего не найдено
+          </p>
+        ) : (
+          (Object.keys(grouped) as Array<keyof typeof grouped>).map((scope) =>
+            grouped[scope].length > 0 ? (
+              <div key={scope} className="mb-4">
+                <p className="t-eyebrow px-2 py-1">{SCOPE_LABEL[scope]}</p>
+                <div className="space-y-1">
+                  {grouped[scope].map((item) => (
+                    <a
+                      key={`${scope}:${item.id}`}
+                      href={item.href}
+                      className="block rounded-[var(--r-md)] border border-transparent px-3 py-2 transition-colors hover:bg-[var(--bg-3)]"
+                      onClick={() => {
+                        rememberQuery(query);
+                        onOpenChange(false);
+                      }}
+                    >
+                      <p className="text-sm font-medium">{item.title}</p>
+                      {item.subtitle ? (
+                        <p className="text-xs" style={{ color: "var(--fg-2)" }}>
+                          {item.subtitle}
+                        </p>
+                      ) : null}
+                    </a>
+                  ))}
                 </div>
-              )
-            ) : (data?.length ?? 0) === 0 ? (
-              <p className="text-sm text-zinc-500">Ничего не найдено</p>
-            ) : (
-              (Object.keys(grouped) as Array<keyof typeof grouped>).map((scope) =>
-                grouped[scope].length > 0 ? (
-                  <div key={scope} className="mb-4">
-                    <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                      {SCOPE_LABEL[scope]}
-                    </p>
-                    <div className="space-y-1">
-                      {grouped[scope].map((item) => (
-                        <a
-                          key={`${scope}:${item.id}`}
-                          href={item.href}
-                          className="block rounded-lg border border-transparent px-3 py-2 hover:border-violet-500/40 hover:bg-violet-500/10"
-                          onClick={() => {
-                            rememberQuery(query);
-                            onOpenChange(false);
-                          }}
-                        >
-                          <p className="text-sm font-medium text-zinc-200">{item.title}</p>
-                          {item.subtitle ? <p className="text-xs text-zinc-500">{item.subtitle}</p> : null}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                ) : null
-              )
-            )}
-          </div>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+              </div>
+            ) : null,
+          )
+        )}
+      </FilkaModalBody>
+    </FilkaModal>
   );
 };

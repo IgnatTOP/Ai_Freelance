@@ -1,5 +1,7 @@
 import { PublicProfilePage } from "@/views/dashboard/PublicProfilePage";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
     params: Promise<{ id: string }>;
 };

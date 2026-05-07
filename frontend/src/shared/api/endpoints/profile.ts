@@ -145,7 +145,7 @@ export const profileApi = {
   },
 
   async getPublicProfile(userId: string): Promise<Profile> {
-    const raw = await apiClient.request<BackendProfile>(`/users/${userId}/profile`);
+    const raw = await apiClient.request<BackendProfile>(`/users/${userId}`);
     return toProfile(raw);
   },
 

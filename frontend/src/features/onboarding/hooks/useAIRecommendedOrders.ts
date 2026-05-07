@@ -13,8 +13,18 @@ type RecommendedOrdersResponse = {
   }>;
 };
 
+const toMatchPercent = (raw: unknown): number => {
+  const value = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  if (value <= 1) return Math.round(value * 100);
+  if (value <= 10) return Math.round(value * 10);
+  return Math.min(Math.round(value), 100);
+};
+
 export const useAIRecommendedOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [scoreById, setScoreById] = useState<Record<string, number>>({});
+  const [explanationById, setExplanationById] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const fetch = useCallback(
@@ -22,22 +32,50 @@ export const useAIRecommendedOrders = () => {
       setIsLoading(true);
       try {
         const data = await apiClient.request<RecommendedOrdersResponse>("/ai/orders/recommended?limit=10");
-        const ids = (data.recommended_order_ids ?? [])
+
+        const detailed = (data.recommended_orders ?? [])
+          .map((item) => ({
+            id: (item.order_id ?? "").trim(),
+            score: toMatchPercent(item.match_score),
+            explanation: (item.explanation ?? "").trim(),
+          }))
+          .filter((item) => item.id);
+
+        const fallbackIds = (data.recommended_order_ids ?? [])
           .map((id) => id.trim())
           .filter(Boolean);
 
-        if (ids.length === 0) {
+        const ordered = detailed.length > 0
+          ? detailed
+          : fallbackIds.map((id) => ({ id, score: 0, explanation: "" }));
+
+        if (ordered.length === 0) {
           setOrders([]);
+          setScoreById({});
+          setExplanationById({});
           return;
         }
 
-        const results = await Promise.allSettled(ids.map((id) => ordersApi.getById(id)));
-        const items = results
-          .filter((result): result is PromiseFulfilledResult<Order> => result.status === "fulfilled")
-          .map((result) => result.value);
+        const results = await Promise.allSettled(ordered.map((item) => ordersApi.getById(item.id)));
+        const items: Order[] = [];
+        const scores: Record<string, number> = {};
+        const explanations: Record<string, string> = {};
+
+        results.forEach((result, idx) => {
+          if (result.status !== "fulfilled") return;
+          const order = result.value;
+          items.push(order);
+          if (ordered[idx].score > 0) scores[order.id] = ordered[idx].score;
+          if (ordered[idx].explanation) explanations[order.id] = ordered[idx].explanation;
+        });
+
         setOrders(items);
+        setScoreById(scores);
+        setExplanationById(explanations);
       } catch {
         setOrders([]);
+        setScoreById({});
+        setExplanationById({});
       } finally {
         setIsLoading(false);
       }
@@ -45,5 +83,5 @@ export const useAIRecommendedOrders = () => {
     []
   );
 
-  return { orders, isLoading, fetch };
+  return { orders, scoreById, explanationById, isLoading, fetch };
 };

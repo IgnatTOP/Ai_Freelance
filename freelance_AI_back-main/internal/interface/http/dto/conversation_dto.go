@@ -40,14 +40,31 @@ type ConversationResponse struct {
 }
 
 type MessageResponse struct {
-	ID             uuid.UUID `json:"id"`
-	ConversationID uuid.UUID `json:"conversation_id"`
-	SenderID       uuid.UUID `json:"sender_id"`
-	AuthorID       uuid.UUID `json:"author_id"`
-	Content        string    `json:"content"`
-	IsEdited       bool      `json:"is_edited"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID             uuid.UUID                   `json:"id"`
+	ConversationID uuid.UUID                   `json:"conversation_id"`
+	SenderID       uuid.UUID                   `json:"sender_id"`
+	AuthorID       uuid.UUID                   `json:"author_id"`
+	Content        string                      `json:"content"`
+	Attachments    []MessageAttachmentResponse `json:"attachments,omitempty"`
+	Reactions      []ReactionResponse          `json:"reactions,omitempty"`
+	IsEdited       bool                        `json:"is_edited"`
+	CreatedAt      time.Time                   `json:"created_at"`
+	UpdatedAt      time.Time                   `json:"updated_at"`
+}
+
+type MessageAttachmentResponse struct {
+	ID        uuid.UUID         `json:"id"`
+	MessageID uuid.UUID         `json:"message_id"`
+	MediaID   uuid.UUID         `json:"media_id"`
+	Media     MediaFileResponse `json:"media"`
+	CreatedAt time.Time         `json:"created_at"`
+}
+
+type MediaFileResponse struct {
+	ID       uuid.UUID `json:"id"`
+	FilePath string    `json:"file_path"`
+	FileType string    `json:"file_type"`
+	FileSize int64     `json:"file_size"`
 }
 
 type ReactionResponse struct {
@@ -78,7 +95,7 @@ func ToConversationResponses(convs []*entity.Conversation) []ConversationRespons
 }
 
 func ToMessageResponse(msg *entity.Message) MessageResponse {
-	return MessageResponse{
+	response := MessageResponse{
 		ID:             msg.ID,
 		ConversationID: msg.ConversationID,
 		SenderID:       msg.SenderID,
@@ -88,6 +105,30 @@ func ToMessageResponse(msg *entity.Message) MessageResponse {
 		CreatedAt:      msg.CreatedAt,
 		UpdatedAt:      msg.UpdatedAt,
 	}
+	if len(msg.Attachments) > 0 {
+		response.Attachments = make([]MessageAttachmentResponse, 0, len(msg.Attachments))
+		for _, attachment := range msg.Attachments {
+			response.Attachments = append(response.Attachments, MessageAttachmentResponse{
+				ID:        attachment.ID,
+				MessageID: attachment.MessageID,
+				MediaID:   attachment.MediaID,
+				Media: MediaFileResponse{
+					ID:       attachment.MediaID,
+					FilePath: attachment.FilePath,
+					FileType: attachment.FileType,
+					FileSize: attachment.FileSize,
+				},
+				CreatedAt: attachment.CreatedAt,
+			})
+		}
+	}
+	if len(msg.Reactions) > 0 {
+		response.Reactions = make([]ReactionResponse, 0, len(msg.Reactions))
+		for _, reaction := range msg.Reactions {
+			response.Reactions = append(response.Reactions, ToReactionResponse(reaction))
+		}
+	}
+	return response
 }
 
 func ToMessageResponses(msgs []*entity.Message) []MessageResponse {

@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Button, Input } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
 import { useOnboardingStore } from "@/features/onboarding/model";
+import { FilkaButton, FilkaField, FilkaInput } from "@/shared/ui/filka/FilkaPrimitives";
 
 export const StepName = () => {
   const { freelancerData, updateFreelancer, nextStep } = useOnboardingStore();
@@ -17,29 +17,21 @@ export const StepName = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
     >
-      <h2 className="mb-1 text-2xl font-bold text-zinc-100">
-        Как вас зовут?
-      </h2>
-      <p className="mb-6 text-sm text-zinc-500">Имя и фамилия</p>
+      <h2 className="mb-1 text-2xl font-bold text-[var(--fg-0)]">Как вас зовут?</h2>
+      <p className="mb-6 text-sm text-[var(--fg-3)]">Имя и фамилия</p>
 
-      <Input
-        label="Имя и фамилия"
-        placeholder="Иван Иванов"
-        value={freelancerData.name}
-        onValueChange={(v) => updateFreelancer({ name: v })}
-        variant="bordered"
-        classNames={{ inputWrapper: "border-zinc-700 hover:border-purple-500/50" }}
-      />
+      <FilkaField label="Имя и фамилия">
+        <FilkaInput
+          placeholder="Иван Иванов"
+          value={freelancerData.name}
+          onChange={(e) => updateFreelancer({ name: e.target.value })}
+        />
+      </FilkaField>
 
       <div className="mt-8 flex justify-end">
-        <Button
-          color="secondary"
-          endContent={<ArrowRight size={16} />}
-          isDisabled={!canContinue}
-          onPress={nextStep}
-        >
+        <FilkaButton variant="primary" endContent={<ArrowRight size={16} />} disabled={!canContinue} onClick={nextStep}>
           Далее
-        </Button>
+        </FilkaButton>
       </div>
     </motion.div>
   );

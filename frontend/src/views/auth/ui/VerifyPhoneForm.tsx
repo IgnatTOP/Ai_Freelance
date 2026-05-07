@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Input, Link } from "@heroui/react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useVerifyPhone } from "@/features/auth-phone";
 import { authTokenStorage } from "@/shared/api/client";
 import { authApi } from "@/shared/api/endpoints/auth";
+import { notify } from "@/shared/notifications/notify";
 import { useSessionStore } from "@/shared/store/session.store";
 import { useSessionHydrated } from "@/shared/store/use-session-hydrated";
+import { formatRuPhoneMask } from "@/shared/lib/phone";
+import {
+  FilkaButton,
+  FilkaOTPInput,
+  IconArrowRight,
+} from "@/shared/ui/filka";
 
 const OTP_LENGTH = 6;
 
@@ -27,9 +34,10 @@ export const VerifyPhoneForm = () => {
   const token = sessionHydrated ? authTokenStorage.get() : null;
   const [verificationCompleted, setVerificationCompleted] = useState(false);
 
-  const [digits, setDigits] = useState<string[]>(() => Array.from({ length: OTP_LENGTH }, () => ""));
+  const [code, setCode] = useState("");
   const [resendCountdown, setResendCountdown] = useState(60);
-  const refs = useRef<Array<HTMLInputElement | null>>([]);
+  const [isResending, setIsResending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sessionHydrated) return;
@@ -47,36 +55,7 @@ export const VerifyPhoneForm = () => {
     return () => window.clearInterval(id);
   }, [resendCountdown]);
 
-  const code = useMemo(() => digits.join(""), [digits]);
-  const canSubmit = code.length === OTP_LENGTH && pendingPhone;
-
-  const setDigit = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
-    const next = [...digits];
-    next[index] = value;
-    setDigits(next);
-    if (value && index < OTP_LENGTH - 1) {
-      refs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Backspace" && !digits[index] && index > 0) {
-      refs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
-    const text = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
-    if (!text) return;
-    event.preventDefault();
-    const next = Array.from({ length: OTP_LENGTH }, (_, index) => text[index] ?? "");
-    setDigits(next);
-    const focusIndex = Math.min(text.length, OTP_LENGTH - 1);
-    refs.current[focusIndex]?.focus();
-  };
-
-  const [error, setError] = useState<string | null>(null);
+  const canSubmit = code.length === OTP_LENGTH && Boolean(pendingPhone);
 
   const handleVerify = async () => {
     if (!pendingPhone || code.length !== OTP_LENGTH) return;
@@ -89,71 +68,79 @@ export const VerifyPhoneForm = () => {
       router.replace("/onboarding" as never);
     } catch {
       setError("Неверный код. Попробуйте ещё раз.");
-      setDigits(Array.from({ length: OTP_LENGTH }, () => ""));
-      refs.current[0]?.focus();
+      notify.error({ title: "Не удалось подтвердить телефон", message: "Проверьте код и попробуйте ещё раз." });
+      setCode("");
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingPhone || resendCountdown > 0 || isResending) return;
+    setIsResending(true);
+    try {
+      await authApi.resendCode(pendingPhone);
+      setResendCountdown(60);
+      notify.success({ title: "Код отправлен повторно" });
+    } catch (resendError) {
+      notify.error({
+        title: "Не удалось отправить код",
+        message: resendError instanceof Error ? resendError.message : "Попробуйте позже.",
+      });
+    } finally {
+      setIsResending(false);
     }
   };
 
   if (!sessionHydrated || !pendingPhone) return null;
 
+  const masked = formatRuPhoneMask(pendingPhone);
+
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <p className="text-sm text-zinc-400">Код отправлен на {pendingPhone}</p>
+        <p className="text-sm" style={{ color: "var(--fg-1)" }}>
+          Код отправлен на{" "}
+          <span className="t-mono font-semibold" style={{ color: "var(--fg-0)" }}>
+            {masked}
+          </span>
+        </p>
       </div>
 
-      <div className="flex items-center justify-center gap-2" onPaste={handlePaste}>
-        {digits.map((digit, index) => (
-          <Input
-            key={index}
-            ref={(el: HTMLInputElement | null) => {
-              refs.current[index] = el;
-            }}
-            value={digit}
-            onValueChange={(value) => setDigit(index, value)}
-            onKeyDown={(event) => handleKeyDown(index, event)}
-            inputMode="numeric"
-            maxLength={1}
-            className="w-11"
-            classNames={{
-              inputWrapper: "bg-zinc-900/60 border-zinc-700/70 h-12",
-              input: "text-center text-lg text-zinc-100 font-semibold"
-            }}
-          />
-        ))}
-      </div>
+      <FilkaOTPInput
+        length={OTP_LENGTH}
+        value={code}
+        onChange={setCode}
+        onComplete={() => void handleVerify()}
+        hasError={Boolean(error)}
+        autoFocus
+      />
 
-      {error && (
-        <p className="text-sm text-red-400 text-center">{error}</p>
-      )}
+      {error ? (
+        <p className="text-center text-sm" style={{ color: "#fecaca" }}>
+          {error}
+        </p>
+      ) : null}
 
-      <Button
-        fullWidth
-        className="bg-purple-600 text-white font-semibold"
-        isDisabled={!canSubmit}
-        isLoading={verifyMutation.isPending}
-        onPress={handleVerify}
+      <FilkaButton
+        className="w-full"
+        size="lg"
+        disabled={!canSubmit}
+        loading={verifyMutation.isPending}
+        onClick={handleVerify}
+        endContent={<IconArrowRight size={18} />}
       >
         Подтвердить телефон
-      </Button>
+      </FilkaButton>
 
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex items-center justify-between gap-4 text-xs" style={{ color: "var(--fg-2)" }}>
         <button
           type="button"
-          className={`transition-colors ${
-            resendCountdown > 0 ? "text-zinc-600 cursor-not-allowed" : "text-purple-400 hover:text-purple-300"
-          }`}
-          disabled={resendCountdown > 0}
-          onClick={() => {
-            if (pendingPhone) {
-              void authApi.resendCode(pendingPhone);
-              setResendCountdown(60);
-            }
-          }}
+          className={resendCountdown > 0 ? "cursor-not-allowed opacity-60" : "filka-link"}
+          disabled={resendCountdown > 0 || isResending}
+          onClick={() => void handleResend()}
         >
-          {resendCountdown > 0 ? `Повторить через ${formatCountdown(resendCountdown)}` : "Отправить код повторно"}
+          {isResending ? "Отправляем…" : resendCountdown > 0 ? `Повторить через ${formatCountdown(resendCountdown)}` : "Отправить код повторно"}
         </button>
-        <Link href="/register" className="text-zinc-500 hover:text-zinc-300">
+        <Link href="/register" className="transition-colors hover:text-[var(--fg-0)]">
           Изменить номер
         </Link>
       </div>

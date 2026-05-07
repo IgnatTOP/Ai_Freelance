@@ -11,11 +11,19 @@ export const useMyProposals = (role: "client" | "freelancer" = "freelancer") =>
     queryFn: () => proposalsApi.getByRole(role),
   });
 
-export const useOrderProposals = (orderId: string) =>
+export const useOrderProposals = (orderId: string, enabled = true) =>
   useQuery({
     queryKey: ["proposals", "order", orderId],
     queryFn: () => proposalsApi.getOrderProposals(orderId),
-    enabled: !!orderId,
+    enabled: Boolean(orderId) && enabled,
+  });
+
+export const useMyOrderProposal = (orderId: string, enabled = true) =>
+  useQuery({
+    queryKey: ["proposals", "order", orderId, "mine"],
+    queryFn: () => proposalsApi.getMyProposal(orderId),
+    enabled: Boolean(orderId) && enabled,
+    retry: false,
   });
 
 export const useSubmitProposal = () => {
@@ -25,6 +33,7 @@ export const useSubmitProposal = () => {
       proposalsApi.submit(orderId, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
 };
@@ -96,6 +105,8 @@ export const useUpdateProposalStatus = () => {
 
       void queryClient.invalidateQueries({ queryKey: ["proposals"] });
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["balance"] });
+      void queryClient.invalidateQueries({ queryKey: ["escrow", variables.orderId] });
       void queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
