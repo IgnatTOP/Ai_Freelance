@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSessionStore } from "@/shared/store/session.store";
 import {
     useDeleteOrder,
@@ -11,6 +11,7 @@ import {
     usePublishOrder,
 } from "@/features/order-management";
 import { useCategories } from "@/features/order-management";
+import { useAIRecommendedOrders } from "@/features/onboarding/hooks/useAIRecommendedOrders";
 import { StatusBadge } from "@/shared/ui/status-badge/StatusBadge";
 import {
     FilkaButton,
@@ -310,7 +311,12 @@ const FreelancerOrders = () => {
     const [activeCategory, setActiveCategory] = useState<string>("all");
     const { data, isLoading } = useMarketplaceOrders({ limit: 30, sort });
     const { data: categoriesData } = useCategories();
-    const orders = data?.items ?? [];
+    const { orders: aiOrders, scoreById: aiScoreById, fetch: fetchAiOrders } = useAIRecommendedOrders();
+    useEffect(() => {
+        fetchAiOrders();
+    }, [fetchAiOrders]);
+    const marketplaceOrders = data?.items ?? [];
+    const orders = aiOrders.length > 0 ? aiOrders : marketplaceOrders;
 
     const categories = useMemo(() => {
         const list = (categoriesData ?? []).map((c) => ({ id: c.name, label: c.name }));
@@ -419,7 +425,7 @@ const FreelancerOrders = () => {
                                     </div>
                                     <FilkaChip>
                                         <IconSpark size={11} />
-                                        AI-совпадение
+                                        {aiScoreById[order.id] ? `AI · ${aiScoreById[order.id]}%` : "AI-совпадение"}
                                     </FilkaChip>
                                 </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSessionStore } from "@/shared/store/session.store";
 import { useBalance } from "@/features/balance-management";
 import { useMyOrders, useMarketplaceOrders } from "@/features/order-management";
@@ -10,6 +10,7 @@ import { useNotificationCenter } from "@/features/notification-center";
 import { useProfileProgress } from "@/features/dashboard-stats/useProfileProgress";
 import { useOnlineCount } from "@/features/dashboard-stats/useOnlineCount";
 import { useCategories } from "@/features/order-management";
+import { useAIRecommendedOrders } from "@/features/onboarding/hooks/useAIRecommendedOrders";
 import { formatMoney } from "@/shared/lib/money";
 import {
     FilkaAISphere,
@@ -69,7 +70,19 @@ export const OverviewPage = () => {
 
     const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
-    const spotlightOrdersAll = role === "freelancer" ? marketplaceData?.items ?? [] : myOrdersData?.items ?? [];
+    // Для фрилансера тянем AI-рекомендации (с match_score). Если AI вернул
+    // пусто — fallback на общий маркетплейс.
+    const { orders: aiOrders, scoreById: aiScoreById, fetch: fetchAiOrders } = useAIRecommendedOrders();
+    useEffect(() => {
+        if (role === "freelancer") fetchAiOrders();
+    }, [role, fetchAiOrders]);
+
+    const spotlightOrdersAll = useMemo(() => {
+        if (role !== "freelancer") return myOrdersData?.items ?? [];
+        if (aiOrders.length > 0) return aiOrders;
+        return marketplaceData?.items ?? [];
+    }, [role, aiOrders, marketplaceData?.items, myOrdersData?.items]);
+
     const spotlightOrders = useMemo(() => {
         if (categoryFilter === "all") return spotlightOrdersAll;
         return spotlightOrdersAll.filter((order) => order.category === categoryFilter);
@@ -240,7 +253,7 @@ export const OverviewPage = () => {
                                             {role === "freelancer" ? (
                                                 <FilkaChip>
                                                     <IconSpark size={11} />
-                                                    AI-совпадение
+                                                    {aiScoreById[order.id] ? `AI · ${aiScoreById[order.id]}%` : "AI-совпадение"}
                                                 </FilkaChip>
                                             ) : null}
                                         </div>
