@@ -440,18 +440,15 @@ export const IconLogo = ({ size = 28, className, style }: { size?: number; class
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-hidden="true" className={className} style={style}>
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#B6D9FC" />
+        <linearGradient id={`${id}-bg`} x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#8A66F6" />
           <stop offset="1" stopColor="#4F2BC7" />
         </linearGradient>
       </defs>
-      <path
-        d="M6 4v20M6 11c0-3 2.5-5 5.5-5h3M6 16c0-2.5 2-4.5 4.5-4.5h2"
-        stroke={`url(#${id})`}
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <circle cx="18.5" cy="7" r="2.2" fill={`url(#${id})`} />
+      <rect x="0" y="0" width="28" height="28" rx="7" fill={`url(#${id}-bg)`} />
+      <rect x="0" y="0" width="28" height="28" rx="7" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+      <path d="M14 5v18" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" />
+      <ellipse cx="14" cy="14" rx="5" ry="4" fill="none" stroke="#FFFFFF" strokeWidth="2.2" />
     </svg>
   );
 };

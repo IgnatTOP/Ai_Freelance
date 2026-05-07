@@ -257,9 +257,14 @@ export const LandingPage = () => {
                     </div>
                 </div>
 
-                <div className="hidden justify-center px-8 pt-5 lg:flex lg:px-14">
+                <div className="hidden items-center justify-between gap-4 px-8 pt-5 lg:flex lg:px-14">
+                    <Link href="/" className="flex items-center gap-2 shrink-0">
+                        <IconLogo size={32} />
+                        <span className="text-[18px] font-bold tracking-[-0.02em]">Филка</span>
+                    </Link>
+
                     <nav
-                        className="flex items-center gap-1 overflow-x-auto rounded-full border px-2 py-2"
+                        className="flex items-center gap-1 rounded-full border px-2 py-2"
                         style={{
                             background: "rgba(10,11,20,0.55)",
                             backdropFilter: "blur(28px) saturate(1.6)",
@@ -269,11 +274,6 @@ export const LandingPage = () => {
                                 "0 1px 0 rgba(255,255,255,0.06) inset, 0 -1px 0 rgba(0,0,0,0.4) inset, 0 18px 50px rgba(0,0,0,0.45), 0 6px 18px rgba(0,0,0,0.3)",
                         }}
                     >
-                        <Link href="/" className="mr-1 flex h-9 items-center gap-2 border-r pl-1 pr-4" style={{ borderColor: "rgba(186,215,247,0.1)" }}>
-                            <IconLogo size={26} />
-                            <span className="text-[15px] font-bold tracking-[-0.015em]">Филка</span>
-                        </Link>
-
                         {NAV_ITEMS.map((item) => {
                             const Icon = item.icon;
                             return (
@@ -292,10 +292,15 @@ export const LandingPage = () => {
                                 </a>
                             );
                         })}
+                    </nav>
 
-                        <div className="mx-2 h-[22px] w-px" style={{ background: "rgba(186,215,247,0.12)" }} />
-
-                        <button type="button" className="grid h-9 w-9 place-items-center rounded-full" style={{ color: "var(--fg-1)" }} aria-label="Поиск">
+                    <div className="flex shrink-0 items-center gap-2">
+                        <button
+                            type="button"
+                            className="grid h-9 w-9 place-items-center rounded-full transition-colors"
+                            style={{ color: "var(--fg-1)" }}
+                            aria-label="Поиск"
+                        >
                             <IconSearch size={16} />
                         </button>
 
@@ -305,7 +310,11 @@ export const LandingPage = () => {
                             </Link>
                         ) : (
                             <>
-                                <Link href="/login" className="filka-btn filka-btn-ghost filka-btn-sm">
+                                <Link
+                                    href="/login"
+                                    className="flex h-9 items-center px-3 text-[13.5px] font-medium transition-colors"
+                                    style={{ color: "var(--fg-1)" }}
+                                >
                                     Войти
                                 </Link>
                                 <Link href="/register" className="filka-btn filka-btn-primary filka-btn-sm">
@@ -313,7 +322,7 @@ export const LandingPage = () => {
                                 </Link>
                             </>
                         )}
-                    </nav>
+                    </div>
                 </div>
 
                 <section className="grid items-center gap-12 px-5 pb-16 pt-10 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:px-14 lg:pb-20 lg:pt-14">
