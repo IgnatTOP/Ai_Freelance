@@ -47,7 +47,9 @@ export const useAISuggestSkills = () => {
     selectedSkills,
     catalogSkills,
   }: SuggestSkillsParams) => {
-    setSuggestedSkills([]);
+    // Не сбрасываем suggestedSkills до получения нового ответа — старые
+    // рекомендации остаются на экране, чтобы блок «AI рекомендует» не
+    // схлопывался во время debounce/запроса и не дёргал лейаут.
     setIsStreaming(true);
 
     const selected = selectedSkills.filter(Boolean);

@@ -89,6 +89,7 @@ export const OnboardingPage = () => {
             description: item.description.trim(),
           };
           if (item.link?.trim()) portfolioPayload.link = item.link.trim();
+          if (item.imageId) portfolioPayload.image_url = item.imageId;
           try {
             await profileApi.addPortfolioItem(portfolioPayload);
           } catch {
@@ -145,9 +146,10 @@ export const OnboardingPage = () => {
   if (!isMounted || !sessionHydrated || !role) return null;
 
   const isWelcome = step === 0;
+  const isWideStep = role === "freelancer" && (step === 4 || step === 5);
 
   return (
-    <OnboardingShell>
+    <OnboardingShell wide={isWideStep}>
       {isWelcome ? (
         <StepTransition stepKey={0} direction={direction}>
           <WelcomeScreen role={role} onStart={nextStep} />

@@ -7,6 +7,8 @@ export type PortfolioEntry = {
   title: string;
   description: string;
   link?: string;
+  imageId?: string;
+  imagePreview?: string;
 };
 
 export type FreelancerData = {
