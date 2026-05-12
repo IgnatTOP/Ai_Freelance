@@ -452,7 +452,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
       await queryClient.invalidateQueries({ queryKey: ["orders", orderId] });
       notify.success({ title: "Работа отправлена на приёмку" });
     } catch (e) {
-      notify.error({ title: "Не удалось завершить", message: e instanceof Error ? e.message : undefined });
+      notify.error({ title: "Не удалось завершить", ...(e instanceof Error && { message: e.message }) });
     }
   };
 
