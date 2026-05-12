@@ -57,7 +57,8 @@ const PortfolioCard = ({ index, item, canRemove, onChange, onRemove }: Portfolio
         onChange({ imageId: media.id });
       } catch (err) {
         setUploadError(err instanceof Error ? err.message : "Не удалось загрузить файл");
-        onChange({ imagePreview: undefined, imageId: undefined });
+        // Reset only imagePreview on error, imageId remains as is
+        onChange({ imagePreview: "", imageId: "" });
       } finally {
         setIsUploading(false);
       }
@@ -79,7 +80,7 @@ const PortfolioCard = ({ index, item, canRemove, onChange, onRemove }: Portfolio
   };
 
   const removePhoto = () => {
-    onChange({ imageId: undefined, imagePreview: undefined });
+    onChange({ imageId: "", imagePreview: "" });
     setUploadError(null);
   };
 

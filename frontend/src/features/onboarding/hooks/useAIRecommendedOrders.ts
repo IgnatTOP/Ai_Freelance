@@ -64,9 +64,10 @@ export const useAIRecommendedOrders = () => {
         results.forEach((result, idx) => {
           if (result.status !== "fulfilled") return;
           const order = result.value;
+          const orderedItem = ordered[idx];
           items.push(order);
-          if (ordered[idx].score > 0) scores[order.id] = ordered[idx].score;
-          if (ordered[idx].explanation) explanations[order.id] = ordered[idx].explanation;
+          if (orderedItem && orderedItem.score > 0) scores[order.id] = orderedItem.score;
+          if (orderedItem && orderedItem.explanation) explanations[order.id] = orderedItem.explanation;
         });
 
         setOrders(items);
