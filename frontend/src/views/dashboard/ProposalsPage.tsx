@@ -114,6 +114,7 @@ export const ProposalsPage = () => {
   const groupedByOrder = useMemo(() => (role === "client" ? groupByOrder(proposals) : []), [proposals, role]);
 
   const [filter, setFilter] = useState<"all" | "pending" | "accepted" | "rejected">("all");
+  const [expandedLetters, setExpandedLetters] = useState<Set<string>>(new Set());
   const [fundsModal, setFundsModal] = useState<{
     isOpen: boolean;
     available: number;
@@ -292,15 +293,33 @@ export const ProposalsPage = () => {
                             </div>
                           </div>
 
-                          <div className="min-w-0 flex-1 text-[13.5px] leading-[1.55] text-[var(--fg-1)]">
-                            {proposal.cover_letter}
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={`text-[13.5px] leading-[1.55] text-[var(--fg-1)] ${expandedLetters.has(proposal.id) ? "" : "line-clamp-3"}`}
+                            >
+                              {proposal.cover_letter}
+                            </p>
+                            {(proposal.cover_letter?.length ?? 0) > 200 ? (
+                              <button
+                                type="button"
+                                className="mt-1 text-[12px] text-[var(--mint-300)] hover:underline"
+                                onClick={() => setExpandedLetters((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(proposal.id)) next.delete(proposal.id);
+                                  else next.add(proposal.id);
+                                  return next;
+                                })}
+                              >
+                                {expandedLetters.has(proposal.id) ? "Свернуть" : "Читать полностью"}
+                              </button>
+                            ) : null}
                           </div>
 
                           <div className="flex gap-2 lg:flex-col lg:items-end">
                             <FilkaButton variant="ghost" size="sm" onClick={() => router.push(`/dashboard/profile/${proposal.freelancer_id}` as never)}>
                               Профиль
                             </FilkaButton>
-                            {proposal.status === "pending" ? (
+                            {proposal.status === "pending" && proposal.order_status === "published" ? (
                               <>
                                 <FilkaButton size="sm" startContent={<IconCheck size={13} />} onClick={() => handleAcceptProposal(proposal.order_id, proposal.id)}>
                                   Принять

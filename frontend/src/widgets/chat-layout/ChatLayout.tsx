@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
   IconArrowDown,
@@ -90,7 +91,7 @@ const getAttachmentFileType = (attachment: MessageAttachment): string | undefine
 
 const getOrderBadge = (conversation?: Conversation): string | null => {
   if (!conversation?.order_id) return null;
-  return `#${conversation.order_id.slice(0, 8).toUpperCase()}`;
+  return conversation.order_title ?? `#${conversation.order_id.slice(0, 8).toUpperCase()}`;
 };
 
 const AvatarBadge = ({
@@ -151,6 +152,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [readByPeerMessageIds, setReadByPeerMessageIds] = useState<Set<string>>(new Set());
   const [showAISuggestions, setShowAISuggestions] = useState(true);
+  const [showRejectedChats, setShowRejectedChats] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSuggestLoading, setIsAiSuggestLoading] = useState(false);
 
@@ -159,6 +161,10 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingStopTimer = useRef<number | null>(null);
   const aiSuggestTimer = useRef<number | null>(null);
+  const lastSuggestMsgCountRef = useRef(0);
+  const lastSuggestDraftRef = useRef("");
+
+  const queryClient = useQueryClient();
 
   const userId = useSessionStore((state) => state.userId);
   const role = useSessionStore((state) => state.role);
@@ -249,11 +255,18 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   useEffect(() => {
     if (!selectedId || !showAISuggestions) return;
+    if (
+      messages.length === lastSuggestMsgCountRef.current &&
+      messageText === lastSuggestDraftRef.current
+    ) return;
+
     if (aiSuggestTimer.current) {
       window.clearTimeout(aiSuggestTimer.current);
     }
 
     aiSuggestTimer.current = window.setTimeout(async () => {
+      lastSuggestMsgCountRef.current = messages.length;
+      lastSuggestDraftRef.current = messageText;
       const promptSource = messageText.trim();
       const contextTail = messages
         .slice(-6)
@@ -431,6 +444,18 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
     }
   };
 
+  const handleCompleteInChat = async () => {
+    const orderId = selectedConversation?.order_id;
+    if (!orderId) return;
+    try {
+      await apiClient.request<unknown>(`/orders/${orderId}/complete-by-freelancer`, { method: "POST" });
+      await queryClient.invalidateQueries({ queryKey: ["orders", orderId] });
+      notify.success({ title: "Работа отправлена на приёмку" });
+    } catch (e) {
+      notify.error({ title: "Не удалось завершить", message: e instanceof Error ? e.message : undefined });
+    }
+  };
+
   return (
     <div className="overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--bg-1)] shadow-[var(--shadow-xl)]">
       <div className="grid h-[calc(100vh-11.25rem)] min-h-[720px] grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)_340px]">
@@ -455,71 +480,102 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {filteredConversations.map((conversation) => {
-              const conversationKey = conversation.order_id ? `${conversation.order_id}:${conversation.freelancer_id}` : "";
-              const proposalStatus = conversationKey ? proposalStatusMap.get(conversationKey) : undefined;
-              const isAccepted = proposalStatus === "accepted";
-              const isRejected = proposalStatus === "rejected";
-              const isActive = selectedId === conversation.id;
+            {(() => {
+              const activeConversations = filteredConversations.filter((c) => {
+                const key = c.order_id ? `${c.order_id}:${c.freelancer_id}` : "";
+                return proposalStatusMap.get(key) !== "rejected";
+              });
+              const rejectedConversations = filteredConversations.filter((c) => {
+                const key = c.order_id ? `${c.order_id}:${c.freelancer_id}` : "";
+                return proposalStatusMap.get(key) === "rejected";
+              });
 
-              return (
-                <button
-                  key={conversation.id}
-                  type="button"
-                  onClick={() => handleSelectConversation(conversation.id)}
-                  className={cn(
-                    "flex w-full gap-3 border-b border-[var(--line)] px-4 py-3 text-left transition-colors",
-                    isActive ? "bg-[var(--bg-3)]" : "hover:bg-[rgba(255,255,255,0.02)]",
-                    isRejected && "opacity-55",
-                  )}
-                  style={{ borderLeft: isActive ? "2px solid var(--mint-400)" : "2px solid transparent" }}
-                >
-                  <AvatarBadge
-                    name={conversation.other_user?.display_name ?? conversation.order_title ?? "Диалог"}
-                    photoUrl={conversation.other_user?.photo_url}
-                    isActive={isAccepted}
-                  />
+              const renderConversation = (conversation: Conversation) => {
+                const conversationKey = conversation.order_id ? `${conversation.order_id}:${conversation.freelancer_id}` : "";
+                const proposalStatus = conversationKey ? proposalStatusMap.get(conversationKey) : undefined;
+                const isAccepted = proposalStatus === "accepted";
+                const isActive = selectedId === conversation.id;
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13.5px] font-semibold text-[var(--fg-0)]">
-                          {conversation.other_user?.display_name ?? conversation.order_title ?? "Диалог"}
+                return (
+                  <button
+                    key={conversation.id}
+                    type="button"
+                    onClick={() => handleSelectConversation(conversation.id)}
+                    className={cn(
+                      "flex w-full gap-3 border-b border-[var(--line)] px-4 py-3 text-left transition-colors",
+                      isActive ? "bg-[var(--bg-3)]" : "hover:bg-[rgba(255,255,255,0.02)]",
+                    )}
+                    style={{ borderLeft: isActive ? "2px solid var(--mint-400)" : "2px solid transparent" }}
+                  >
+                    <AvatarBadge
+                      name={conversation.other_user?.display_name ?? conversation.order_title ?? "Диалог"}
+                      photoUrl={conversation.other_user?.photo_url}
+                      isActive={isAccepted}
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[13.5px] font-semibold text-[var(--fg-0)]">
+                            {conversation.other_user?.display_name ?? conversation.order_title ?? "Диалог"}
+                          </div>
+                          {getOrderBadge(conversation) ? (
+                            <div className="t-mono mt-0.5 truncate text-[10px] text-[var(--mint-400)]">{getOrderBadge(conversation)}</div>
+                          ) : null}
                         </div>
-                        {getOrderBadge(conversation) ? (
-                          <div className="t-mono mt-0.5 text-[10px] text-[var(--mint-400)]">{getOrderBadge(conversation)}</div>
-                        ) : null}
+                        <div className="text-[10.5px] text-[var(--fg-3)]">
+                          {conversation.last_message ? formatTime(conversation.last_message.created_at) : ""}
+                        </div>
                       </div>
-                      <div className="text-[10.5px] text-[var(--fg-3)]">
-                        {conversation.last_message ? formatTime(conversation.last_message.created_at) : ""}
+
+                      <div className="mt-1 truncate text-[12.5px] text-[var(--fg-2)]">
+                        {conversation.last_message
+                          ? (conversation.last_message.content || (conversation.last_message.attachments?.length ? "📎 Вложение" : "Сообщение"))
+                          : "Нет сообщений"}
                       </div>
+
+                      {isAccepted ? (
+                        <div className="mt-2">
+                          <FilkaChip className="text-[10px]">Исполнитель подтверждён</FilkaChip>
+                        </div>
+                      ) : null}
                     </div>
 
-                    <div className="mt-1 truncate text-[12.5px] text-[var(--fg-2)]">
-                      {conversation.last_message
-                        ? (conversation.last_message.content || (conversation.last_message.attachments?.length ? "📎 Вложение" : "Сообщение"))
-                        : "Нет сообщений"}
-                    </div>
-
-                    {isAccepted ? (
-                      <div className="mt-2">
-                        <FilkaChip className="text-[10px]">Исполнитель подтверждён</FilkaChip>
+                    {(conversation.unread_count ?? 0) > 0 ? (
+                      <div className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--mint-400)] px-1.5 text-[11px] font-bold text-[#05060f]">
+                        {conversation.unread_count}
                       </div>
                     ) : null}
-                  </div>
+                  </button>
+                );
+              };
 
-                  {(conversation.unread_count ?? 0) > 0 ? (
-                    <div className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--mint-400)] px-1.5 text-[11px] font-bold text-[#05060f]">
-                      {conversation.unread_count}
-                    </div>
+              return (
+                <>
+                  {activeConversations.map(renderConversation)}
+
+                  {rejectedConversations.length > 0 ? (
+                    <>
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 border-b border-[var(--line)] px-4 py-2.5 text-left transition-colors hover:bg-[rgba(255,255,255,0.02)]"
+                        onClick={() => setShowRejectedChats((prev) => !prev)}
+                      >
+                        <span className="text-[11px] text-[var(--fg-3)]">
+                          Отклонённые · {rejectedConversations.length}
+                        </span>
+                        <span className="ml-auto text-[10px] text-[var(--fg-3)]">{showRejectedChats ? "▲" : "▼"}</span>
+                      </button>
+                      {showRejectedChats ? rejectedConversations.map(renderConversation) : null}
+                    </>
                   ) : null}
-                </button>
-              );
-            })}
 
-            {!filteredConversations.length ? (
-              <div className="px-4 py-6 text-[12px] text-[var(--fg-3)]">Диалоги не найдены</div>
-            ) : null}
+                  {!filteredConversations.length ? (
+                    <div className="px-4 py-6 text-[12px] text-[var(--fg-3)]">Диалоги не найдены</div>
+                  ) : null}
+                </>
+              );
+            })()}
           </div>
         </section>
 
@@ -550,7 +606,17 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   </div>
                 </div>
 
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                  {relatedOrder && role === "freelancer" && relatedOrder.status === "in_progress" ? (
+                    <FilkaButton size="sm" variant="ghost" startContent={<IconCheck size={13} />} onClick={handleCompleteInChat}>
+                      Сдать работу
+                    </FilkaButton>
+                  ) : null}
+                  {relatedOrder && role === "client" && ["in_progress", "completed"].includes(relatedOrder.status) ? (
+                    <FilkaButton size="sm" startContent={<IconCheck size={13} />} onClick={() => router.push(`/dashboard/orders/${relatedOrder.id}` as never)}>
+                      Принять работу
+                    </FilkaButton>
+                  ) : null}
                   {getOrderBadge(selectedConversation) ? (
                     <div className="rounded-[8px] border border-[var(--line)] px-2 py-1">
                       <div className="t-mono text-[10.5px] text-[var(--fg-2)]">{getOrderBadge(selectedConversation)}</div>
@@ -745,7 +811,15 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
               </div>
 
               <div className="border-t border-[var(--line)] px-4 py-4 sm:px-5">
-                {isLockedByFirstResponseRule ? (
+                {relatedOrder?.status === "completed" ? (
+                  <div className="mb-3 rounded-[12px] border border-[rgba(54,211,153,0.25)] bg-[rgba(54,211,153,0.06)] px-4 py-2.5 text-[12px] text-[var(--mint-300)]">
+                    ✓ Заказ завершён. Чат доступен только для просмотра истории.
+                  </div>
+                ) : relatedOrder?.status === "cancelled" ? (
+                  <div className="mb-3 rounded-[12px] border border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.06)] px-4 py-2.5 text-[12px] text-[var(--err)]">
+                    Заказ отменён.
+                  </div>
+                ) : isLockedByFirstResponseRule ? (
                   <div className="mb-3 rounded-[12px] border border-[rgba(245,158,11,0.22)] bg-[rgba(245,158,11,0.08)] px-4 py-3 text-[12px] text-[#fcd34d]">
                     Ожидаем ответа заказчика. Новые сообщения временно недоступны.
                   </div>
@@ -761,7 +835,8 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 ) : null}
 
                 {uploadedMedia.length > 0 ? (
-                  <div className="mb-3 flex flex-wrap gap-2">
+                  <div className="mb-3 max-h-[88px] overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
                     {uploadedMedia.map((item) => {
                       const isImage = item.file_type?.startsWith("image/");
                       const url = toMediaUrl(item.file_path);
@@ -785,6 +860,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                         </div>
                       );
                     })}
+                    </div>
                   </div>
                 ) : null}
 
@@ -858,7 +934,17 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
                 {showAISuggestions ? (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {(isAiSuggestLoading ? [] : aiSuggestions).map((suggestion) => (
+                    {isAiSuggestLoading ? (
+                      <>
+                        {[32, 24, 28].map((w) => (
+                          <div
+                            key={w}
+                            className="h-7 animate-pulse rounded-full bg-[rgba(102,58,243,0.12)]"
+                            style={{ width: `${w * 4}px` }}
+                          />
+                        ))}
+                      </>
+                    ) : aiSuggestions.map((suggestion) => (
                       <button
                         key={suggestion}
                         type="button"
@@ -869,9 +955,6 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                         {suggestion}
                       </button>
                     ))}
-                    {isAiSuggestLoading ? (
-                      <div className="text-[12px] text-[var(--fg-3)]">Генерируем подсказки…</div>
-                    ) : null}
                   </div>
                 ) : null}
               </div>
