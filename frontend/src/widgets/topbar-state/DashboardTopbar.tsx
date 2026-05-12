@@ -221,25 +221,24 @@ export const DashboardTopbar = () => {
 
                     <Link
                         href="/dashboard/balance"
+                        title="Доступно к выводу и средства в эскроу"
                         className="hidden h-9 items-center gap-2 rounded-[var(--r-md)] border px-3 sm:flex"
                         style={{
                             background: "rgba(186,215,247,0.06)",
                             borderColor: "var(--line)",
                         }}
                     >
-                        <IconWallet size={14} className="text-[var(--mint-300)]" />
+                        <IconWallet size={14} className="shrink-0 text-[var(--mint-300)]" aria-hidden />
                         <span className="t-tabular text-[13px] font-semibold">
                             {availableValue !== null ? formatMoney(availableValue) : "—"}
                         </span>
-                        {pendingValue !== null && pendingValue > 0 ? (
-                            <>
-                                <span className="text-[var(--fg-3)] text-[12px]">·</span>
-                                <IconShield size={12} className="text-[var(--fg-3)]" />
-                                <span className="t-tabular text-[12px] text-[var(--fg-2)]">
-                                    {formatMoney(pendingValue)}
-                                </span>
-                            </>
-                        ) : null}
+                        <span className="text-[var(--fg-3)] text-[12px]" aria-hidden>
+                            ·
+                        </span>
+                        <IconShield size={12} className="shrink-0 text-[var(--mint-300)]" aria-hidden />
+                        <span className="t-tabular text-[13px] font-semibold text-[var(--mint-300)]">
+                            {pendingValue !== null ? formatMoney(pendingValue) : formatMoney(0)}
+                        </span>
                     </Link>
 
                     <Link

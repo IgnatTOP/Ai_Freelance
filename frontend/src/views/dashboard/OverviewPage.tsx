@@ -72,16 +72,22 @@ export const OverviewPage = () => {
 
     // Для фрилансера тянем AI-рекомендации (с match_score). Если AI вернул
     // пусто — fallback на общий маркетплейс.
-    const { orders: aiOrders, scoreById: aiScoreById, fetch: fetchAiOrders } = useAIRecommendedOrders();
+    const { orders: aiOrders, scoreById: aiScoreById, fetch: fetchAiOrders, isLoading: isAiSpotlightLoading } = useAIRecommendedOrders();
     useEffect(() => {
         if (role === "freelancer") fetchAiOrders();
     }, [role, fetchAiOrders]);
 
     const spotlightOrdersAll = useMemo(() => {
         if (role !== "freelancer") return myOrdersData?.items ?? [];
+        if (isAiSpotlightLoading && aiOrders.length === 0) return [];
         if (aiOrders.length > 0) return aiOrders;
         return marketplaceData?.items ?? [];
-    }, [role, aiOrders, marketplaceData?.items, myOrdersData?.items]);
+    }, [role, aiOrders, marketplaceData?.items, myOrdersData?.items, isAiSpotlightLoading]);
+
+    const isSpotlightListLoading =
+        (role === "freelancer" && isAiSpotlightLoading && aiOrders.length === 0) ||
+        (role === "freelancer" && aiOrders.length === 0 && isMarketplaceLoading) ||
+        (isOrdersLoading && role !== "freelancer");
 
     const spotlightOrders = useMemo(() => {
         if (categoryFilter === "all") return spotlightOrdersAll;
@@ -219,7 +225,7 @@ export const OverviewPage = () => {
                         </div>
                     </div>
 
-                    {(isOrdersLoading && role !== "freelancer") || (isMarketplaceLoading && role === "freelancer") ? (
+                    {isSpotlightListLoading ? (
                         <div className="grid gap-3">
                             {Array.from({ length: 3 }).map((_, index) => (
                                 <FilkaCard key={index} className="p-5">

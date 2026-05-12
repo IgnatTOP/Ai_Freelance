@@ -15,11 +15,17 @@ export const useMarketplaceOrders = (filter?: OrdersFilter) =>
     queryFn: () => ordersApi.getMarketplace(filter),
   });
 
-export const useOrderDetail = (id: string) =>
+export const useOrderDetail = (
+  id: string,
+  options?: {
+    readonly refetchInterval?: number;
+  },
+) =>
   useQuery({
     queryKey: ["orders", id],
     queryFn: () => ordersApi.getById(id),
     enabled: !!id,
+    ...(options?.refetchInterval != null ? { refetchInterval: options.refetchInterval } : {}),
   });
 
 export const useCreateOrder = () => {

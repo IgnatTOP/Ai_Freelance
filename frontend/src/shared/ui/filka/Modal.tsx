@@ -24,6 +24,21 @@ const sizeMap: Record<NonNullable<FilkaModalProps["size"]>, number> = {
   xl: 960,
 };
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const pickInitialModalFocus = (root: HTMLElement): HTMLElement | null => {
+  const marked = root.querySelector<HTMLElement>("[data-filka-autofocus]");
+  if (marked && !marked.matches(":disabled")) return marked;
+  const autofocusEl = root.querySelector<HTMLElement>("[autofocus]");
+  if (autofocusEl && !autofocusEl.matches(":disabled")) return autofocusEl;
+  const primaryField = root.querySelector<HTMLElement>(
+    "textarea:not([disabled]), input:not([disabled]), select:not([disabled])",
+  );
+  if (primaryField) return primaryField;
+  return root.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+};
+
 export const FilkaModal = ({
   open,
   onClose,
@@ -47,9 +62,7 @@ export const FilkaModal = ({
         return;
       }
       if (e.key === "Tab" && containerRef.current) {
-        const focusables = containerRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        );
+        const focusables = containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
         if (focusables.length === 0) return;
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
@@ -68,10 +81,9 @@ export const FilkaModal = ({
     document.body.style.overflow = "hidden";
 
     const t = setTimeout(() => {
-      const first = containerRef.current?.querySelector<HTMLElement>(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-      first?.focus();
+      const root = containerRef.current;
+      if (!root) return;
+      pickInitialModalFocus(root)?.focus();
     }, 50);
 
     return () => {
@@ -112,6 +124,7 @@ export const FilkaModal = ({
           animation: "modal-pop 240ms var(--ease-out) both",
         }}
       >
+        {children}
         {!hideCloseButton ? (
           <button
             type="button"
@@ -122,7 +135,6 @@ export const FilkaModal = ({
             <IconClose size={16} />
           </button>
         ) : null}
-        {children}
       </div>
     </div>,
     document.body,

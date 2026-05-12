@@ -311,12 +311,15 @@ const FreelancerOrders = () => {
     const [activeCategory, setActiveCategory] = useState<string>("all");
     const { data, isLoading } = useMarketplaceOrders({ limit: 30, sort });
     const { data: categoriesData } = useCategories();
-    const { orders: aiOrders, scoreById: aiScoreById, fetch: fetchAiOrders } = useAIRecommendedOrders();
+    const { orders: aiOrders, scoreById: aiScoreById, fetch: fetchAiOrders, isLoading: isAiOrdersLoading } = useAIRecommendedOrders();
     useEffect(() => {
         fetchAiOrders();
     }, [fetchAiOrders]);
     const marketplaceOrders = data?.items ?? [];
-    const orders = aiOrders.length > 0 ? aiOrders : marketplaceOrders;
+    const orders =
+        aiOrders.length > 0 ? aiOrders : isAiOrdersLoading ? [] : marketplaceOrders;
+    const isListLoading =
+        (isAiOrdersLoading && aiOrders.length === 0) || (aiOrders.length === 0 && isLoading);
 
     const categories = useMemo(() => {
         const list = (categoriesData ?? []).map((c) => ({ id: c.name, label: c.name }));
@@ -390,7 +393,7 @@ const FreelancerOrders = () => {
                 </div>
             </FilkaCard>
 
-            {isLoading ? (
+            {isListLoading ? (
                 <div className="grid gap-3">
                     {Array.from({ length: 4 }).map((_, index) => (
                         <FilkaCard key={index} className="p-5">

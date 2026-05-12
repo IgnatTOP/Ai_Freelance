@@ -121,6 +121,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
     const [pendingAcceptProposalId, setPendingAcceptProposalId] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<"match" | "price" | "deadline">("match");
     const [tab, setTab] = useState<"proposals" | "details">("proposals");
+    const [expandedProposalLetters, setExpandedProposalLetters] = useState<Set<string>>(() => new Set());
 
     const proposals = useMemo(() => {
         const list = [...(proposalsData?.items ?? [])];
@@ -368,6 +369,13 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                         >
                             ✓ Заказ завершён — работа принята и оплачена.
                         </div>
+                    ) : order.status === "completed" ? (
+                        <div
+                            className="mt-4 rounded-[12px] border px-4 py-3 text-[13px] font-medium"
+                            style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)", color: "#fcd34d" }}
+                        >
+                            Заказ отмечен выполненным — подтвердите приёмку и выплату, когда результат вас устраивает.
+                        </div>
                     ) : null}
 
                     <div
@@ -393,8 +401,13 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                         ) : null}
 
                         {isClient && order.status === "draft" ? (
-                            <FilkaButton variant="primary" onClick={handlePublishOrder} loading={publish.isPending}>
-                                Опубликовать <IconArrowRight size={14} />
+                            <FilkaButton
+                                variant="primary"
+                                onClick={handlePublishOrder}
+                                loading={publish.isPending}
+                                endContent={<IconArrowRight size={14} />}
+                            >
+                                Опубликовать
                             </FilkaButton>
                         ) : null}
 
@@ -524,11 +537,27 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                                     </span>
                                                 </div>
                                                 <p
-                                                    className="mt-2 text-[13.5px] leading-[1.5]"
+                                                    className={`mt-2 text-[13.5px] leading-[1.5] ${expandedProposalLetters.has(p.id) ? "" : "line-clamp-3"}`}
                                                     style={{ color: "var(--fg-1)" }}
                                                 >
                                                     {p.cover_letter}
                                                 </p>
+                                                {(p.cover_letter?.length ?? 0) > 200 ? (
+                                                    <button
+                                                        type="button"
+                                                        className="mt-1 text-[12px] text-[var(--mint-300)] hover:underline"
+                                                        onClick={() =>
+                                                            setExpandedProposalLetters((prev) => {
+                                                                const next = new Set(prev);
+                                                                if (next.has(p.id)) next.delete(p.id);
+                                                                else next.add(p.id);
+                                                                return next;
+                                                            })
+                                                        }
+                                                    >
+                                                        {expandedProposalLetters.has(p.id) ? "Свернуть" : "Читать полностью"}
+                                                    </button>
+                                                ) : null}
                                                 <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px]">
                                                     <div>
                                                         <span className="t-caption">Цена</span>

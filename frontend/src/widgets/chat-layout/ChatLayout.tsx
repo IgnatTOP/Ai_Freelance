@@ -153,6 +153,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const [readByPeerMessageIds, setReadByPeerMessageIds] = useState<Set<string>>(new Set());
   const [showAISuggestions, setShowAISuggestions] = useState(true);
   const [showRejectedChats, setShowRejectedChats] = useState(false);
+  const [showOtherResponderChats, setShowOtherResponderChats] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSuggestLoading, setIsAiSuggestLoading] = useState(false);
 
@@ -161,7 +162,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingStopTimer = useRef<number | null>(null);
   const aiSuggestTimer = useRef<number | null>(null);
-  const lastSuggestMsgCountRef = useRef(0);
+  const lastSuggestMsgCountRef = useRef(-1);
   const lastSuggestDraftRef = useRef("");
 
   const queryClient = useQueryClient();
@@ -179,7 +180,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   const messages = useMemo(() => sortMessagesByDate(messagesData?.items ?? []), [messagesData?.items]);
   const selectedConversation = conversations?.find((conversation) => conversation.id === selectedId);
-  const { data: relatedOrder } = useOrderDetail(selectedConversation?.order_id ?? "");
+  const { data: relatedOrder } = useOrderDetail(selectedConversation?.order_id ?? "", { refetchInterval: 30_000 });
 
   const proposalStatusMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -189,6 +190,15 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
     }
     return map;
   }, [allProposalsData]);
+
+  const acceptedFreelancerByOrderId = useMemo(() => {
+    const map = new Map<string, string>();
+    if (role !== "client" || !allProposalsData?.items) return map;
+    for (const proposal of allProposalsData.items) {
+      if (proposal.status === "accepted") map.set(proposal.order_id, proposal.freelancer_id);
+    }
+    return map;
+  }, [allProposalsData, role]);
 
   const typingPublisher = useMemo(
     () => (selectedId ? createTypingPublisher(selectedId) : null),
@@ -254,11 +264,33 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   }, [selectedId]);
 
   useEffect(() => {
+    lastSuggestMsgCountRef.current = -1;
+    lastSuggestDraftRef.current = "";
+    setAiSuggestions([]);
+    if (aiSuggestTimer.current) {
+      window.clearTimeout(aiSuggestTimer.current);
+      aiSuggestTimer.current = null;
+    }
+  }, [selectedId]);
+
+  useEffect(() => {
     if (!selectedId || !showAISuggestions) return;
+
+    if (
+      lastSuggestMsgCountRef.current >= 0 &&
+      messageText === lastSuggestDraftRef.current &&
+      messages.length !== lastSuggestMsgCountRef.current
+    ) {
+      lastSuggestMsgCountRef.current = messages.length;
+      return;
+    }
+
     if (
       messages.length === lastSuggestMsgCountRef.current &&
       messageText === lastSuggestDraftRef.current
-    ) return;
+    ) {
+      return;
+    }
 
     if (aiSuggestTimer.current) {
       window.clearTimeout(aiSuggestTimer.current);
@@ -344,6 +376,9 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
     return hasFreelancerMessage && !hasClientMessage;
   }, [messages, role, selectedConversation]);
 
+  const isChatClosed = relatedOrder?.status === "completed" || relatedOrder?.status === "cancelled";
+  const composeLocked = isLockedByFirstResponseRule || isChatClosed;
+
   const filteredConversations = useMemo(() => {
     const list = conversations ?? [];
     const query = conversationSearch.trim().toLowerCase();
@@ -400,6 +435,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   const handleSend = () => {
     if (!selectedId) return;
+    if (composeLocked) return;
     if (!messageText.trim() && uploadedMedia.length === 0) return;
 
     const payload: { content: string; parent_message_id?: string; attachment_ids?: string[] } = {
@@ -481,13 +517,27 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {(() => {
-              const activeConversations = filteredConversations.filter((c) => {
+              const nonRejected = filteredConversations.filter((c) => {
                 const key = c.order_id ? `${c.order_id}:${c.freelancer_id}` : "";
                 return proposalStatusMap.get(key) !== "rejected";
               });
               const rejectedConversations = filteredConversations.filter((c) => {
                 const key = c.order_id ? `${c.order_id}:${c.freelancer_id}` : "";
                 return proposalStatusMap.get(key) === "rejected";
+              });
+
+              const primaryConversations = nonRejected.filter((c) => {
+                if (role !== "client" || !c.order_id) return true;
+                const acceptedFl = acceptedFreelancerByOrderId.get(c.order_id);
+                if (!acceptedFl) return true;
+                return c.freelancer_id === acceptedFl;
+              });
+
+              const otherResponderConversations = nonRejected.filter((c) => {
+                if (role !== "client" || !c.order_id) return false;
+                const acceptedFl = acceptedFreelancerByOrderId.get(c.order_id);
+                if (!acceptedFl) return false;
+                return c.freelancer_id !== acceptedFl;
               });
 
               const renderConversation = (conversation: Conversation) => {
@@ -552,7 +602,23 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
               return (
                 <>
-                  {activeConversations.map(renderConversation)}
+                  {primaryConversations.map(renderConversation)}
+
+                  {otherResponderConversations.length > 0 ? (
+                    <>
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 border-b border-[var(--line)] px-4 py-2.5 text-left transition-colors hover:bg-[rgba(255,255,255,0.02)]"
+                        onClick={() => setShowOtherResponderChats((prev) => !prev)}
+                      >
+                        <span className="text-[11px] text-[var(--fg-3)]">
+                          Другие отклики · {otherResponderConversations.length}
+                        </span>
+                        <span className="ml-auto text-[10px] text-[var(--fg-3)]">{showOtherResponderChats ? "▲" : "▼"}</span>
+                      </button>
+                      {showOtherResponderChats ? otherResponderConversations.map(renderConversation) : null}
+                    </>
+                  ) : null}
 
                   {rejectedConversations.length > 0 ? (
                     <>
@@ -870,7 +936,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="grid h-9 w-9 place-items-center rounded-[12px] text-[var(--fg-2)] transition-colors hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
-                      disabled={isUploading || isLockedByFirstResponseRule}
+                      disabled={isUploading || composeLocked}
                     >
                       <IconPaperclip size={17} />
                     </button>
@@ -885,7 +951,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                           handleSend();
                         }
                       }}
-                      disabled={isLockedByFirstResponseRule}
+                      disabled={composeLocked}
                       rows={1}
                       className="min-h-10 flex-1 resize-none border-none bg-transparent px-0 py-2 text-[14px] text-[var(--fg-0)] outline-none placeholder:text-[var(--fg-3)]"
                     />
@@ -900,7 +966,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                         void handleUpload(event.target.files);
                         event.target.value = "";
                       }}
-                      disabled={isUploading || isLockedByFirstResponseRule}
+                      disabled={isUploading || composeLocked}
                     />
 
                     <button
@@ -916,6 +982,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                       size="sm"
                       className="h-9 w-9 px-0"
                       onClick={() => setShowAISuggestions((value) => !value)}
+                      disabled={composeLocked}
                     >
                       <IconSpark size={16} />
                     </FilkaButton>
@@ -925,7 +992,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                       className="h-9 w-9 px-0"
                       loading={sendMessage.isPending}
                       onClick={handleSend}
-                      disabled={isLockedByFirstResponseRule || (!messageText.trim() && uploadedMedia.length === 0)}
+                      disabled={composeLocked || (!messageText.trim() && uploadedMedia.length === 0)}
                     >
                       {!sendMessage.isPending ? <IconSend size={16} /> : null}
                     </FilkaButton>
@@ -948,8 +1015,9 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                       <button
                         key={suggestion}
                         type="button"
+                        disabled={composeLocked}
                         onClick={() => setMessageText(suggestion)}
-                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] px-3 py-1.5 text-[11px] text-[var(--mint-200)]"
+                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] px-3 py-1.5 text-[11px] text-[var(--mint-200)] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <IconSpark size={10} />
                         {suggestion}
