@@ -116,6 +116,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
     const [coverLetter, setCoverLetter] = useState("");
     const [proposedBudget, setProposedBudget] = useState("");
     const [estimatedDays, setEstimatedDays] = useState("");
+    const [isAiWriting, setIsAiWriting] = useState(false);
     const [insufficient, setInsufficient] = useState<{ available: number; required: number } | null>(null);
     const [pendingAcceptProposalId, setPendingAcceptProposalId] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<"match" | "price" | "deadline">("match");
@@ -286,6 +287,23 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
         }
     };
 
+    const handleAIHelp = async () => {
+        setIsAiWriting(true);
+        try {
+            const prompt = `Ты помогаешь фрилансеру написать отклик на заказ. Заказ: "${order.title}". Описание: "${(order.description ?? "").slice(0, 400)}". Бюджет: ${formatMoney(order.budget_min ?? 0)}–${formatMoney(order.budget_max ?? 0)}. Напиши короткий конкретный текст отклика (3-4 предложения) от первого лица. Только текст, без заголовков.`;
+            const data = await apiClient.request<{ response?: string; data?: { response?: string } }>("/ai/assistant", {
+                method: "POST",
+                body: JSON.stringify({ message: prompt }),
+            });
+            const text = data.response ?? data.data?.response ?? "";
+            if (text) setCoverLetter(text);
+        } catch {
+            toast.warn("Не удалось сгенерировать текст");
+        } finally {
+            setIsAiWriting(false);
+        }
+    };
+
     return (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="flex min-w-0 flex-col gap-5">
@@ -336,6 +354,22 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                         </div>
                     ) : null}
 
+                    {order.status === "cancelled" ? (
+                        <div
+                            className="mt-4 rounded-[12px] border px-4 py-3 text-[13px] font-medium"
+                            style={{ borderColor: "rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.07)", color: "var(--err)" }}
+                        >
+                            Заказ отменён — принятие откликов и новые сообщения недоступны.
+                        </div>
+                    ) : order.status === "completed" && escrow?.status === "released" ? (
+                        <div
+                            className="mt-4 rounded-[12px] border px-4 py-3 text-[13px] font-medium"
+                            style={{ borderColor: "rgba(54,211,153,0.3)", background: "rgba(54,211,153,0.07)", color: "var(--mint-300)" }}
+                        >
+                            ✓ Заказ завершён — работа принята и оплачена.
+                        </div>
+                    ) : null}
+
                     <div
                         className="mt-6 flex flex-wrap gap-2 border-t pt-4"
                         style={{ borderColor: "var(--line)" }}
@@ -346,8 +380,8 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                     Отклик отправлен · {myProposal.status}
                                 </FilkaButton>
                             ) : order.status === "published" ? (
-                                <FilkaButton variant="primary" onClick={() => setProposalOpen(true)}>
-                                    Откликнуться <IconArrowRight size={14} />
+                                <FilkaButton variant="primary" onClick={() => setProposalOpen(true)} endContent={<IconArrowRight size={14} />}>
+                                    Откликнуться
                                 </FilkaButton>
                             ) : null
                         ) : null}
@@ -364,7 +398,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                             </FilkaButton>
                         ) : null}
 
-                        {isClient && order.status === "in_progress" ? (
+                        {isClient && ["in_progress", "completed"].includes(order.status) && escrow?.status !== "released" ? (
                             <FilkaButton
                                 variant="primary"
                                 onClick={handleReleaseEscrow}
@@ -639,39 +673,93 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
             <FilkaModal
                 open={proposalOpen}
                 onClose={() => setProposalOpen(false)}
-                size="md"
+                size="xl"
             >
                 <FilkaModalHeader>
                     <FilkaModalTitle>Отклик на заказ</FilkaModalTitle>
                 </FilkaModalHeader>
-                <FilkaModalBody className="flex flex-col gap-4">
-                    <FilkaField label="Сопроводительное письмо">
-                        <FilkaTextarea
-                            value={coverLetter}
-                            onChange={(e) => setCoverLetter(e.target.value)}
-                            rows={5}
-                            placeholder="Расскажите, почему вы подходите. Кратко и по делу."
-                        />
-                    </FilkaField>
-                    <div className="grid grid-cols-2 gap-3">
-                        <FilkaField label="Ваша цена, ₽">
-                            <FilkaInput
-                                type="number"
-                                inputMode="numeric"
-                                value={proposedBudget}
-                                onChange={(e) => setProposedBudget(e.target.value)}
-                                placeholder={String(order.budget_max || order.budget_min || "")}
-                            />
-                        </FilkaField>
-                        <FilkaField label="Срок, дней">
-                            <FilkaInput
-                                type="number"
-                                inputMode="numeric"
-                                value={estimatedDays}
-                                onChange={(e) => setEstimatedDays(e.target.value)}
-                                placeholder="14"
-                            />
-                        </FilkaField>
+                <FilkaModalBody className="p-0">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px]">
+                        <div className="flex flex-col gap-4 p-5">
+                            <FilkaField label="Сопроводительное письмо">
+                                <div className="relative">
+                                    <FilkaTextarea
+                                        autoFocus
+                                        value={coverLetter}
+                                        onChange={(e) => setCoverLetter(e.target.value)}
+                                        rows={7}
+                                        placeholder="Расскажите, почему вы подходите. Кратко и по делу."
+                                        disabled={isAiWriting}
+                                    />
+                                    {isAiWriting ? (
+                                        <div className="absolute inset-0 flex items-center justify-center rounded-[12px] bg-[var(--bg-1)] opacity-80">
+                                            <FilkaSpinner size={20} />
+                                        </div>
+                                    ) : null}
+                                </div>
+                                <FilkaButton
+                                    variant="ghost"
+                                    size="sm"
+                                    className="mt-2"
+                                    loading={isAiWriting}
+                                    startContent={!isAiWriting ? <IconSpark size={13} /> : undefined}
+                                    onClick={handleAIHelp}
+                                >
+                                    {isAiWriting ? "Генерирую текст…" : "Помоги написать отклик"}
+                                </FilkaButton>
+                            </FilkaField>
+                            <div className="grid grid-cols-2 gap-3">
+                                <FilkaField label="Ваша цена, ₽">
+                                    <FilkaInput
+                                        type="number"
+                                        inputMode="numeric"
+                                        value={proposedBudget}
+                                        onChange={(e) => setProposedBudget(e.target.value)}
+                                        placeholder={String(order.budget_max || order.budget_min || "")}
+                                    />
+                                </FilkaField>
+                                <FilkaField label="Срок, дней">
+                                    <FilkaInput
+                                        type="number"
+                                        inputMode="numeric"
+                                        value={estimatedDays}
+                                        onChange={(e) => setEstimatedDays(e.target.value)}
+                                        placeholder="14"
+                                    />
+                                </FilkaField>
+                            </div>
+                        </div>
+
+                        <div
+                            className="hidden flex-col gap-3 overflow-y-auto border-l p-5 lg:flex"
+                            style={{ borderColor: "var(--line)", background: "var(--bg-1)", maxHeight: 480 }}
+                        >
+                            <div className="t-eyebrow">Заказ</div>
+                            <div className="text-[15px] font-bold leading-[1.3]">{order.title}</div>
+                            {order.category ? (
+                                <FilkaChip tone="muted" className="w-fit text-[11px]">{order.category}</FilkaChip>
+                            ) : null}
+                            <p className="line-clamp-8 text-[12.5px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+                                {order.description}
+                            </p>
+                            <div className="flex flex-wrap gap-3 pt-1 text-[13px]">
+                                <div>
+                                    <div className="t-caption">Бюджет</div>
+                                    <div className="font-semibold">{formatMoney(order.budget_min ?? 0)} – {formatMoney(order.budget_max ?? 0)}</div>
+                                </div>
+                                <div>
+                                    <div className="t-caption">Срок</div>
+                                    <div className="font-semibold">{formatDeadline(order.deadline)}</div>
+                                </div>
+                            </div>
+                            {(order.skill_tags ?? []).length > 0 ? (
+                                <div className="flex flex-wrap gap-1.5">
+                                    {(order.skill_tags ?? []).map((tag) => (
+                                        <FilkaChip key={tag} tone="muted" className="text-[11px]">{tag}</FilkaChip>
+                                    ))}
+                                </div>
+                            ) : null}
+                        </div>
                     </div>
                 </FilkaModalBody>
                 <FilkaModalFooter>

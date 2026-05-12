@@ -52,6 +52,7 @@ export const RegisterForm = () => {
     const [passwordTouched, setPasswordTouched] = useState(false);
     const [confirmTouched, setConfirmTouched] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
 
     const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
     const phoneInvalid = phoneTouched && !isValidPhone(phoneDigits);
@@ -75,6 +76,7 @@ export const RegisterForm = () => {
                     setSession(data.user.id, data.user.role);
                     setPendingPhone(fullPhone);
                     setPhoneVerified(false);
+                    setIsNavigating(true);
                     router.push("/verify-phone" as never);
                 },
             },
@@ -194,12 +196,12 @@ export const RegisterForm = () => {
             <FilkaButton
                 type="submit"
                 size="lg"
-                loading={registerMutation.isPending}
+                loading={registerMutation.isPending || isNavigating}
                 disabled={!canSubmit}
                 endContent={<IconArrowRight size={18} />}
                 className="w-full"
             >
-                Создать аккаунт
+                {isNavigating ? "Переходим…" : "Создать аккаунт"}
             </FilkaButton>
 
             <p className="text-center text-sm" style={{ color: "var(--fg-2)" }}>
