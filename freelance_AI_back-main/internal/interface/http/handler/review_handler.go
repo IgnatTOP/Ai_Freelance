@@ -32,11 +32,23 @@ func NewReviewHandler(
 	}
 }
 
-// CreateReview handles POST /reviews
+// CreateReview handles POST /orders/:id/reviews
 func (h *ReviewHandler) CreateReview(c *gin.Context) {
+	reviewerID, ok := requireUserID(c, "unauthorized")
+	if !ok {
+		return
+	}
+
+	orderIDStr := c.Param("id")
+	orderID, err := uuid.Parse(orderIDStr)
+	if err != nil {
+		httpresp.BadRequest(c, "invalid order id")
+		return
+	}
+
 	var input struct {
 		OrderID    string  `json:"order_id"`
-		ReviewerID string  `json:"reviewer_id"` // Usually from auth context
+		ReviewerID string  `json:"reviewer_id"` // ignored; taken from auth
 		ReviewedID string  `json:"reviewed_id"`
 		Rating     int     `json:"rating"`
 		Comment    *string `json:"comment"`
@@ -46,23 +58,16 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 		return
 	}
 
-	// Extract reviewer ID from context usually
-	reviewerIDStr := ""
-	if reviewerID, err := getUserID(c); err == nil {
-		reviewerIDStr = reviewerID.String()
-	}
-	if reviewerIDStr == "" {
-		// If not in context, use input or fail
-		if input.ReviewerID == "" {
-			httpresp.Unauthorized(c, "unauthorized")
-			return
-		}
-		reviewerIDStr = input.ReviewerID
+	if input.OrderID != "" && input.OrderID != orderID.String() {
+		httpresp.BadRequest(c, "order_id does not match URL")
+		return
 	}
 
-	orderID, _ := uuid.Parse(input.OrderID)
-	reviewerID, _ := uuid.Parse(reviewerIDStr)
-	reviewedID, _ := uuid.Parse(input.ReviewedID)
+	reviewedID, err := uuid.Parse(input.ReviewedID)
+	if err != nil {
+		httpresp.BadRequest(c, "invalid reviewed_id")
+		return
+	}
 
 	createInput := review.CreateReviewInput{
 		OrderID:    orderID,

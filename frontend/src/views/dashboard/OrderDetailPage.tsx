@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionStore } from "@/shared/store/session.store";
 import { profileApi } from "@/shared/api/endpoints/profile";
@@ -121,6 +121,13 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
     const [pendingAcceptProposalId, setPendingAcceptProposalId] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<"match" | "price" | "deadline">("match");
     const [tab, setTab] = useState<"proposals" | "details">("proposals");
+
+    useEffect(() => {
+        if (!order) return;
+        if (!isClient) {
+            setTab("details");
+        }
+    }, [order?.id, isClient]);
     const [expandedProposalLetters, setExpandedProposalLetters] = useState<Set<string>>(() => new Set());
 
     const handleCloseProposalModal = useCallback(() => {
@@ -324,7 +331,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                     </p>
 
                     <div
-                        className="mt-6 grid grid-cols-2 gap-3 border-t pt-4 lg:grid-cols-4"
+                        className={`mt-6 grid grid-cols-2 gap-3 border-t pt-4 ${isClient ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}
                         style={{ borderColor: "var(--line)" }}
                     >
                         <div>
@@ -337,16 +344,20 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                             <div className="t-caption">Срок</div>
                             <div className="text-[16px] font-semibold">{formatDeadline(order.deadline)}</div>
                         </div>
-                        <div>
-                            <div className="t-caption">Откликов</div>
-                            <div className="text-[16px] font-semibold">{visibleProposalCount}</div>
-                        </div>
-                        <div>
-                            <div className="t-caption">AI-совпадений</div>
-                            <div className="text-[16px] font-semibold" style={{ color: "var(--mint-300)" }}>
-                                {bestId ? "1 топ" : "—"}
-                            </div>
-                        </div>
+                        {isClient ? (
+                            <>
+                                <div>
+                                    <div className="t-caption">Откликов</div>
+                                    <div className="text-[16px] font-semibold">{visibleProposalCount}</div>
+                                </div>
+                                <div>
+                                    <div className="t-caption">AI-совпадений</div>
+                                    <div className="text-[16px] font-semibold" style={{ color: "var(--mint-300)" }}>
+                                        {bestId ? "1 топ" : "—"}
+                                    </div>
+                                </div>
+                            </>
+                        ) : null}
                     </div>
 
                     {(order.skill_tags ?? []).length > 0 ? (
@@ -445,7 +456,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                     </div>
                 </FilkaCard>
 
-                {bestId ? (
+                {isClient && bestId ? (
                     <FilkaCard
                         glow
                         className="relative overflow-hidden p-5"
@@ -476,13 +487,64 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                 <FilkaTabs
                     value={tab}
                     onChange={setTab}
-                    items={[
-                        { id: "proposals", label: `Отклики · ${proposals.length}` },
-                        { id: "details", label: "Подробности" },
-                    ]}
+                    items={
+                        isClient
+                            ? [
+                                  { id: "proposals", label: `Отклики · ${proposals.length}` },
+                                  { id: "details", label: "Подробности" },
+                              ]
+                            : isFreelancer
+                              ? [
+                                    { id: "details", label: "Подробности" },
+                                    { id: "proposals", label: "Мой отклик" },
+                                ]
+                              : [{ id: "details", label: "Подробности" }]
+                    }
                 />
 
-                {tab === "proposals" ? (
+                {tab === "proposals" && isFreelancer && !isClient ? (
+                    <FilkaCard className="p-5">
+                        <h3 className="t-h4 m-0 mb-3">Мой отклик</h3>
+                        {!myProposal ? (
+                            order.status === "published" ? (
+                                <div className="space-y-4">
+                                    <p className="m-0 text-[14px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+                                        Здесь виден только ваш отклик. Список чужих откликов доступен заказчику.
+                                    </p>
+                                    <FilkaButton variant="primary" onClick={() => setProposalOpen(true)} endContent={<IconArrowRight size={14} />}>
+                                        Откликнуться
+                                    </FilkaButton>
+                                </div>
+                            ) : (
+                                <p className="m-0 text-[14px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+                                    На этом заказе сейчас нельзя отправить новый отклик (статус «{order.status}»).
+                                </p>
+                            )
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <StatusBadge status={myProposal.status} />
+                                    <span className="t-caption">{formatRelative(myProposal.created_at)}</span>
+                                </div>
+                                <p className="m-0 text-[14px] leading-[1.55] whitespace-pre-wrap" style={{ color: "var(--fg-1)" }}>
+                                    {myProposal.cover_letter}
+                                </p>
+                                <div className="flex flex-wrap gap-6 text-[13px]">
+                                    <div>
+                                        <span className="t-caption">Цена</span>
+                                        <div className="font-bold">{formatMoney(myProposal.proposed_budget)}</div>
+                                    </div>
+                                    <div>
+                                        <span className="t-caption">Срок</span>
+                                        <div className="font-medium">
+                                            <IconClock size={12} className="inline" /> {myProposal.estimated_days || "—"} дн.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </FilkaCard>
+                ) : tab === "proposals" && isClient ? (
                     <FilkaCard className="p-5">
                         <div className="mb-4 flex flex-wrap items-center gap-3">
                             <h3 className="t-h4 m-0">Все отклики</h3>

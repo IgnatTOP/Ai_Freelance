@@ -14,6 +14,8 @@ import {
   IconSend,
   IconShield,
   IconSpark,
+  IconStar,
+  IconStarFilled,
 } from "@/shared/ui/filka";
 import { useMyConversations, useConversationMessages } from "@/features/conversation-list";
 import { useSendMessage } from "@/features/chat-compose";
@@ -21,9 +23,10 @@ import { useAddReaction, useRemoveReaction } from "@/features/chat-reactions";
 import { createTypingPublisher } from "@/features/chat-typing";
 import { markConversationRead } from "@/features/chat-read";
 import { useOrderDetail } from "@/features/order-management";
+import { useCanLeaveReview, useCreateOrderReview, useOrderReviews } from "@/features/order-reviews/model";
 import { useMyProposals } from "@/features/proposal-management";
 import { mediaApi } from "@/shared/api/endpoints/media";
-import { apiClient } from "@/shared/api/client";
+import { ApiError, apiClient } from "@/shared/api/client";
 import { env } from "@/shared/config/env";
 import { cn } from "@/shared/lib/cn";
 import { notify } from "@/shared/notifications/notify";
@@ -156,6 +159,8 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const [showOtherResponderChats, setShowOtherResponderChats] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSuggestLoading, setIsAiSuggestLoading] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -180,7 +185,18 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   const messages = useMemo(() => sortMessagesByDate(messagesData?.items ?? []), [messagesData?.items]);
   const selectedConversation = conversations?.find((conversation) => conversation.id === selectedId);
-  const { data: relatedOrder } = useOrderDetail(selectedConversation?.order_id ?? "", { refetchInterval: 30_000 });
+  const orderIdForReview = selectedConversation?.order_id;
+  const { data: relatedOrder } = useOrderDetail(orderIdForReview ?? "", { refetchInterval: 30_000 });
+
+  const chatOrderReviewParticipant =
+    Boolean(userId && selectedConversation) &&
+    (userId === selectedConversation!.client_id || userId === selectedConversation!.freelancer_id);
+  const showOrderReviewPanel =
+    Boolean(orderIdForReview && relatedOrder?.status === "completed" && chatOrderReviewParticipant);
+
+  const { data: canLeaveReview, isFetched: canReviewFetched } = useCanLeaveReview(orderIdForReview, showOrderReviewPanel);
+  const { data: orderReviews = [], isFetched: orderReviewsFetched } = useOrderReviews(orderIdForReview, showOrderReviewPanel);
+  const createOrderReview = useCreateOrderReview();
 
   const proposalStatusMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -281,6 +297,11 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   useEffect(() => {
     if (!selectedId || !showAISuggestions) return;
+    if (!selectedConversation?.order_id) {
+      setAiSuggestions([]);
+      setIsAiSuggestLoading(false);
+      return;
+    }
 
     if (
       lastSuggestMsgCountRef.current >= 0 &&
@@ -384,6 +405,27 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   const isChatClosed = relatedOrder?.status === "completed" || relatedOrder?.status === "cancelled";
   const composeLocked = isLockedByFirstResponseRule || isChatClosed;
+
+  const reviewedIdForOrder =
+    userId && selectedConversation
+      ? userId === selectedConversation.client_id
+        ? selectedConversation.freelancer_id
+        : selectedConversation.client_id
+      : "";
+
+  const myOrderReview = useMemo(
+    () => (userId ? orderReviews.find((review) => review.reviewer_id === userId) : undefined),
+    [orderReviews, userId],
+  );
+  const peerOrderReview = useMemo(
+    () => (userId ? orderReviews.find((review) => review.reviewer_id !== userId) : undefined),
+    [orderReviews, userId],
+  );
+
+  useEffect(() => {
+    setReviewRating(0);
+    setReviewComment("");
+  }, [selectedId, orderIdForReview]);
 
   const filteredConversations = useMemo(() => {
     const list = conversations ?? [];
@@ -500,7 +542,12 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
 
   return (
     <div className="overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--bg-1)] shadow-[var(--shadow-xl)]">
-      <div className="grid h-[calc(100vh-11.25rem)] min-h-[720px] grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+      <div
+        className={cn(
+          "grid h-[calc(100vh-11.25rem)] min-h-[720px] grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)]",
+          selectedConversation?.order_id ? "2xl:grid-cols-[300px_minmax(0,1fr)_340px]" : "2xl:grid-cols-[300px_minmax(0,1fr)]",
+        )}
+      >
         <section
           className={cn(
             "border-r border-[var(--line)] bg-[var(--bg-1)]",
@@ -902,6 +949,124 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   </div>
                 ) : null}
 
+                {showOrderReviewPanel && selectedConversation && orderIdForReview && userId && reviewedIdForOrder ? (
+                  <div className="mb-3 space-y-3 rounded-[14px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3">
+                    <div className="text-[13px] font-semibold text-[var(--fg-0)]">Оцените сделку</div>
+
+                    {!canReviewFetched || !orderReviewsFetched ? (
+                      <p className="text-[11px] text-[var(--fg-3)]">Загрузка…</p>
+                    ) : (
+                      <>
+                        {peerOrderReview ? (
+                          <div className="rounded-[12px] border border-[var(--line)] bg-[var(--bg-1)] px-3 py-2.5">
+                            <div className="mb-1 text-[11px] font-medium text-[var(--fg-2)]">
+                              Отзыв от {selectedConversation.other_user?.display_name ?? "собеседника"}
+                            </div>
+                            <div className="mb-1 flex items-center gap-0.5">
+                              {Array.from({ length: 5 }, (_, index) =>
+                                index < peerOrderReview.rating ? (
+                                  <IconStarFilled key={index} size={16} className="text-[var(--accent-sun)]" />
+                                ) : (
+                                  <IconStar key={index} size={16} className="text-[var(--fg-3)]" />
+                                ),
+                              )}
+                            </div>
+                            {peerOrderReview.comment ? (
+                              <p className="text-[12px] leading-snug text-[var(--fg-1)]">{peerOrderReview.comment}</p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {canLeaveReview && !myOrderReview ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1" role="group" aria-label="Оценка от 1 до 5">
+                              {Array.from({ length: 5 }, (_, index) => {
+                                const value = index + 1;
+                                const active = reviewRating >= value;
+                                return (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    className="grid h-9 w-9 place-items-center rounded-[10px] text-[var(--accent-sun)] transition-colors hover:bg-[var(--bg-3)]"
+                                    onClick={() => setReviewRating(value)}
+                                    aria-label={`${value} из 5`}
+                                  >
+                                    {active ? <IconStarFilled size={22} /> : <IconStar size={22} className="text-[var(--fg-3)]" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <textarea
+                              value={reviewComment}
+                              onChange={(event) => setReviewComment(event.target.value)}
+                              placeholder="Комментарий (необязательно)"
+                              rows={2}
+                              className="w-full resize-none rounded-[12px] border border-[var(--line)] bg-[var(--bg-0)] px-3 py-2 text-[13px] text-[var(--fg-0)] outline-none placeholder:text-[var(--fg-3)]"
+                            />
+                            <FilkaButton
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              disabled={reviewRating < 1 || createOrderReview.isPending}
+                              onClick={() => {
+                                if (!orderIdForReview || !userId || !reviewedIdForOrder || reviewRating < 1) return;
+                                createOrderReview.mutate(
+                                  {
+                                    orderId: orderIdForReview,
+                                    reviewerId: userId,
+                                    input: {
+                                      order_id: orderIdForReview,
+                                      reviewed_id: reviewedIdForOrder,
+                                      rating: reviewRating,
+                                      comment: reviewComment.trim() ? reviewComment.trim() : null,
+                                    },
+                                  },
+                                  {
+                                    onSuccess: () => {
+                                      notify.success({ title: "Спасибо!", message: "Отзыв сохранён" });
+                                      setReviewRating(0);
+                                      setReviewComment("");
+                                    },
+                                    onError: (err) => {
+                                      notify.error({
+                                        title: "Не удалось отправить отзыв",
+                                        message: err instanceof ApiError ? err.message : "Попробуйте ещё раз",
+                                      });
+                                    },
+                                  },
+                                );
+                              }}
+                            >
+                              {createOrderReview.isPending ? "Отправка…" : "Отправить отзыв"}
+                            </FilkaButton>
+                          </div>
+                        ) : null}
+
+                        {myOrderReview ? (
+                          <div className="rounded-[12px] border border-[rgba(102,58,243,0.2)] bg-[rgba(102,58,243,0.06)] px-3 py-2.5">
+                            <div className="mb-1 text-[11px] font-medium text-[var(--fg-2)]">Ваш отзыв</div>
+                            <div className="mb-1 flex items-center gap-0.5">
+                              {Array.from({ length: 5 }, (_, index) =>
+                                index < myOrderReview.rating ? (
+                                  <IconStarFilled key={index} size={16} className="text-[var(--accent-sun)]" />
+                                ) : (
+                                  <IconStar key={index} size={16} className="text-[var(--fg-3)]" />
+                                ),
+                              )}
+                            </div>
+                            {myOrderReview.comment ? (
+                              <p className="text-[12px] leading-snug text-[var(--fg-1)]">{myOrderReview.comment}</p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {!canLeaveReview && !myOrderReview && !peerOrderReview ? (
+                          <p className="text-[12px] text-[var(--fg-2)]">Вы уже оставили отзыв или оценка сейчас недоступна.</p>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                ) : null}
+
                 {replyToMessage ? (
                   <div className="mb-3 flex items-center justify-between gap-3 rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-4 py-3 text-[12px] text-[var(--fg-2)]">
                     <span className="truncate">Ответ на: {replyToMessage.content.slice(0, 100)}</span>
@@ -981,23 +1146,18 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                       disabled={isUploading || composeLocked}
                     />
 
-                    <button
-                      type="button"
-                      className="grid h-9 w-9 place-items-center rounded-[12px] text-[var(--fg-2)] transition-colors hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
-                      disabled
-                    >
-                      <IconSpark size={16} />
-                    </button>
-
-                    <FilkaButton
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 w-9 px-0"
-                      onClick={() => setShowAISuggestions((value) => !value)}
-                      disabled={composeLocked}
-                    >
-                      <IconSpark size={16} />
-                    </FilkaButton>
+                    {selectedConversation.order_id ? (
+                      <FilkaButton
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 px-0"
+                        onClick={() => setShowAISuggestions((value) => !value)}
+                        disabled={composeLocked}
+                        title={showAISuggestions ? "Скрыть подсказки ИИ" : "Показать подсказки ИИ"}
+                      >
+                        <IconSpark size={16} />
+                      </FilkaButton>
+                    ) : null}
 
                     <FilkaButton
                       size="sm"
@@ -1011,30 +1171,34 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   </div>
                 </div>
 
-                {showAISuggestions ? (
-                  <div className="mt-2 flex max-h-[min(30vh,140px)] flex-wrap gap-2 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+                {selectedConversation.order_id && showAISuggestions ? (
+                  <div className="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto overscroll-contain rounded-[14px] border border-[var(--line)] bg-[var(--bg-2)] p-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+                    <div className="flex items-center justify-between gap-2 px-1 pt-0.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-3)]">ИИ · варианты ответа</span>
+                      <IconSpark size={12} className="shrink-0 text-[var(--mint-300)] opacity-80" />
+                    </div>
                     {isAiSuggestLoading ? (
-                      <>
-                        {[32, 24, 28].map((w) => (
-                          <div
-                            key={w}
-                            className="h-7 animate-pulse rounded-full bg-[rgba(102,58,243,0.12)]"
-                            style={{ width: `${w * 4}px` }}
-                          />
+                      <div className="space-y-2 px-1 pb-1">
+                        {[1, 2, 3].map((row) => (
+                          <div key={row} className="h-[52px] animate-pulse rounded-[12px] bg-[rgba(102,58,243,0.08)]" />
                         ))}
-                      </>
-                    ) : aiSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        disabled={composeLocked}
-                        onClick={() => setMessageText(suggestion)}
-                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(102,58,243,0.18)] bg-[rgba(102,58,243,0.08)] px-3 py-1.5 text-[11px] text-[var(--mint-200)] disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <IconSpark size={10} />
-                        {suggestion}
-                      </button>
-                    ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5 px-1 pb-1">
+                        {aiSuggestions.map((suggestion, index) => (
+                          <button
+                            key={`${index}-${suggestion.slice(0, 48)}`}
+                            type="button"
+                            disabled={composeLocked}
+                            onClick={() => setMessageText(suggestion)}
+                            className="flex w-full gap-2.5 rounded-[12px] border border-[var(--line)] bg-[var(--bg-1)] px-3 py-2.5 text-left text-[13px] leading-snug text-[var(--fg-1)] transition-colors hover:border-[rgba(102,58,243,0.35)] hover:bg-[rgba(102,58,243,0.06)] disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <IconSpark size={14} className="mt-0.5 shrink-0 text-[var(--mint-300)]" />
+                            <span className="min-w-0 flex-1 whitespace-pre-wrap break-words">{suggestion}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -1049,7 +1213,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
           )}
         </section>
 
-        {selectedConversation ? (
+        {selectedConversation?.order_id ? (
           <aside className="hidden min-h-0 min-w-0 overflow-y-auto border-l border-[var(--line)] bg-[var(--bg-1)] p-4 2xl:flex 2xl:flex-col 2xl:gap-4">
             <div>
               <div className="t-eyebrow mb-2">ЗАКАЗ</div>

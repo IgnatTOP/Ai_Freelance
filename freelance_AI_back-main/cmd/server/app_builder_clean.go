@@ -115,7 +115,7 @@ func buildCleanPaymentHandler(cfg *config.Config, repos repoBundle) *newHandler.
 }
 
 func buildCleanReviewHandler(repos repoBundle) *newHandler.ReviewHandler {
-	createReviewUC := reviewUC.NewCreateReviewUseCase(repos.newReviewRepo)
+	createReviewUC := reviewUC.NewCreateReviewUseCase(repos.newReviewRepo, repos.newOrderRepo)
 	listReviewsUC := reviewUC.NewListReviewsUseCase(repos.newReviewRepo)
 	listOrderReviewsUC := reviewUC.NewListOrderReviewsUseCase(repos.newReviewRepo)
 	canLeaveReviewUC := reviewUC.NewCanLeaveReviewUseCase(repos.newReviewRepo, repos.newOrderRepo)
