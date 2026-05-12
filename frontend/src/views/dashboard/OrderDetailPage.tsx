@@ -109,7 +109,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
     const publish = usePublishOrder();
     const remove = useDeleteOrder();
     const releaseEscrow = useReleaseEscrow();
-    const { data: escrow } = useEscrowStatus(orderId);
+    const { data: escrow, isError: escrowQueryError, isPending: escrowPending, refetch: refetchEscrow } = useEscrowStatus(orderId);
     const { data: balance } = useBalance();
 
     const [proposalOpen, setProposalOpen] = useState(false);
@@ -698,18 +698,51 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                     <div className="t-eyebrow mb-3 flex items-center gap-2">
                         <IconShield size={12} /> Эскроу
                     </div>
-                    <div className="text-[24px] font-bold tracking-[-0.02em]">
-                        {escrow ? formatMoney(escrow.amount) : formatMoney(order.budget_max || order.budget_min || 0)}
-                    </div>
-                    <div className="t-caption mb-4">
-                        {escrow?.status === "held"
-                            ? "заморожено"
-                            : escrow?.status === "released"
-                              ? "выплачено"
-                              : escrow?.status === "refunded"
-                                ? "возвращено"
-                                : "будет заморожено при принятии отклика"}
-                    </div>
+                    {escrowQueryError ? (
+                        <div className="space-y-3">
+                            <p className="m-0 text-[13px] leading-[1.5]" style={{ color: "var(--err)" }}>
+                                Не удалось загрузить данные эскроу. Проверьте соединение и попробуйте снова.
+                            </p>
+                            <FilkaButton size="sm" variant="ghost" onClick={() => void refetchEscrow()}>
+                                Повторить
+                            </FilkaButton>
+                        </div>
+                    ) : escrowPending ? (
+                        <div className="flex items-center gap-3 py-2">
+                            <FilkaSpinner size={22} />
+                            <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
+                                Загрузка эскроу…
+                            </span>
+                        </div>
+                    ) : escrow ? (
+                        <>
+                            <div className="text-[24px] font-bold tracking-[-0.02em]">{formatMoney(escrow.amount)}</div>
+                            <div className="t-caption mb-4">
+                                {escrow.status === "held"
+                                    ? "заморожено"
+                                    : escrow.status === "released"
+                                      ? "выплачено"
+                                      : escrow.status === "refunded"
+                                        ? "возвращено"
+                                        : escrow.status}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="text-[15px] font-semibold leading-snug" style={{ color: "var(--fg-1)" }}>
+                                Эскроу ещё не создан
+                            </div>
+                            <p className="mt-2 mb-1 text-[13px] leading-[1.5]" style={{ color: "var(--fg-2)" }}>
+                                Сумма появится здесь после того, как заказчик примет отклик и средства будут заморожены.
+                            </p>
+                            <div className="mt-2 text-[12px]" style={{ color: "var(--fg-3)" }}>
+                                Ориентир по бюджету заказа:{" "}
+                                <span className="font-semibold text-[var(--fg-1)]">
+                                    {formatMoney(order.budget_min)} – {formatMoney(order.budget_max)}
+                                </span>
+                            </div>
+                        </>
+                    )}
                     <FilkaProgressBar value={escrowPercent} />
                     <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
                         {STATUS_TIMELINE.map((step, i) => {

@@ -3,8 +3,26 @@
 import { useMemo, useState } from "react";
 import { BriefcaseBusiness, Camera, Edit3, FolderOpen, MessageSquare, Rss, Save, ShoppingBag, Star, Trophy, User } from "lucide-react";
 import { useSessionStore } from "@/shared/store/session.store";
-import { usePortfolio, useProfile, useUpdateProfile, useUserReviews } from "@/features/profile-management";
-import { FilkaButton, FilkaCard, FilkaChip, FilkaField, FilkaInput, FilkaTextarea } from "@/shared/ui/filka/FilkaPrimitives";
+import { useAddPortfolioItem, usePortfolio, useProfile, useUpdateProfile, useUserReviews } from "@/features/profile-management";
+import type { UpdateProfileInput } from "@/shared/api/endpoints/profile";
+import { mediaApi } from "@/shared/api/endpoints/media";
+import { normalizePhone, formatRuPhoneMask } from "@/shared/lib/phone";
+import {
+    FilkaButton,
+    FilkaCard,
+    FilkaChip,
+    FilkaField,
+    FilkaInput,
+    FilkaModal,
+    FilkaModalBody,
+    FilkaModalFooter,
+    FilkaModalHeader,
+    FilkaModalTitle,
+    FilkaPhoneInput,
+    FilkaSpinner,
+    FilkaTextarea,
+    useFilkaToast,
+} from "@/shared/ui/filka";
 
 const initialsFromName = (value: string | undefined): string => {
     const text = value?.trim() || "Филка";
@@ -19,15 +37,24 @@ const formatMoney = (value: number | null | undefined): string => {
 
 export const ProfilePage = () => {
     const role = useSessionStore((s) => s.role);
+    const toast = useFilkaToast();
     const { data: profile, isLoading } = useProfile();
     const { data: portfolio } = usePortfolio();
     const { data: reviews } = useUserReviews(profile?.id);
     const updateProfile = useUpdateProfile();
+    const addPortfolioItem = useAddPortfolioItem();
 
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState("");
     const [bio, setBio] = useState("");
     const [hourlyRate, setHourlyRate] = useState("");
+    const [phoneDigits, setPhoneDigits] = useState("");
+    const [portfolioOpen, setPortfolioOpen] = useState(false);
+    const [pfTitle, setPfTitle] = useState("");
+    const [pfDescription, setPfDescription] = useState("");
+    const [pfLink, setPfLink] = useState("");
+    const [pfCoverId, setPfCoverId] = useState<string | null>(null);
+    const [pfUploading, setPfUploading] = useState(false);
 
     const portfolioItems = portfolio ?? [];
     const reviewItems = reviews ?? [];
@@ -37,6 +64,7 @@ export const ProfilePage = () => {
 
     const completionItems = [
         { label: "Имя", done: Boolean(profile?.name) },
+        { label: "Телефон", done: Boolean(profile?.phone?.trim()) },
         { label: "О себе", done: Boolean(profile?.bio) },
         { label: "Фото", done: Boolean(profile?.avatar_url) },
         ...(role === "freelancer"
@@ -62,18 +90,77 @@ export const ProfilePage = () => {
         setName(profile?.name ?? "");
         setBio(profile?.bio ?? "");
         setHourlyRate(profile?.hourly_rate ? String(profile.hourly_rate) : "");
+        const raw = profile?.phone ?? "";
+        const d = normalizePhone(raw);
+        const ten =
+            d.length >= 11 && (d.startsWith("7") || d.startsWith("8"))
+                ? d.slice(1, 11)
+                : d.length === 10
+                  ? d
+                  : d.slice(-10);
+        setPhoneDigits(ten.replace(/\D/g, "").slice(0, 10));
         setIsEditing(true);
     };
 
     const handleSave = () => {
-        const payload: Record<string, string | number | string[]> = {};
-        if (name.trim()) payload.name = name.trim();
-        if (typeof bio === "string") payload.bio = bio;
-        if (hourlyRate.trim()) payload.hourly_rate = Number(hourlyRate);
-        if (profile?.skills?.length) payload.skills = profile.skills;
-        updateProfile.mutate(payload, {
+        const input: UpdateProfileInput = {};
+        if (name.trim()) input.name = name.trim();
+        input.bio = bio;
+        if (hourlyRate.trim()) {
+            const n = Number(hourlyRate);
+            if (Number.isFinite(n) && n > 0) input.hourly_rate = n;
+        }
+        if (phoneDigits.length >= 10) {
+            input.phone = phoneDigits.startsWith("7") ? phoneDigits : `7${phoneDigits}`;
+        }
+        if (profile?.skills?.length) input.skills = profile.skills;
+        updateProfile.mutate(input, {
             onSuccess: () => setIsEditing(false),
+            onError: (e) => {
+                toast.error("Не удалось сохранить", e instanceof Error ? e.message : undefined);
+            },
         });
+    };
+
+    const phoneDisplay = useMemo(() => {
+        const p = profile?.phone?.trim();
+        if (!p) return "Телефон не указан";
+        const d = normalizePhone(p);
+        const full = d.length === 10 ? `7${d}` : d;
+        if (normalizePhone(full).length >= 11) return formatRuPhoneMask(full);
+        return p;
+    }, [profile?.phone]);
+
+    const resetPortfolioForm = () => {
+        setPfTitle("");
+        setPfDescription("");
+        setPfLink("");
+        setPfCoverId(null);
+    };
+
+    const handleAddPortfolio = () => {
+        if (!pfTitle.trim() || !pfDescription.trim()) {
+            toast.warn("Укажите название и описание работы");
+            return;
+        }
+        addPortfolioItem.mutate(
+            {
+                title: pfTitle.trim(),
+                description: pfDescription.trim(),
+                ...(pfLink.trim() ? { link: pfLink.trim() } : {}),
+                ...(pfCoverId ? { image_url: pfCoverId } : {}),
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Работа добавлена в портфолио");
+                    setPortfolioOpen(false);
+                    resetPortfolioForm();
+                },
+                onError: (e) => {
+                    toast.error("Не удалось добавить", e instanceof Error ? e.message : undefined);
+                },
+            },
+        );
     };
 
     if (isLoading) {
@@ -125,10 +212,15 @@ export const ProfilePage = () => {
                                     <FilkaInput value={name} onChange={(event) => setName(event.target.value)} />
                                 </FilkaField>
                                 {role === "freelancer" ? (
-                                    <FilkaField label="Ставка">
-                                        <FilkaInput type="number" value={hourlyRate} onChange={(event) => setHourlyRate(event.target.value)} />
+                                    <FilkaField label="Ставка, ₽/час">
+                                        <FilkaInput type="number" min={0} value={hourlyRate} onChange={(event) => setHourlyRate(event.target.value)} />
                                     </FilkaField>
-                                ) : <div />}
+                                ) : (
+                                    <div />
+                                )}
+                                <FilkaField label="Телефон" className="md:col-span-2">
+                                    <FilkaPhoneInput value={phoneDigits} onChange={(digits) => setPhoneDigits(digits)} />
+                                </FilkaField>
                             </div>
                         ) : (
                             <>
@@ -150,7 +242,7 @@ export const ProfilePage = () => {
                                 {averageRating ? `${averageRating} · ${reviewItems.length} отзывов` : "Отзывов пока нет"}
                             </span>
                             <span>·</span>
-                            <span>{profile?.phone || "Телефон не указан"}</span>
+                            <span>{phoneDisplay}</span>
                             {role === "freelancer" && profile?.hourly_rate ? (
                                 <>
                                     <span>·</span>
@@ -195,9 +287,14 @@ export const ProfilePage = () => {
                     </FilkaCard>
 
                     <FilkaCard className="rounded-[16px] bg-[var(--bg-1)] p-5">
-                        <div className="mb-4 flex items-center gap-3">
-                            <FolderOpen size={16} className="text-[var(--mint-300)]" />
-                            <div className="t-eyebrow">ПОРТФОЛИО · {portfolioItems.length}</div>
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <FolderOpen size={16} className="text-[var(--mint-300)]" />
+                                <div className="t-eyebrow">ПОРТФОЛИО · {portfolioItems.length}</div>
+                            </div>
+                            <FilkaButton size="sm" variant="primary" onClick={() => setPortfolioOpen(true)}>
+                                Добавить работу
+                            </FilkaButton>
                         </div>
 
                         {portfolioItems.length > 0 ? (
@@ -236,6 +333,9 @@ export const ProfilePage = () => {
                                 <FolderOpen size={28} className="mx-auto mb-3 text-[var(--fg-3)]" />
                                 <div className="text-[15px] font-semibold text-[var(--fg-0)]">Портфолио пока пусто</div>
                                 <div className="mt-2 text-[13px] text-[var(--fg-2)]">Добавьте примеры работ, чтобы заказчики быстрее понимали ваш уровень.</div>
+                                <FilkaButton size="sm" className="mt-4" variant="ghost" onClick={() => setPortfolioOpen(true)}>
+                                    Добавить первую работу
+                                </FilkaButton>
                             </div>
                         )}
                     </FilkaCard>
@@ -365,6 +465,57 @@ export const ProfilePage = () => {
                     </FilkaCard>
                 </div>
             </div>
+
+            <FilkaModal open={portfolioOpen} onClose={() => setPortfolioOpen(false)} size="md">
+                <FilkaModalHeader>
+                    <FilkaModalTitle>Новая работа в портфолио</FilkaModalTitle>
+                </FilkaModalHeader>
+                <FilkaModalBody className="space-y-4">
+                    <FilkaField label="Название">
+                        <FilkaInput value={pfTitle} onChange={(e) => setPfTitle(e.target.value)} placeholder="Например: Лендинг для SaaS" />
+                    </FilkaField>
+                    <FilkaField label="Описание">
+                        <FilkaTextarea rows={4} value={pfDescription} onChange={(e) => setPfDescription(e.target.value)} placeholder="Задача, роль, результат" />
+                    </FilkaField>
+                    <FilkaField label="Ссылка (необязательно)">
+                        <FilkaInput value={pfLink} onChange={(e) => setPfLink(e.target.value)} placeholder="https://…" />
+                    </FilkaField>
+                    <FilkaField label="Обложка (необязательно)">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                className="text-[13px] text-[var(--fg-2)]"
+                                disabled={pfUploading}
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    e.target.value = "";
+                                    if (!file) return;
+                                    setPfUploading(true);
+                                    try {
+                                        const uploaded = await mediaApi.uploadPhoto(file);
+                                        setPfCoverId(uploaded.id);
+                                        toast.success("Изображение загружено");
+                                    } catch (err) {
+                                        toast.error("Не удалось загрузить файл", err instanceof Error ? err.message : undefined);
+                                    } finally {
+                                        setPfUploading(false);
+                                    }
+                                }}
+                            />
+                            {pfCoverId ? <FilkaChip tone="muted">Обложка: {pfCoverId.slice(0, 8)}…</FilkaChip> : null}
+                        </div>
+                    </FilkaField>
+                </FilkaModalBody>
+                <FilkaModalFooter>
+                    <FilkaButton variant="ghost" onClick={() => setPortfolioOpen(false)}>
+                        Отмена
+                    </FilkaButton>
+                    <FilkaButton loading={addPortfolioItem.isPending || pfUploading} onClick={handleAddPortfolio}>
+                        Сохранить
+                    </FilkaButton>
+                </FilkaModalFooter>
+            </FilkaModal>
         </div>
     );
 };

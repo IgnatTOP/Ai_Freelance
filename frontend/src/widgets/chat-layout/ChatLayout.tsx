@@ -24,7 +24,8 @@ import { createTypingPublisher } from "@/features/chat-typing";
 import { markConversationRead } from "@/features/chat-read";
 import { useOrderDetail } from "@/features/order-management";
 import { useCanLeaveReview, useCreateOrderReview, useOrderReviews } from "@/features/order-reviews/model";
-import { useMyProposals } from "@/features/proposal-management";
+import { useMyProposals, useMyOrderProposal } from "@/features/proposal-management";
+import { useEscrowStatus } from "@/features/balance-management";
 import { mediaApi } from "@/shared/api/endpoints/media";
 import { ApiError, apiClient } from "@/shared/api/client";
 import { env } from "@/shared/config/env";
@@ -194,6 +195,8 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   const showOrderReviewPanel =
     Boolean(orderIdForReview && relatedOrder?.status === "completed" && chatOrderReviewParticipant);
 
+  const { data: chatEscrow } = useEscrowStatus(orderIdForReview ?? "");
+  const { data: myChatOrderProposal } = useMyOrderProposal(orderIdForReview ?? "", Boolean(orderIdForReview && role === "freelancer"));
   const { data: canLeaveReview, isFetched: canReviewFetched } = useCanLeaveReview(orderIdForReview, showOrderReviewPanel);
   const { data: orderReviews = [], isFetched: orderReviewsFetched } = useOrderReviews(orderIdForReview, showOrderReviewPanel);
   const createOrderReview = useCreateOrderReview();
@@ -706,46 +709,51 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
         >
           {selectedConversation ? (
             <>
-              <div className="flex shrink-0 min-w-0 flex-wrap items-center gap-2 border-b border-[var(--line)] px-4 py-3 sm:flex-nowrap sm:px-5">
-                <button
-                  type="button"
-                  onClick={() => setShowList(true)}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line)] bg-[var(--bg-1)] text-[var(--fg-1)] lg:hidden"
-                >
-                  <IconArrowLeft size={16} />
-                </button>
+              <div className="flex shrink-0 min-w-0 flex-col gap-1.5 border-b border-[var(--line)] px-4 py-3 sm:px-5">
+                <div className="flex min-w-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowList(true)}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--line)] bg-[var(--bg-1)] text-[var(--fg-1)] lg:hidden"
+                  >
+                    <IconArrowLeft size={16} />
+                  </button>
 
-                <AvatarBadge
-                  name={selectedConversation.other_user?.display_name ?? "Собеседник"}
-                  photoUrl={selectedConversation.other_user?.photo_url}
-                />
+                  <AvatarBadge
+                    name={selectedConversation.other_user?.display_name ?? "Собеседник"}
+                    photoUrl={selectedConversation.other_user?.photo_url}
+                  />
 
-                <div className="min-w-0">
-                  <div className="truncate text-[15px] font-bold tracking-[-0.01em]">
-                    {selectedConversation.other_user?.display_name ?? "Собеседник"}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[15px] font-bold tracking-[-0.01em]">
+                      {selectedConversation.other_user?.display_name ?? "Собеседник"}
+                    </div>
                   </div>
-                  <div className="t-caption mt-0.5 flex items-center gap-1.5">
-                    <span className="dot-live h-[6px] w-[6px]" />
-                    {typingUsers.length > 0 ? "печатает…" : "онлайн"}
+
+                  <div className="flex max-w-[48%] shrink-0 flex-wrap items-center justify-end gap-2 sm:max-w-none">
+                    {relatedOrder &&
+                    role === "freelancer" &&
+                    relatedOrder.status === "in_progress" &&
+                    myChatOrderProposal?.status === "accepted" ? (
+                      <FilkaButton size="sm" variant="ghost" startContent={<IconCheck size={13} />} onClick={handleCompleteInChat}>
+                        Сдать работу
+                      </FilkaButton>
+                    ) : null}
+                    {relatedOrder && role === "client" && ["in_progress", "completed"].includes(relatedOrder.status) ? (
+                      <FilkaButton size="sm" startContent={<IconCheck size={13} />} onClick={() => router.push(`/dashboard/orders/${relatedOrder.id}` as never)}>
+                        Принять работу
+                      </FilkaButton>
+                    ) : null}
+                    {getOrderBadge(selectedConversation) ? (
+                      <div className="rounded-[8px] border border-[var(--line)] px-2 py-1">
+                        <div className="t-mono text-[10.5px] text-[var(--fg-2)]">{getOrderBadge(selectedConversation)}</div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-
-                <div className="ml-auto flex min-w-0 max-w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
-                  {relatedOrder && role === "freelancer" && relatedOrder.status === "in_progress" ? (
-                    <FilkaButton size="sm" variant="ghost" startContent={<IconCheck size={13} />} onClick={handleCompleteInChat}>
-                      Сдать работу
-                    </FilkaButton>
-                  ) : null}
-                  {relatedOrder && role === "client" && ["in_progress", "completed"].includes(relatedOrder.status) ? (
-                    <FilkaButton size="sm" startContent={<IconCheck size={13} />} onClick={() => router.push(`/dashboard/orders/${relatedOrder.id}` as never)}>
-                      Принять работу
-                    </FilkaButton>
-                  ) : null}
-                  {getOrderBadge(selectedConversation) ? (
-                    <div className="rounded-[8px] border border-[var(--line)] px-2 py-1">
-                      <div className="t-mono text-[10.5px] text-[var(--fg-2)]">{getOrderBadge(selectedConversation)}</div>
-                    </div>
-                  ) : null}
+                <div className="flex items-center gap-1.5 pl-11 text-[11px] text-[var(--fg-3)] sm:pl-11">
+                  <span className="dot-live h-[6px] w-[6px] shrink-0" />
+                  <span className="min-w-0">{typingUsers.length > 0 ? "собеседник печатает…" : "онлайн"}</span>
                 </div>
               </div>
 
@@ -1234,13 +1242,27 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
               </div>
               <div className="mb-3 flex items-center gap-2">
                 <IconShield size={16} className="text-[var(--mint-300)]" />
-                <div className="t-caption text-[var(--mint-300)]">ESCROW · АКТИВЕН</div>
+                <div className="t-caption text-[var(--mint-300)]">
+                  {chatEscrow ? "ЭСКРОУ · СУММА" : "БЮДЖЕТ · ПО ЗАКАЗУ"}
+                </div>
               </div>
               <div className="text-[30px] font-bold tracking-[-0.02em]">
-                {formatCurrency(role === "client" ? relatedOrder?.budget_max : relatedOrder?.budget_min)}
+                {chatEscrow
+                  ? formatCurrency(chatEscrow.amount)
+                  : formatCurrency(role === "client" ? relatedOrder?.budget_max : relatedOrder?.budget_min)}
               </div>
               <div className="mt-1 text-[12px] text-[var(--fg-2)]">
-                {role === "client" ? "зарезервировано для сделки" : "объём сделки по заказу"}
+                {chatEscrow
+                  ? chatEscrow.status === "held"
+                    ? "заморожено по сделке"
+                    : chatEscrow.status === "released"
+                      ? "выплачено"
+                      : chatEscrow.status === "refunded"
+                        ? "возвращено"
+                        : chatEscrow.status
+                  : role === "client"
+                    ? "по заказу (эскроу после принятия отклика)"
+                    : "ориентир по заказу"}
               </div>
 
               <div className="mt-5 flex gap-2">

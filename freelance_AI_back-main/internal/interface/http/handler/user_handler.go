@@ -154,6 +154,12 @@ func (h *UserHandler) RegisterPhone(c *gin.Context) {
 		return
 	}
 
+	phoneCopy := phone
+	_, _ = h.updateProfileUC.Run(c.Request.Context(), user.UpdateProfileInput{
+		UserID: result.User.ID,
+		Phone:  &phoneCopy,
+	})
+
 	httpresp.Created(c, result)
 }
 
@@ -178,6 +184,20 @@ func (h *UserHandler) LoginPhone(c *gin.Context) {
 	if err != nil {
 		httpresp.Unauthorized(c, err.Error())
 		return
+	}
+
+	if _, prof, perr := h.getProfileUC.RunWithUserID(c.Request.Context(), result.User.ID); perr == nil && prof != nil {
+		needPhone := prof.Phone == nil
+		if !needPhone && prof.Phone != nil {
+			needPhone = strings.TrimSpace(*prof.Phone) == ""
+		}
+		if needPhone {
+			phoneCopy := phone
+			_, _ = h.updateProfileUC.Run(c.Request.Context(), user.UpdateProfileInput{
+				UserID: result.User.ID,
+				Phone:  &phoneCopy,
+			})
+		}
 	}
 
 	httpresp.Success(c, result)
