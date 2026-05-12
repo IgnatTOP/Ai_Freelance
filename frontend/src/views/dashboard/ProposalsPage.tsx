@@ -299,7 +299,10 @@ export const ProposalsPage = () => {
                             >
                               {proposal.cover_letter}
                             </p>
-                            {(proposal.cover_letter?.length ?? 0) > 200 ? (
+                            {(() => {
+                              const letter = proposal.cover_letter ?? "";
+                              const showExpand = letter.length > 200 || letter.split("\n").length > 3;
+                              return showExpand ? (
                               <button
                                 type="button"
                                 className="mt-1 text-[12px] text-[var(--mint-300)] hover:underline"
@@ -312,7 +315,8 @@ export const ProposalsPage = () => {
                               >
                                 {expandedLetters.has(proposal.id) ? "Свернуть" : "Читать полностью"}
                               </button>
-                            ) : null}
+                              ) : null;
+                            })()}
                           </div>
 
                           <div className="flex gap-2 lg:flex-col lg:items-end">

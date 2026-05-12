@@ -51,6 +51,8 @@ export const FilkaModal = ({
 }: FilkaModalProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -58,7 +60,7 @@ export const FilkaModal = ({
     const handleKey = (e: KeyboardEvent) => {
       if (closeOnEsc && e.key === "Escape") {
         e.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key === "Tab" && containerRef.current) {
@@ -80,19 +82,22 @@ export const FilkaModal = ({
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const t = setTimeout(() => {
-      const root = containerRef.current;
-      if (!root) return;
-      pickInitialModalFocus(root)?.focus();
-    }, 50);
-
     return () => {
-      clearTimeout(t);
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = prevOverflow;
       lastFocused.current?.focus?.();
     };
-  }, [open, onClose, closeOnEsc]);
+  }, [open, closeOnEsc]);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = window.setTimeout(() => {
+      const root = containerRef.current;
+      if (!root) return;
+      pickInitialModalFocus(root)?.focus();
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [open]);
 
   if (!open || typeof document === "undefined") return null;
 

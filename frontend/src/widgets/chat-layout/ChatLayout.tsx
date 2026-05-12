@@ -274,6 +274,12 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
   }, [selectedId]);
 
   useEffect(() => {
+    if (!showAISuggestions) return;
+    lastSuggestMsgCountRef.current = -1;
+    lastSuggestDraftRef.current = "";
+  }, [showAISuggestions]);
+
+  useEffect(() => {
     if (!selectedId || !showAISuggestions) return;
 
     if (
@@ -552,7 +558,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                     type="button"
                     onClick={() => handleSelectConversation(conversation.id)}
                     className={cn(
-                      "flex w-full gap-3 border-b border-[var(--line)] px-4 py-3 text-left transition-colors",
+                      "flex w-full min-w-0 gap-3 border-b border-[var(--line)] px-4 py-3 text-left transition-colors",
                       isActive ? "bg-[var(--bg-3)]" : "hover:bg-[rgba(255,255,255,0.02)]",
                     )}
                     style={{ borderLeft: isActive ? "2px solid var(--mint-400)" : "2px solid transparent" }}
@@ -645,10 +651,15 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
           </div>
         </section>
 
-        <section className={cn("min-w-0 flex-col bg-[var(--bg-0)]", showList && !selectedConversation ? "hidden lg:flex" : "flex")}>
+        <section
+          className={cn(
+            "flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-0)]",
+            showList && !selectedConversation ? "hidden lg:flex" : "flex",
+          )}
+        >
           {selectedConversation ? (
             <>
-              <div className="flex items-center gap-3 border-b border-[var(--line)] px-4 py-3 sm:px-5">
+              <div className="flex shrink-0 min-w-0 flex-wrap items-center gap-2 border-b border-[var(--line)] px-4 py-3 sm:flex-nowrap sm:px-5">
                 <button
                   type="button"
                   onClick={() => setShowList(true)}
@@ -672,7 +683,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                   </div>
                 </div>
 
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex min-w-0 max-w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
                   {relatedOrder && role === "freelancer" && relatedOrder.status === "in_progress" ? (
                     <FilkaButton size="sm" variant="ghost" startContent={<IconCheck size={13} />} onClick={handleCompleteInChat}>
                       Сдать работу
@@ -721,8 +732,8 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                         }
 
                         return (
-                          <div key={message.id} className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
-                            <div className={cn("max-w-[540px]", isOwn ? "items-end" : "items-start")}>
+                          <div key={message.id} className={cn("flex min-w-0", isOwn ? "justify-end" : "justify-start")}>
+                            <div className={cn("w-full min-w-0 max-w-[540px]", isOwn ? "items-end" : "items-start")}>
                               <div
                                 className={cn(
                                   "rounded-[14px] border px-4 py-3",
@@ -745,7 +756,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                                 ) : null}
 
                                 {mediaItems.length > 0 ? (
-                                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                  <div className="mt-3 grid max-w-full grid-cols-1 gap-2 overflow-hidden sm:grid-cols-2">
                                     {mediaItems.map((attachment) => {
                                       const url = toMediaUrl(getAttachmentFilePath(attachment));
                                       const isImage = getAttachmentFileType(attachment)?.startsWith("image/");
@@ -759,7 +770,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                                           alt="attachment"
                                           loading="lazy"
                                           decoding="async"
-                                          className="rounded-[12px] border border-[var(--line)] object-cover"
+                                          className="max-h-[min(40vh,280px)] w-full max-w-full rounded-[12px] border border-[var(--line)] object-cover"
                                         />
                                       ) : (
                                         <a
@@ -876,7 +887,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 ) : null}
               </div>
 
-              <div className="border-t border-[var(--line)] px-4 py-4 sm:px-5">
+              <div className="border-t border-[var(--line)] bg-[var(--bg-0)] px-4 py-3 sm:px-5 shrink-0">
                 {relatedOrder?.status === "completed" ? (
                   <div className="mb-3 rounded-[12px] border border-[rgba(54,211,153,0.25)] bg-[rgba(54,211,153,0.06)] px-4 py-2.5 text-[12px] text-[var(--mint-300)]">
                     ✓ Заказ завершён. Чат доступен только для просмотра истории.
@@ -901,25 +912,26 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 ) : null}
 
                 {uploadedMedia.length > 0 ? (
-                  <div className="mb-3 max-h-[88px] overflow-y-auto">
-                    <div className="flex flex-wrap gap-2">
+                  <div className="mb-2 max-w-full overflow-x-auto overflow-y-hidden [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+                    <div className="flex w-max max-w-full flex-nowrap gap-2 pb-1">
                     {uploadedMedia.map((item) => {
                       const isImage = item.file_type?.startsWith("image/");
                       const url = toMediaUrl(item.file_path);
 
                       return (
-                        <div key={item.id} className="group relative">
+                        <div key={item.id} className="group relative shrink-0">
                           {isImage && url ? (
-                            <img src={url} alt="preview" className="h-16 w-16 rounded-[12px] border border-[var(--line)] object-cover" />
+                            <img src={url} alt="preview" className="h-14 w-14 rounded-[10px] border border-[var(--line)] object-cover sm:h-16 sm:w-16" />
                           ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-[12px] border border-[var(--line)] bg-[var(--bg-2)] px-1 text-center text-[10px] text-[var(--fg-2)]">
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[10px] border border-[var(--line)] bg-[var(--bg-2)] px-1 text-center text-[9px] text-[var(--fg-2)] sm:h-16 sm:w-16 sm:text-[10px]">
                               {item.file_type?.split("/").pop()?.toUpperCase() ?? "FILE"}
                             </div>
                           )}
                           <button
                             type="button"
                             onClick={() => setUploadedMedia((prev) => prev.filter((media) => media.id !== item.id))}
-                            className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--err)] text-[11px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                            className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--err)] text-[11px] text-white shadow-sm"
+                            aria-label="Удалить вложение"
                           >
                             ×
                           </button>
@@ -931,7 +943,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 ) : null}
 
                 <div className="rounded-[16px] border border-[var(--line-2)] bg-[var(--bg-1)] p-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -1000,7 +1012,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
                 </div>
 
                 {showAISuggestions ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-2 flex max-h-[min(30vh,140px)] flex-wrap gap-2 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
                     {isAiSuggestLoading ? (
                       <>
                         {[32, 24, 28].map((w) => (
@@ -1038,7 +1050,7 @@ export const ChatLayout = ({ initialConversationId }: ChatLayoutProps) => {
         </section>
 
         {selectedConversation ? (
-          <aside className="hidden overflow-y-auto border-l border-[var(--line)] bg-[var(--bg-1)] p-4 2xl:flex 2xl:flex-col 2xl:gap-4">
+          <aside className="hidden min-h-0 min-w-0 overflow-y-auto border-l border-[var(--line)] bg-[var(--bg-1)] p-4 2xl:flex 2xl:flex-col 2xl:gap-4">
             <div>
               <div className="t-eyebrow mb-2">ЗАКАЗ</div>
               <div className="text-[15px] font-bold leading-[1.35] tracking-[-0.01em]">

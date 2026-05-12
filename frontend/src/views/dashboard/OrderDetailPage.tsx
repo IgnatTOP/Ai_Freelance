@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionStore } from "@/shared/store/session.store";
 import { profileApi } from "@/shared/api/endpoints/profile";
@@ -122,6 +122,10 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
     const [sortBy, setSortBy] = useState<"match" | "price" | "deadline">("match");
     const [tab, setTab] = useState<"proposals" | "details">("proposals");
     const [expandedProposalLetters, setExpandedProposalLetters] = useState<Set<string>>(() => new Set());
+
+    const handleCloseProposalModal = useCallback(() => {
+        setProposalOpen(false);
+    }, []);
 
     const proposals = useMemo(() => {
         const list = [...(proposalsData?.items ?? [])];
@@ -542,7 +546,7 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
                                                 >
                                                     {p.cover_letter}
                                                 </p>
-                                                {(p.cover_letter?.length ?? 0) > 200 ? (
+                                                {(p.cover_letter?.length ?? 0) > 200 || (p.cover_letter?.split("\n").length ?? 0) > 3 ? (
                                                     <button
                                                         type="button"
                                                         className="mt-1 text-[12px] text-[var(--mint-300)] hover:underline"
@@ -701,19 +705,19 @@ export const OrderDetailPage = ({ orderId }: OrderDetailPageProps) => {
 
             <FilkaModal
                 open={proposalOpen}
-                onClose={() => setProposalOpen(false)}
+                onClose={handleCloseProposalModal}
                 size="xl"
             >
                 <FilkaModalHeader>
                     <FilkaModalTitle>Отклик на заказ</FilkaModalTitle>
                 </FilkaModalHeader>
-                <FilkaModalBody className="p-0">
+                <FilkaModalBody className="max-h-[min(85vh,760px)] overflow-y-auto p-0">
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px]">
                         <div className="flex flex-col gap-4 p-5">
                             <FilkaField label="Сопроводительное письмо">
                                 <div className="relative">
                                     <FilkaTextarea
-                                        autoFocus
+                                        data-filka-autofocus
                                         value={coverLetter}
                                         onChange={(e) => setCoverLetter(e.target.value)}
                                         rows={7}

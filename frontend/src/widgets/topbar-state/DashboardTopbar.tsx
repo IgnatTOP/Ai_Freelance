@@ -222,6 +222,7 @@ export const DashboardTopbar = () => {
                     <Link
                         href="/dashboard/balance"
                         title="Доступно к выводу и средства в эскроу"
+                        aria-label={`Кошелёк: доступно ${availableValue !== null ? formatMoney(availableValue) : "нет данных"}, в эскроу ${pendingValue !== null ? formatMoney(pendingValue) : formatMoney(0)}`}
                         className="hidden h-9 items-center gap-2 rounded-[var(--r-md)] border px-3 sm:flex"
                         style={{
                             background: "rgba(186,215,247,0.06)",
